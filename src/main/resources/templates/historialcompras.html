@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Compras - Sistema de Ventas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <script th:src="@{/js/tema.js}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link th:href="@{/css/menu.css}" rel="stylesheet">
+    <link th:href="@{/css/menu1.css}" rel="stylesheet">
+    <link th:href="@{/css/modal.css}" rel="stylesheet">
+    <style>
+        /* =========================================
+   MODO OSCURO GENERAL
+   ========================================= */
+        html.dark-mode {
+            color-scheme: dark;
+            background-color: #121212;
+        }
+
+        /* TABLA PRINCIPAL */
+        html.dark-mode .table,
+        html.dark-mode .table th,
+        html.dark-mode .table td {
+            background-color: transparent !important;
+            color: #fff !important;
+            border-color: #333;
+        }
+
+        html.dark-mode .table thead {
+            background-color: #1f1f1f !important;
+        }
+
+        html.dark-mode .table tbody tr:hover {
+            background-color: inherit !important;
+        }
+
+        /* TABLA DEL MODAL */
+        html.dark-mode #modalVerDetalle .table,
+        html.dark-mode #modalVerDetalle .table th,
+        html.dark-mode #modalVerDetalle .table td,
+        html.dark-mode #modalVerDetalle .text-muted {
+            background-color: transparent !important;
+            color: #fff !important;
+            border-color: #333;
+        }
+
+        html.dark-mode #modalVerDetalle .table thead {
+            background-color: #1f1f1f !important;
+        }
+
+        /* MODAL COMPLETO */
+        #modalVerDetalle .modal-content {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        /* HEADER MODAL (degradado) */
+        #modalVerDetalle .modal-header {
+            background: linear-gradient(45deg, #4b6cb7, #182848);
+            color: #fff;
+            border-radius: 15px 15px 0 0;
+        }
+
+        /* BOTON NUEVA ORDEN */
+        .btn-nueva-orden {
+            background-color: #4b6cb7 !important;
+            color: white !important;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 22px;
+            font-weight: normal;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .btn-nueva-orden i {
+            font-size: 0.9rem;
+        }
+
+        .btn-nueva-orden:hover {
+            background-color: #4b6cb7 !important;
+            transform: none;
+        }
+
+        .btn-buscar-filtro {
+            /* COLOR Y TEXTO */
+            background-color: #4b6cb7 !important;
+            color: white !important;
+            border: none;
+            font-size: 0.85rem;
+            padding: 10px 22px;
+            white-space: nowrap;
+
+            /* REDONDEADO DE COSTADOS */
+            border-radius: 20px; /* Ajusta a 10px si lo quieres menos circular */
+
+            /* SEPARACIÓN DE ARRIBA */
+            margin-top: 30px;
+
+            /* SIN EFECTOS EXTRAS */
+            cursor: pointer;
+        }
+
+        /* Para asegurar que no cambie nada al pasar el mouse */
+        .btn-buscar-filtro:hover {
+            background-color: #4b6cb7 !important;
+            transform: none;
+            filter: none;
+        }
+
+        /* =========================================
+           BOTONES DE ACCIÓN FIJOS - CIRCULARES
+           ========================================= */
+        .acciones-boton {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;  /* centrado horizontal */
+            align-items: center;      /* centrado vertical */
+            gap: 0.25rem;             /* espacio entre botones */
+        }
+
+        .acciones-boton .btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        /* Colores por tipo */
+        .acciones-boton .btn-outline-info {
+            background-color: #17a2b8;
+        }
+        .acciones-boton .btn-outline-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .acciones-boton .btn-outline-success {
+            background-color: #198754;
+        }
+
+        /* Hover suave */
+        .acciones-boton .btn-outline-info:hover {
+            background-color: #138496;
+        }
+        .acciones-boton .btn-outline-warning:hover {
+            background-color: #e0a800;
+        }
+        .acciones-boton .btn-outline-success:hover {
+            background-color: #157347;
+        }
+
+        /* Icono centrado */
+        .acciones-boton .btn i {
+            display: block;
+        }
+
+        /* =========================================
+           RESPONSIVE HEADER
+           ========================================= */
+        @media (max-width: 576px) {
+            .mb-4.d-flex.justify-content-between.align-items-center {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+
+            .mb-4.d-flex > div {
+                width: 100%;
+            }
+
+            .btn-nueva-orden {
+                width: 100%;
+                text-align: center;
+                padding: 10px 0.5rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* =========================================
+           TABLA PRINCIPAL CON SCROLL Y PROVEEDOR WRAP
+           ========================================= */
+        .crud-card .table td {
+            white-space: normal;
+        }
+
+        .crud-card .table td:nth-child(3) {
+            white-space: normal;
+            word-break: break-word;
+        }
+
+
+        /* =========================================
+           RESPONSIVE TABLAS Y MODAL
+           ========================================= */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+            }
+
+            /* MÁS ESPACIO ENTRE COLUMNAS */
+            .table th, .table td {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.8rem;   /* padding horizontal aumentado */
+                white-space: nowrap;
+                vertical-align: middle;   /* contenido centrado verticalmente */
+            }
+
+            #modalVerDetalle .table th,
+            #modalVerDetalle .table td {
+                font-size: 0.9rem;
+                padding: 0.3rem 0.6rem;   /* más espacio horizontal en modal */
+                vertical-align: middle;
+            }
+
+            #modalVerDetalle tfoot td {
+                font-size: 0.9rem;
+                padding-top: 0.5rem;
+            }
+
+            .acciones-boton .btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .table th, .table td {
+                font-size: 0.9rem;
+                padding: 0.3rem 0.6rem;   /* espacio horizontal para móviles */
+                vertical-align: middle;
+            }
+
+            .acciones-boton .btn {
+                width: 26px;
+                height: 26px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* EFECTO HOVER: MICRO-LEVANTAMIENTO Y COLOR MÁS OSCURO */
+
+        /* EFECTO HOVER: MICRO-LEVANTAMIENTO Y COLOR MÁS OSCURO */
+
+        .btn-nueva-orden:hover,
+        .btn-buscar-filtro:hover {
+            background-color: #3e5898 !important; /* Azul un toque más oscuro */
+            transform: translateY(-1px) !important; /* Levantamiento mínimo */
+            box-shadow: none !important;            /* Sin sombra */
+            transition: all 0.2s ease;              /* Movimiento suave */
+        }
+
+        /* Aplicar transición base para que el retorno sea suave al quitar el mouse */
+        .btn-nueva-orden,
+        .btn-buscar-filtro {
+            transition: all 0.2s ease;
+        }
+
+
+        /* =========================================
+   CORRECCIÓN VISIBILIDAD ESTADOS (MODO OSCURO)
+   ========================================= */
+        html.dark-mode .text-muted,
+        html.dark-mode small.text-muted {
+            color: #adb5bd !important; /* Gris claro para que sea legible */
+        }
+
+        /* Color del icono del camioncito en modo oscuro */
+        html.dark-mode .fa-truck-loading {
+            color: #0dcaf0 !important; /* Cyan brillante */
+        }
+
+        /* Color de "Esperando..." en modo oscuro */
+        html.dark-mode .text-warning-emphasis {
+            color: #ffca28 !important; /* Amarillo ámbar brillante */
+            background: transparent !important;
+        }
+
+        /* Asegura que el texto dinámico (horas/fechas) sea blanco puro */
+        html.dark-mode .text-dynamic {
+            color: #ffffff !important;
+        }
+
+        /* PAGINACIÓN COMPACTA */
+        .pagination { gap: 5px; }
+
+        .page-link {
+            border: none !important;
+            color: #64748b !important;
+            background: #fff !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+
+        /* Estado Activo y Hover */
+        .page-item.active .page-link {
+            background: #4b6cb7 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 10px rgba(75, 108, 183, 0.3) !important;
+        }
+
+        .page-link:hover:not(.active) {
+            background: #f1f5f9 !important;
+            color: #4b6cb7 !important;
+        }
+
+        /* Deshabilitado */
+        .page-item.disabled .page-link {
+            background: #f8fafc !important;
+            color: #cbd5e1 !important;
+            box-shadow: none;
+        }
+
+        /* MODO OSCURO (Solo lo necesario) */
+        [data-bs-theme="dark"] .page-link {
+            background: #1e293b !important;
+            color: #94a3b8 !important;
+        }
+
+        [data-bs-theme="dark"] .page-link:hover:not(.active) {
+            background: #334155 !important;
+            color: #fff !important;
+        }
+
+    </style>
+
+</head>
+<body>
+
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- Topbar -->
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="content" id="mainContent" style="padding-bottom: 80px;">
+    <div class="container-fluid">
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold text-dynamic mb-1 fs-3">Historial de Compras</h2>
+                <p class="text-muted-dynamic mb-0 fs-6">Gestiona tus pedidos y entradas de inventario</p>
+            </div>
+            <a href="/compras/nueva"
+               class="btn btn-primary rounded-pill px-3 py-2 shadow-sm btn-nueva-orden">
+                <i class="fas fa-plus-circle me-1"></i>
+                <span class="texto-btn">Nueva Orden</span>
+            </a>
+        </div>
+
+        <form th:action="@{/compras/historial}" method="get" class="row g-2 mb-3 align-items-end">
+            <div class="col-sm-4">
+                <label class="form-label small">Proveedor</label>
+                <input type="text" name="proveedor" class="form-control" th:value="${proveedorElegido}" placeholder="Nombre proveedor">
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label small">Fecha desde</label>
+                <input type="date" name="fechaDesde" class="form-control" th:value="${fechaDesde}">
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label small">Fecha hasta</label>
+                <input type="date" name="fechaHasta" class="form-control" th:value="${fechaHasta}">
+            </div>
+            <div class="col-sm-2 d-grid">
+                <button type="submit" class="btn btn-buscar-filtro">
+                    <i class="fas fa-search me-2"></i> Buscar
+                </button>
+            </div>
+        </form>
+
+        <div class="crud-card p-0 shadow overflow-hidden">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light">
+                    <tr class="text-muted small text-uppercase">
+                        <th class="ps-4">ID</th>
+                        <th class="text-center">Fecha Emisión</th>
+                        <th class="text-center">Proveedor</th>
+                        <th class="text-center">Total Compra</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(compras)}">
+                        <td colspan="6" class="text-center py-4 text-muted">No hay registros de compras disponibles.</td>
+                    </tr>
+                    <tr th:each="c : ${compras}" class="border-bottom">
+                        <td class="ps-4 fw-bold text-dynamic" th:text="'#' + ${c.idCompra}"></td>
+                        <td class="text-center">
+                            <div class="fw-bold text-dynamic" th:text="${#temporals.format(c.fechaInicio, 'dd/MM/yyyy')}"></div>
+                            <small th:if="${c.fechaRecepcion != null}" class="text-muted d-block" style="font-size: 0.75rem;">
+                                <i class="fas fa-truck-loading me-1"></i>
+                                Recibido: <span th:text="${#temporals.format(c.fechaRecepcion, 'HH:mm')}"></span>
+                            </small>
+                            <small th:if="${c.fechaRecepcion == null}" class="text-warning-emphasis d-block" style="font-size: 0.7rem;">
+                                Esperando...
+                            </small>
+                        </td>
+                        <td class="text-center" th:text="${c.proveedor.nombre}"></td>
+                        <td class="text-center">
+                                <span class="fw-bold text-dynamic">
+                                    S/ <span th:text="${#numbers.formatDecimal(c.total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                </span>
+                        </td>
+                        <td class="text-center">
+                                <span th:if="${c.estado == 'PENDIENTE'}" class="badge bg-warning text-dark px-3 rounded-pill">
+                                    <i class="fas fa-clock me-1"></i> PENDIENTE
+                                </span>
+                            <span th:if="${c.estado == 'COMPLETADA'}" class="badge bg-success px-3 rounded-pill">
+                                    <i class="fas fa-check-circle me-1"></i> COMPLETADA
+                                </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="acciones-boton">
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1"
+                                        th:onclick="|verDetalle(${c.idCompra})|" title="Ver Detalle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <th:block th:if="${c.estado == 'PENDIENTE'}">
+                                    <a th:href="@{/compras/editar/{id}(id=${c.idCompra})}"
+                                       class="btn btn-sm btn-outline-warning rounded-circle me-1" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-success rounded-circle"
+                                            th:onclick="|confirmarRecepcion(${c.idCompra})|" title="Confirmar Stock">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </th:block>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
+            <div class="text-muted-dynamic small">
+                Página <span class="fw-bold" th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">2</span>
+            </div>
+
+            <nav aria-label="Navegación de historial">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link shadow-sm border-0"
+                           th:href="@{/compras/historial(page=${currentPage - 1}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:if="${i >= currentPage - 1 and i <= currentPage + 1}"
+                        th:classappend="${i == currentPage} ? 'active'">
+                        <a class="page-link shadow-sm border-0 rounded"
+                           th:href="@{/compras/historial(page=${i}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
+                           th:text="${i + 1}"></a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                        <a class="page-link shadow-sm border-0"
+                           th:href="@{/compras/historial(page=${currentPage + 1}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</main>
+<div class="modal fade" id="modalVerDetalle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-receipt me-2 text-info"></i>Detalle de la Compra</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <label class="text-muted small d-block">PROVEEDOR</label>
+                        <span id="detProveedor" class="fw-bold text-dynamic fs-5"></span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <label class="text-muted small d-block">FECHA DE LLEGADA</label>
+                        <span id="detFecha" class="fw-bold text-dynamic fs-5"></span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                <table class="table table-sm border-top">
+                    <thead class="bg-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Cant.</th>
+                        <th class="text-end">Costo</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody id="detTablaCuerpo">
+                    </tbody>
+                    <tfoot>
+                    <tr class="fs-5 fw-bold">
+                        <td colspan="3" class="text-end pt-3 text-dynamic">TOTAL:</td>
+                        <td class="text-end pt-3 text-success">S/ <span id="detTotal">0.00</span></td>
+                    </tr>
+                    </tfoot>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/menu.js}"></script>
+<script>
+    function confirmarRecepcion(id) {
+        Swal.fire({
+            title: '¿Confirmar Ingreso?',
+            text: "El stock se actualizará y la compra pasará a COMPLETADA.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff4d4d',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, confirmar stock',
+            cancelButtonText: 'Cancelar',
+            background: '#fff', // Forzamos fondo blanco
+            color: '#000'       // Forzamos texto negro
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/compras/confirmar/' + id;
+            }
+        });
+    }
+
+    function verDetalle(id) {
+        // Limpieza previa (Feedback visual de carga)
+        document.getElementById('detTablaCuerpo').innerHTML = '<tr><td colspan="4" class="text-center py-3">Cargando...</td></tr>';
+        document.getElementById('detTotal').innerText = '0.00';
+
+        fetch('/compras/api/' + id)
+            .then(response => {
+                if (!response.ok) throw new Error("Error al obtener datos");
+                return response.json();
+            })
+            .then(compra => {
+                // 1. Datos básicos y formateo de fecha INTELIGENTE
+                document.getElementById('detProveedor').innerText = compra.proveedor.nombre;
+
+                let fechaAMostrar = "";
+
+                if (compra.fechaRecepcion) {
+                    // Si ya se recibió, usamos la fecha y hora real
+                    const f = new Date(compra.fechaRecepcion);
+                    const dia = String(f.getDate()).padStart(2, '0');
+                    const mes = String(f.getMonth() + 1).padStart(2, '0');
+                    const anio = f.getFullYear();
+                    const hora = String(f.getHours()).padStart(2, '0');
+                    const min = String(f.getMinutes()).padStart(2, '0');
+
+                    fechaAMostrar = `${dia}/${mes}/${anio} ${hora}:${min}`;
+                } else {
+                    // Si está pendiente, usamos la fecha esperada o de inicio
+                    const fechaISO = compra.fecha || compra.fechaInicio;
+                    const [anio, mes, dia] = fechaISO.split('-');
+                    fechaAMostrar = `${dia}/${mes}/${anio} (Pendiente)`;
+                }
+
+                document.getElementById('detFecha').innerText = fechaAMostrar;
+
+                // 2. Procesar detalles
+                let html = '';
+                let totalAcumulado = 0;
+
+                compra.detalles.forEach(d => {
+                    const cant = parseFloat(d.cantidad) || 0;
+                    const precio = parseFloat(d.precioCompra) || 0;
+                    const subtotal = cant * precio;
+                    totalAcumulado += subtotal;
+
+                    html += `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${d.producto.nombreProducto}</div>
+                        <small class="text-muted">Cód: ${d.producto.codigoBarras || 'N/A'}</small>
+                    </td>
+                    <td class="text-center">${cant}</td>
+                    <td class="text-end">S/ ${precio.toFixed(2)}</td>
+                    <td class="text-end fw-bold">S/ ${subtotal.toFixed(2)}</td>
+                </tr>`;
+                });
+
+                // 3. Inyectar datos
+                document.getElementById('detTablaCuerpo').innerHTML = html;
+
+                // Priorizamos el total del backend
+                const totalFinal = compra.total ? parseFloat(compra.total) : totalAcumulado;
+                document.getElementById('detTotal').innerText = totalFinal.toFixed(2);
+
+                // 4. Mostrar modal
+                const modalElement = document.getElementById('modalVerDetalle');
+                let modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                modalInstance.show();
+            })
+            .catch(error => {
+                console.error(error);
+                Swal.fire('Error', 'No se pudo cargar el detalle de la compra', 'error');
+            });
+    }
+</script>
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+
+        // Esta es la forma correcta y segura:
+        const successMsg = /*[[${success}]]*/ null;
+        const errorMsg = /*[[${error}]]*/ null;
+
+        const configComun = {
+            confirmButtonColor: '#4b6cb7',
+            // Forzamos el estilo claro aquí mismo para evitar conflictos
+            background: '#ffffff',
+            color: '#333333'
+        };
+
+        if (successMsg && successMsg !== "") {
+            Swal.fire({
+                ...configComun,
+                icon: 'success',
+                title: '¡Logrado!',
+                text: successMsg
+            });
+        }
+
+        if (errorMsg && errorMsg !== "") {
+            Swal.fire({
+                ...configComun,
+                icon: 'error',
+                title: 'Error',
+                text: errorMsg,
+                confirmButtonColor: '#ff4d4d'
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Fragments</title>
+</head>
+<body>
+
+<nav id="sidebar"  th:fragment="sidebar">
+    <div class="brand-sidebar">
+        <img th:src="@{/img/logo1.png}" alt="Logo">
+        <span>SISTEMA VENTAS</span>
+    </div>
+    <div class="sidebar-menu">
+        <a href="/home"><i class="fas fa-th-large"></i> Inicio</a>
+
+        <a href="/categorias"><i class="fas fa-tags"></i> Categorías</a>
+        <a href="/productos"><i class="fas fa-box"></i> Productos</a>
+
+        <a href="/proveedores"><i class="fas fa-truck"></i> Proveedores</a>
+        <a href="/compras/nueva"><i class="fas fa-file-import"></i> Compras</a>
+        <a href="/compras"><i class="fas fa-list-alt"></i> Historial de Compras</a>
+
+        <a href="/clientes"><i class="fas fa-user-friends"></i> Clientes</a>
+        <a href="/ventas/nueva"><i class="fas fa-shopping-cart"></i> Realizar Venta</a>
+        <a href="/ventas"><i class="fas fa-history"></i> Historial de Ventas</a>
+
+        <a href="/deudas"><i class="fas fa-hand-holding-usd"></i> Cuentas por Cobrar</a>
+
+        <a href="/usuarios"><i class="fas fa-users-cog"></i> Usuarios</a>
+        <a href="/perfil"><i class="fas fa-user-circle"></i> Mi Perfil </a>
+
+        <form th:action="@{/logout}" method="post" style="margin-top: auto;">
+            <button type="submit" class="btn-logout">
+                <i class="fas fa-power-off"></i> Cerrar sesión
+            </button>
+        </form>
+    </div>
+</nav>
+
+<nav class="top-navbar" th:fragment="topbar">
+    <div class="hamburger-container" id="hamburgerWrapper">
+        <i class="fas fa-bars hamburger" id="hamburger"></i>
+    </div>
+    <div class="d-flex align-items-center">
+        <div class="theme-switch">
+            <input type="radio" name="theme" id="darkMode">
+            <label for="darkMode"><i class="fas fa-moon"></i></label>
+            <input type="radio" name="theme" id="lightMode">
+            <label for="lightMode"><i class="fas fa-sun"></i></label>
+        </div>
+        <div class="dropdown">
+            <a href="#" class="user-link dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" data-bs-display="static">
+                <div class="user-avatar bg-light text-dark text-center">
+                    <i class="fas fa-user"></i>
+                </div>
+                <span th:text="${nombreUsuario}"></span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+                <li class="dropdown-header-mobile" th:text="${nombreUsuario}"></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-user-circle"></i> Mi Perfil</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Configuración</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form th:action="@{/logout}" method="post">
+                        <button class="dropdown-item text-danger" type="submit">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+/* 1. VARIABLES Y ESTADOS GLOBALES */
+.input-group {
+    border-radius: .5rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+.input-group-text { user-select: none; }
+
+/* 2. CONFIGURACIÓN TEMA OSCURO */
+/* Grupo de Inputs y Contenedores */
+.dark-theme .input-group {
+    border-color: #444 !important;
+    background-color: transparent !important;
+}
+
+/* Inputs de Fecha y solo lectura */
+.dark-theme .fecha-inicio,
+.dark-theme .fecha-llegada,
+.dark-theme input[type="date"],
+.dark-theme .input-group input[readonly].form-control,
+.dark-theme .input-group-text.bg-light {
+    background-color: transparent !important;
+    color: #e0e0e0 !important;
+    -webkit-text-fill-color: #e0e0e0 !important;
+    border: none !important;
+}
+
+/* SELECTS - Consolidado para evitar parpadeo blanco */
+.dark-theme .form-select {
+    background-color: #1a1d21 !important; /* Fondo sólido para legibilidad de opciones */
+    color: #e0e0e0 !important;
+    border-color: #444 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.dark-theme .form-select option {
+    background-color: #1a1d21 !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .form-select option:disabled { color: #6c757d !important; }
+
+/* Iconos */
+.dark-theme .input-group-text {
+    background-color: transparent !important;
+    color: #888 !important;
+    border: none !important;
+}
+.dark-theme .fa-calendar-alt,
+.dark-theme .fa-truck-loading { color: #888 !important; }
+
+/* 3. CONFIGURACIÓN TEMA CLARO */
+.light-theme .input-group {
+    border-color: #ced4da !important;
+    background-color: #fff;
+}
+.light-theme .fecha-inicio {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    -webkit-text-fill-color: #212529 !important;
+}
+
+/* 4. COMPORTAMIENTO DE INPUTS */
+#buscadorCompra:focus,
+.fecha-llegada:focus,
+.input-group:focus-within {
+    outline: none !important;
+    border-color: #4b6cb7 !important;
+    box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.2) !important;
+}
+
+/* Bloqueo Fecha Inicio */
+.fecha-inicio {
+    pointer-events: none;
+    user-select: none;
+    cursor: default;
+}
+.fecha-inicio:focus, .fecha-inicio:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* 5. TABLA Y COMPONENTES */
+.custom-table th, .custom-table td { padding: 12px 8px !important; }
+.nombre-producto-celda {
+    min-width: 140px; max-width: 220px;
+    white-space: normal !important; word-wrap: break-word; line-height: 1.2;
+}
+
+
+/* 6. DISEÑO TOTAL TICKET */
+.contenedor-total-ticket {
+    border-radius: 15px; padding: 25px 15px; text-align: center; margin: 20px 0;
+    transition: all 0.3s ease; background-color: #d4ece0; border: 1.5px dashed #208b58;
+}
+.dark-theme .contenedor-total-ticket {
+    background-color: rgba(32, 139, 88, 0.15) !important;
+    border-color: rgba(46, 204, 113, 0.3) !important;
+}
+
+.titulo-total {
+    font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 10px; display: block; color: #444;
+}
+.dark-theme .titulo-total { color: #aaa !important; }
+
+.monto-total {
+    font-size: 2.5rem; font-weight: 400; color: #208b58;
+    display: flex; justify-content: center; align-items: baseline; gap: 10px; line-height: 1;
+}
+.dark-theme .monto-total { color: #2ecc71 !important; }
+
+/* 7. BOTONES */
+#btnGuardar, #btnGuardar + a {
+    font-size: 0.9rem !important; font-weight: 400 !important;
+    border-radius: 10px !important; border: none !important; transition: background 0.2s;
+}
+#btnGuardar { background-color: #4b6cb7 !important; }
+#btnGuardar:hover { background-color: #3b5998 !important; }
+#btnGuardar + a { background: #dc3545 !important; color: #fff !important; }
+#btnGuardar + a:hover { background: #b02a37 !important; }

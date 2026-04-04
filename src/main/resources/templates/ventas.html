@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Categorias - Sistema de Ventas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <script th:src="@{/js/tema.js}"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link th:href="@{/css/menu.css}" rel="stylesheet">
+  <link th:href="@{/css/menu1.css}" rel="stylesheet">
+  <link th:href="@{/css/modal.css}" rel="stylesheet">
+  <link th:href="@{/css/vencom.css}" rel="stylesheet">
+  <style>
+    /* Quita el borde azul resaltado al hacer clic (focus) */
+    #buscadorPOS:focus {
+      outline: none !important;
+      box-shadow: none !important;
+      border-color: rgba(0, 0, 0, 0.1) !important; /* Mantén un borde suave si prefieres */
+    }
+
+    /* Si usas el input dentro de un input-group de Bootstrap */
+    .input-group #buscadorPOS:focus {
+      z-index: 1;
+    }
+
+    html.dark-mode .custom-table thead th {
+      background-color: #2A3651FF !important;
+      color: #ffffff !important;
+      border-bottom: 2px solid #171f39 !important;
+      text-align: center;
+      padding: 15px !important;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- Topbar -->
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="content" id="mainContent" style="padding-bottom: 80px;">
+  <div class="container-fluid">
+    <div class="mb-4">
+      <h2 class="fw-bold text-dynamic mb-1 fs-3">Nueva Venta</h2>
+      <p class="text-muted-dynamic mb-0 fs-6">Genera un comprobante y actualiza el inventario al instante</p>
+    </div>
+
+    <form th:action="@{/ventas/guardar}" th:object="${venta}" method="post" id="formVenta">
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="crud-card p-4 shadow mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+              <h5 class="fw-bold mb-0 text-dynamic fs-5">Agregar Productos</h5>
+            </div>
+            <div class="input-group shadow-sm border rounded-3 overflow-hidden bg-transparent">
+              <span class="input-group-text bg-transparent border-0 py-3 ps-3"><i class="fas fa-barcode text-muted-dynamic"></i></span>
+              <input type="text" id="buscadorVenta" class="form-control border-0 py-3 bg-transparent text-dynamic"
+                     placeholder="Escanea o busca el producto..." list="listaProductos" autocomplete="off">
+              <datalist id="listaProductos">
+                <option th:each="p : ${productos}"
+                        th:value="${p.nombreProducto}"
+                        th:data-id="${p.idProducto}"
+                        th:data-precio="${p.precio}"
+                        th:data-stock="${p.stock}"
+                        th:data-unidad="${p.unidadMedida}"
+                        th:data-barcode="${p.codigoBarras}"
+                        th:text="${p.unidadMedida == 'KG' ? 'Stock: ' + p.stock + 'kg' : 'Stock: ' + p.stock} + ' - S/ ' + p.precio">
+                </option>
+              </datalist>
+            </div>
+          </div>
+
+          <div class="crud-card p-0 shadow overflow-hidden">
+            <div class="table-responsive" style="max-height: 400px;">
+              <table class="table custom-table align-middle mb-0">
+                <thead class="sticky-top">
+                <tr class="text-muted">
+                  <th class="text-center">Producto</th>
+                  <th class="text-center">Precio Unit.</th>
+                  <th class="text-center">Cantidad</th>
+                  <th class="text-center">Subtotal</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+                </thead>
+                <tbody id="tbodyDetalles">
+                </tbody>
+              </table>
+            </div>
+            <div id="msgVacio" class="p-5 text-center text-muted-dynamic">
+              <i class="fas fa-shopping-basket fa-3x mb-3 opacity-25"></i>
+              <p>No hay productos en el carrito</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="sticky-top" style="top: 20px;">
+            <div class="crud-card p-4 shadow">
+              <h5 class="fw-bold mb-4 text-dynamic fs-5 border-bottom pb-2">Resumen de Venta</h5>
+
+              <div class="mb-3">
+                <label class="form-label small fw-bold text-muted-dynamic">Cliente</label>
+                <div class="input-group border rounded-3 overflow-hidden">
+                  <span class="input-group-text border-0 bg-transparent"><i class="fas fa-user"></i></span>
+                  <input type="text" id="inputCliente" class="form-control border-0 bg-transparent text-dynamic"
+                         placeholder="Buscar cliente..." list="listaClientes" autocomplete="off" required>
+                  <input type="hidden" th:field="*{cliente.idCliente}" id="clienteId">
+                  <datalist id="listaClientes">
+                    <option th:each="c : ${clientes}"
+                            th:value="${c.nombre + ' ' + c.apellidoPat}"
+                            th:data-id="${c.idCliente}"></option>
+                  </datalist>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <label class="form-label small fw-bold text-muted-dynamic">Tipo de Venta</label>
+                  <select th:field="*{tipoVenta}" class="form-select border-0 shadow-sm bg-light-dynamic" id="tipoVenta">
+                    <option value="CONTADO">Contado</option>
+                    <option value="CREDITO">Crédito</option>
+                  </select>
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="form-label small fw-bold text-muted-dynamic">Método de Pago</label>
+                  <select th:field="*{metodoPago}" class="form-select border-0 shadow-sm bg-light-dynamic" id="selectMetodo">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Yape">Yape</option>
+                    <option value="Plin">Plin</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="contenedor-total-ticket shadow-sm mb-4">
+                <span class="titulo-total">TOTAL A PAGAR</span>
+                <div class="monto-total">
+                  S/ <span id="labelTotal">0.00</span>
+                </div>
+                <input type="hidden" th:field="*{totalVenta}" id="inputTotalVenta">
+              </div>
+
+              <div id="wrapperVuelto" class="bg-light-dynamic p-3 rounded-3 mb-4 border border-dashed shadow-sm" style="border-left: 5px solid #0dcaf0 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span id="labelPagaCon" class="small fw-bold">Paga con:</span>
+                  <input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold"
+                         id="montoPagado" th:field="*{montoPagado}" style="max-width: 120px;" placeholder="0.00">
+                </div>
+                <div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
+                  <span id="tituloEstadoFinanciero">Vuelto:</span>
+                  <span class="text-primary">S/ <span id="labelVuelto">0.00</span></span>
+                </div>
+              </div>
+
+              <button type="submit" id="btnGuardar" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow" disabled>
+                <i class="fas fa-check-circle me-2"></i> Finalizar Venta
+              </button>
+
+              <a href="/ventas" class="btn btn-outline-secondary w-100 mt-2 py-2 rounded-pill small">
+                <i class="fas fa-times me-1"></i> Cancelar
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/menu.js}"></script>
+<script>
+  // 1. SELECTORES PRINCIPALES
+  const buscador = document.getElementById('buscadorVenta');
+  const datalistProd = document.getElementById('listaProductos');
+  const inputCliente = document.getElementById('inputCliente');
+  const datalistCli = document.getElementById('listaClientes');
+  const selectTipoVenta = document.getElementById('tipoVenta');
+  const inputMontoPagado = document.getElementById('montoPagado');
+  const selectMetodo = document.getElementById('selectMetodo');
+  const labelVuelto = document.getElementById("labelVuelto");
+  const wrapperVuelto = document.getElementById('wrapperVuelto');
+
+  // 2. LÓGICA DE CLIENTE (Se mantiene igual)
+  inputCliente.addEventListener('input', function() {
+    const opcion = Array.from(datalistCli.options).find(opt => opt.value === this.value);
+    if (opcion) {
+      document.getElementById('clienteId').value = opcion.getAttribute('data-id');
+    } else {
+      document.getElementById('clienteId').value = "";
+    }
+  });
+
+  // 3. BUSCADOR DE PRODUCTOS
+  buscador.addEventListener('input', function(e) {
+    const valorBusqueda = e.target.value.trim();
+    const opcion = Array.from(datalistProd.options).find(opt =>
+            opt.value === valorBusqueda || opt.getAttribute('data-barcode') === valorBusqueda
+    );
+
+    if (opcion) {
+      const id = opcion.getAttribute('data-id');
+      const nombre = opcion.value;
+      const precio = parseFloat(opcion.getAttribute('data-precio'));
+      const stock = parseFloat(opcion.getAttribute('data-stock'));
+      const unidad = opcion.getAttribute('data-unidad');
+
+      if(stock <= 0) {
+        Swal.fire('Sin Stock', 'Este producto no tiene existencias.', 'warning');
+        this.value = "";
+        return;
+      }
+
+      ejecutarAgregar(id, nombre, precio, stock, unidad);
+      this.value = "";
+      this.focus();
+    }
+  });
+
+  // 4. AGREGAR FILA (SIN BOTONES + / -)
+  function ejecutarAgregar(id, nombre, precio, stockMax, unidad) {
+    const filaExistente = document.getElementById(`f_${id}`);
+
+    // Si ya existe, le sumamos la unidad mínima (1 o 0.100)
+    if (filaExistente) {
+      const input = filaExistente.querySelector('.input-cantidad');
+      let actual = parseFloat(input.value) || 0;
+      let paso = (unidad === 'KG') ? 0.100 : 1;
+
+      if ((actual + paso) <= stockMax) {
+        input.value = (unidad === 'KG') ? (actual + paso).toFixed(3) : (actual + paso);
+      }
+      actualizarTotales();
+      return;
+    }
+
+    const step = (unidad === 'KG') ? "0.001" : "1";
+
+    const fila = `
+    <tr id="f_${id}" data-id="${id}" data-stock-max="${stockMax}" data-unidad="${unidad}" class="align-middle border-bottom">
+        <td class="ps-4 py-3 text-center"> <input type="hidden" class="prod-id" value="${id}">
+            <span class="fw-bold text-dynamic d-block">${nombre}</span>
+            <small class="text-muted-dynamic">Stock: ${stockMax} ${unidad}</small>
+        </td>
+        <td class="text-center fw-bold"> S/ ${precio.toFixed(2)}
+            <input type="hidden" class="input-precio" value="${precio}">
+        </td>
+        <td class="text-center" style="width: 110px;"> <input type="number" step="${step}"
+                   class="form-control form-control-sm input-cantidad text-center fw-bold shadow-sm mx-auto"
+                   value="1"
+                   oninput="validarManual(this, ${stockMax})"
+                   onclick="this.select()"
+                   style="max-width: 90px;">
+        </td>
+        <td class="text-center fw-bold text-dynamic"> S/ <span class="subtotal-fila">0.00</span>
+        </td>
+        <td class="text-center">
+            <button type="button"
+                    onclick="quitar('${id}')"
+                    class="btn btn-danger btn-sm rounded-circle shadow-sm"
+                    style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-trash-can" style="font-size: 0.85rem;"></i>
+            </button>
+        </td>
+    </tr>`;
+
+    document.getElementById("tbodyDetalles").insertAdjacentHTML('afterbegin', fila);
+    document.getElementById("msgVacio").classList.add('d-none');
+    actualizarTotales();
+  }
+
+  // 5. VALIDACIÓN MANUAL (Escribir directamente)
+  function validarManual(input, stockMax) {
+    let valor = parseFloat(input.value);
+    if (isNaN(valor)) return;
+
+    if (valor > stockMax) {
+      input.value = stockMax;
+
+      Swal.fire({
+        title: 'Stock Insuficiente',
+        text: 'La cantidad máxima disponible es ' + stockMax,
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Entendido',
+        // --- ESTOS AJUSTES MEJORAN EL DISEÑO ---
+        width: '400px', // Ancho fijo para PC, evita que se estire "feo"
+        padding: '2em',
+        background: '#ffffff', // Puedes cambiarlo a #1a1a1a si usas tema oscuro
+        color: '#1a1a1a',      // Color de texto
+        backdrop: `rgba(0,0,0,0.6)` // Fondo exterior más oscuro para dar enfoque
+      });
+    }
+
+    if (valor < 0) input.value = 0;
+    actualizarTotales();
+  }
+
+  // 6. CÁLCULOS Y TOTALES (Sigue igual)
+  selectTipoVenta.addEventListener('change', actualizarInterfazCredito);
+  inputMontoPagado.addEventListener('input', calcularVuelto);
+  selectMetodo.addEventListener('change', calcularVuelto);
+
+  function actualizarInterfazCredito() {
+    const tipoVenta = selectTipoVenta.value;
+    const labelPagaCon = document.getElementById('labelPagaCon');
+    const tituloEstado = document.getElementById('tituloEstadoFinanciero');
+
+    if (tipoVenta === "CREDITO") {
+      if(labelPagaCon) labelPagaCon.innerText = "Inicial / Adelanto:";
+      if(tituloEstado) tituloEstado.innerText = "POR COBRAR (DEUDA):";
+      if(wrapperVuelto) wrapperVuelto.style.borderLeft = "5px solid #fd7e14";
+    } else {
+      if(labelPagaCon) labelPagaCon.innerText = "Paga con:";
+      if(tituloEstado) tituloEstado.innerText = "Vuelto:";
+      if(wrapperVuelto) wrapperVuelto.style.borderLeft = "5px solid #0dcaf0";
+    }
+    calcularVuelto();
+  }
+
+  function actualizarTotales() {
+    let acumulado = 0;
+    const filas = document.querySelectorAll('#tbodyDetalles tr');
+
+    filas.forEach((tr, i) => {
+      const cant = parseFloat(tr.querySelector('.input-cantidad').value) || 0;
+      const precio = parseFloat(tr.querySelector('.input-precio').value) || 0;
+      const sub = cant * precio;
+
+      tr.querySelector('.subtotal-fila').innerText = sub.toFixed(2);
+      acumulado += sub;
+
+      tr.querySelector('.prod-id').name = `detalles[${i}].producto.idProducto`;
+      tr.querySelector('.input-precio').name = `detalles[${i}].precioVenta`;
+      tr.querySelector('.input-cantidad').name = `detalles[${i}].cantidad`;
+    });
+
+    document.getElementById("labelTotal").innerText = acumulado.toFixed(2);
+    document.getElementById("inputTotalVenta").value = acumulado.toFixed(2);
+    document.getElementById("btnGuardar").disabled = (filas.length === 0);
+
+    if(filas.length === 0) document.getElementById("msgVacio").classList.remove('d-none');
+    calcularVuelto();
+  }
+
+  function calcularVuelto() {
+    const total = parseFloat(document.getElementById("inputTotalVenta").value) || 0;
+    const tipoVenta = selectTipoVenta.value;
+    let pagado = parseFloat(inputMontoPagado.value) || 0;
+
+    if (tipoVenta === "CREDITO") {
+      let deuda = total - pagado;
+      if (deuda < 0) {
+        inputMontoPagado.value = total.toFixed(2);
+        deuda = 0;
+      }
+      labelVuelto.innerText = deuda.toFixed(2);
+      labelVuelto.parentElement.className = "fw-bold text-warning";
+    } else {
+      const vuelto = pagado - total;
+      labelVuelto.innerText = (vuelto > 0) ? vuelto.toFixed(2) : "0.00";
+      labelVuelto.parentElement.className = (vuelto < 0 && pagado > 0) ? "fw-bold text-danger" : "fw-bold text-primary";
+    }
+  }
+
+  function quitar(id) {
+    const fila = document.getElementById("f_" + id);
+    if (fila) {
+      fila.remove();
+      actualizarTotales();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (buscador) buscador.focus();
+    actualizarInterfazCredito();
+  });
+
+  document.getElementById('formVenta').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const tipo = selectTipoVenta.value;
+    Swal.fire({
+      title: '¿Finalizar Venta?',
+      text: (tipo === 'CREDITO') ? "Generará deuda pendiente." : "Se descontará stock.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#07e80b',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, vender'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.submit();
+      }
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+package com.sistemaventas.sistema_ventas.controller;
+
+import com.sistemaventas.sistema_ventas.model.Compra;
+import com.sistemaventas.sistema_ventas.repository.*;
+import com.sistemaventas.sistema_ventas.service.CompraService;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Controller
+@RequestMapping("/compras")
+public class CompraController {
+
+    @Autowired private CompraService compraService;
+    @Autowired private ProductoRepository productoRepository;
+    @Autowired private ProveedorRepository proveedorRepository;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private CategoriaRepository categoriaRepository;
+
+
+
+    @GetMapping("/historial")
+    public String historial(
+            @RequestParam(required = false) String proveedor,
+            @RequestParam(required = false) String fechaDesde,
+            @RequestParam(required = false) String fechaHasta,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+
+        // Cambiamos el tamaño a 20 para que coincida con ventas
+        Page<Compra> resultado = compraService.filtrarCompras(proveedor, fechaDesde, fechaHasta, page, 20);
+
+        model.addAttribute("compras", resultado.getContent());
+        model.addAttribute("totalPages", resultado.getTotalPages());
+        model.addAttribute("currentPage", page);
+
+        // IMPORTANTE: Estos nombres deben coincidir con los th:value del HTML
+        model.addAttribute("proveedorElegido", proveedor);
+        model.addAttribute("fechaDesde", fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta);
+
+        return "historialcompras";
+    }
+
+    @GetMapping("/nueva")
+    public String formulario(Model model) {
+        Compra compra = new Compra();
+        // El total se inicializa en cero, el Service lo calculará al guardar
+        model.addAttribute("compra", compra);
+        cargarCombos(model);
+        return "compras";
+    }
+
+    @PostMapping("/guardar")
+    public String guardar(@ModelAttribute Compra compra, Principal principal, RedirectAttributes flash) {
+        try {
+            if (principal == null) throw new RuntimeException("Sesión inválida.");
+
+            // Asignar el usuario que inició sesión a la compra
+            usuarioRepository.findByUsername(principal.getName())
+                    .ifPresentOrElse(compra::setUsuario, () -> {
+                        throw new RuntimeException("Usuario no encontrado.");
+                    });
+
+            if (compra.getIdCompra() != null) {
+                compraService.actualizarCompraPendiente(compra);
+                flash.addFlashAttribute("success", "La orden #" + compra.getIdCompra() + " ha sido actualizada.");
+            } else {
+                compraService.registrarCompra(compra);
+                flash.addFlashAttribute("success", "¡Orden de compra registrada con éxito!");
+            }
+
+            // REDIRECCIÓN CORRECTA: Después de guardar, vamos al historial
+            return "redirect:/compras/historial";
+
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Error: " + e.getMessage());
+            // Si falla, lo mantenemos en el formulario (editar o nueva)
+            return (compra.getIdCompra() != null)
+                    ? "redirect:/compras/editar/" + compra.getIdCompra()
+                    : "redirect:/compras/nueva";
+        }
+    }
+
+    @GetMapping(value = {"", "/"})
+    public String index() {
+        return "redirect:/compras/historial";
+    }
+
+    @GetMapping("/confirmar/{id}")
+    public String confirmarCompra(@PathVariable Integer id, RedirectAttributes attribute) {
+        try {
+            compraService.confirmarRecepcion(id);
+            // El mensaje se guarda en el FlashAttribute
+            attribute.addFlashAttribute("success", "Pedido aceptado exitosamente");
+        } catch (Exception e) {
+            attribute.addFlashAttribute("error", "Error al procesar: " + e.getMessage());
+        }
+        // REDIRIGE DIRECTO AL HISTORIAL
+        return "redirect:/compras/historial";
+    }
+
+    @GetMapping("/editar/{id}")
+    public String editar(@PathVariable Integer id, Model model) {
+        Compra compra = compraService.buscarPorId(id);
+        if (compra == null || !"PENDIENTE".equals(compra.getEstado())) {
+            return "redirect:/compras?error=No+se+puede+editar+esta+compra";
+        }
+        model.addAttribute("compra", compra);
+        model.addAttribute("modoEdicion", true);
+        cargarCombos(model);
+        return "compras";
+    }
+
+    @GetMapping("/api/{id}")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> obtenerDetalleJson(@PathVariable Integer id) {
+        Compra c = compraService.buscarPorId(id);
+        if (c == null) return ResponseEntity.notFound().build();
+
+        Map<String, Object> json = new HashMap<>();
+        json.put("idCompra", c.getIdCompra());
+        json.put("fecha", c.getFecha());
+        json.put("fechaInicio", c.getFechaInicio()); // Enviamos también fecha de creación
+        json.put("fechaRecepcion", c.getFechaRecepcion()); // <--- ESTA ES LA LÍNEA NUEVA
+        json.put("estado", c.getEstado());
+        json.put("total", c.getTotal());
+        json.put("proveedor", Map.of("nombre", c.getProveedor().getNombre()));
+
+        // El resto del mapeo de detalles se mantiene igual...
+        List<Map<String, Object>> detallesJson = c.getDetalles().stream().map(d -> {
+            Map<String, Object> det = new HashMap<>();
+            det.put("cantidad", d.getCantidad());
+            det.put("precioCompra", d.getPrecioCompra());
+
+            if (d.getProducto() != null) {
+                det.put("producto", Map.of(
+                        "nombreProducto", d.getProducto().getNombreProducto(),
+                        "codigoBarras", d.getProducto().getCodigoBarras() != null ? d.getProducto().getCodigoBarras() : "N/A",
+                        "unidadMedida", d.getProducto().getUnidadMedida() // <--- AGREGA ESTO
+                ));
+            }
+            return det;
+        }).collect(Collectors.toList());
+
+        json.put("detalles", detallesJson);
+        return ResponseEntity.ok(json);
+    }
+
+    private void cargarCombos(Model model) {
+        // Solo enviamos lo ACTIVO al formulario de 'Nueva Compra'
+        model.addAttribute("productos", productoRepository.findByEstadoTrue());
+        model.addAttribute("proveedores", proveedorRepository.findByEstadoTrueOrderByNombreAsc());
+        model.addAttribute("categorias", categoriaRepository.findByEstadoTrueOrderByNombreCategoriaAsc());
+    }
+}

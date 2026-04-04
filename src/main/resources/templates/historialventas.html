@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Compras - Sistema de Ventas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <script th:src="@{/js/tema.js}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link th:href="@{/css/menu.css}" rel="stylesheet">
+    <link th:href="@{/css/menu1.css}" rel="stylesheet">
+    <link th:href="@{/css/modal.css}" rel="stylesheet">
+
+
+    <style>
+        /* =========================================
+            MODO OSCURO GENERAL
+        ========================================= */
+        html.dark-mode {
+            color-scheme: dark;
+            background-color: #121212;
+        }
+
+        /* TABLA PRINCIPAL */
+        html.dark-mode .table,
+        html.dark-mode .table th,
+        html.dark-mode .table td {
+            background-color: transparent !important;
+            color: #fff !important;
+            border-color: #333;
+        }
+
+        html.dark-mode .table thead {
+            background-color: #1f1f1f !important;
+        }
+
+        html.dark-mode .table tbody tr:hover {
+            background-color: inherit !important;
+        }
+
+        /* TABLA DEL MODAL */
+        html.dark-mode #modalVerDetalleVenta .table,
+        html.dark-mode #modalVerDetalleVenta .table th,
+        html.dark-mode #modalVerDetalleVenta .table td,
+        html.dark-mode #modalVerDetalleVenta .text-muted {
+            background-color: transparent !important;
+            color: #fff !important;
+            border-color: #333;
+        }
+
+        html.dark-mode #modalVerDetalleVenta .table thead {
+            background-color: #2A3651FF !important;
+        }
+
+        /* MODAL COMPLETO */
+        modalVerDetalleVenta .modal-content {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        /* HEADER MODAL (degradado) */
+        #modalVerDetalleVenta .modal-header {
+            background: linear-gradient(45deg, #4b6cb7, #182848);
+            color: #fff;
+            border-radius: 15px 15px 0 0;
+        }
+
+        /* BOTON NUEVA ORDEN */
+        .btn-nueva-orden {
+            background-color: #4b6cb7 !important;
+            color: white !important;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 22px;
+            font-weight: normal;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .btn-nueva-orden i {
+            font-size: 0.9rem;
+        }
+
+        .btn-nueva-orden:hover {
+            background-color: #4b6cb7 !important;
+            transform: none;
+        }
+
+        .btn-buscar-filtro {
+            /* COLOR Y TEXTO */
+            background-color: #4b6cb7 !important;
+            color: white !important;
+            border: none;
+            font-size: 0.85rem;
+            padding: 10px 22px;
+            white-space: nowrap;
+
+            /* REDONDEADO DE COSTADOS */
+            border-radius: 20px; /* Ajusta a 10px si lo quieres menos circular */
+
+            /* SEPARACIÓN DE ARRIBA */
+            margin-top: 30px;
+
+            /* SIN EFECTOS EXTRAS */
+            cursor: pointer;
+        }
+
+        /* Para asegurar que no cambie nada al pasar el mouse */
+        .btn-buscar-filtro:hover {
+            background-color: #4b6cb7 !important;
+            transform: none;
+            filter: none;
+        }
+
+        /* =========================================
+           BOTONES DE ACCIÓN FIJOS - CIRCULARES
+           ========================================= */
+        .acciones-boton {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;  /* centrado horizontal */
+            align-items: center;      /* centrado vertical */
+            gap: 0.25rem;             /* espacio entre botones */
+        }
+
+        .acciones-boton .btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        /* Colores por tipo */
+        .acciones-boton .btn-outline-info {
+            background-color: #17a2b8;
+        }
+        .acciones-boton .btn-outline-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .acciones-boton .btn-outline-success {
+            background-color: #198754;
+        }
+
+        /* Hover suave */
+        .acciones-boton .btn-outline-info:hover {
+            background-color: #138496;
+        }
+        .acciones-boton .btn-outline-warning:hover {
+            background-color: #e0a800;
+        }
+        .acciones-boton .btn-outline-success:hover {
+            background-color: #157347;
+        }
+
+        /* Icono centrado */
+        .acciones-boton .btn i {
+            display: block;
+        }
+
+        /* =========================================
+           RESPONSIVE HEADER
+           ========================================= */
+        @media (max-width: 576px) {
+            .mb-4.d-flex.justify-content-between.align-items-center {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+
+            .mb-4.d-flex > div {
+                width: 100%;
+            }
+
+            .btn-nueva-orden {
+                width: 100%;
+                text-align: center;
+                padding: 10px 0.5rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* =========================================
+           TABLA PRINCIPAL CON SCROLL Y PROVEEDOR WRAP
+           ========================================= */
+        .crud-card .table td {
+            white-space: normal;
+        }
+
+        .crud-card .table td:nth-child(3) {
+            white-space: normal;
+            word-break: break-word;
+        }
+
+
+        /* =========================================
+           RESPONSIVE TABLAS Y MODAL
+           ========================================= */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+            }
+
+            /* MÁS ESPACIO ENTRE COLUMNAS */
+            .table th, .table td {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.8rem;   /* padding horizontal aumentado */
+                white-space: nowrap;
+                vertical-align: middle;   /* contenido centrado verticalmente */
+            }
+
+            #modalVerDetalle .table th,
+            #modalVerDetalle .table td {
+                font-size: 0.9rem;
+                padding: 0.3rem 0.6rem;   /* más espacio horizontal en modal */
+                vertical-align: middle;
+            }
+
+            #modalVerDetalle tfoot td {
+                font-size: 0.9rem;
+                padding-top: 0.5rem;
+            }
+
+            .acciones-boton .btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .table th, .table td {
+                font-size: 0.9rem;
+                padding: 0.3rem 0.6rem;   /* espacio horizontal para móviles */
+                vertical-align: middle;
+            }
+
+            .acciones-boton .btn {
+                width: 26px;
+                height: 26px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* EFECTO HOVER: MICRO-LEVANTAMIENTO Y COLOR MÁS OSCURO */
+
+        /* EFECTO HOVER: MICRO-LEVANTAMIENTO Y COLOR MÁS OSCURO */
+
+        .btn-nueva-orden:hover,
+        .btn-buscar-filtro:hover {
+            background-color: #3e5898 !important; /* Azul un toque más oscuro */
+            transform: translateY(-1px) !important; /* Levantamiento mínimo */
+            box-shadow: none !important;            /* Sin sombra */
+            transition: all 0.2s ease;              /* Movimiento suave */
+        }
+
+        /* Aplicar transición base para que el retorno sea suave al quitar el mouse */
+        .btn-nueva-orden,
+        .btn-buscar-filtro {
+            transition: all 0.2s ease;
+        }
+
+        .bg-yape {
+            background-color: #742284 !important; /* Morado Yape */
+            color: white !important;
+        }
+
+        .bg-plin {
+            background-color: #00d1ce !important; /* Turquesa Plin */
+            color: white !important;
+        }
+
+
+
+        /* PAGINACIÓN COMPACTA */
+        .pagination { gap: 5px; }
+
+        .page-link {
+            border: none !important;
+            color: #64748b !important;
+            background: #fff !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+
+        /* Estado Activo y Hover */
+        .page-item.active .page-link {
+            background: #4b6cb7 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 10px rgba(75, 108, 183, 0.3) !important;
+        }
+
+        .page-link:hover:not(.active) {
+            background: #f1f5f9 !important;
+            color: #4b6cb7 !important;
+        }
+
+        /* Deshabilitado */
+        .page-item.disabled .page-link {
+            background: #f8fafc !important;
+            color: #cbd5e1 !important;
+            box-shadow: none;
+        }
+
+        /* MODO OSCURO (Solo lo necesario) */
+        [data-bs-theme="dark"] .page-link {
+            background: #1e293b !important;
+            color: #94a3b8 !important;
+        }
+
+        [data-bs-theme="dark"] .page-link:hover:not(.active) {
+            background: #334155 !important;
+            color: #fff !important;
+        }
+    </style>
+
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- Topbar -->
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+
+<main class="content" id="mainContent" style="padding-bottom: 80px;">
+    <div class="container-fluid">
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold text-dynamic mb-1 fs-3">Historial de Ventas</h2>
+                <p class="text-muted-dynamic mb-0 fs-6">Visualiza tus ingresos y comprobantes emitidos</p>
+            </div>
+            <a href="/ventas/nueva" class="btn btn-primary rounded-pill px-3 py-2 shadow-sm btn-nueva-orden">
+                <i class="fas fa-plus-circle me-1"></i>
+                <span class="texto-btn">Nueva Venta</span>
+            </a>
+        </div>
+
+        <form th:action="@{/ventas}" method="get" class="row g-2 mb-3 align-items-end">
+            <div class="col-sm-4">
+                <label class="form-label small">Cliente / Ticket</label>
+                <input type="text" id="filtroVentasJS" name="buscar" th:value="${buscar}"
+                       class="form-control" placeholder="Buscar por cliente o ID...">
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label small">Fecha desde</label>
+                <input type="date" name="fechaDesde" th:value="${fechaDesde}" class="form-control">
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label small">Fecha hasta</label>
+                <input type="date" name="fechaHasta" th:value="${fechaHasta}" class="form-control">
+            </div>
+            <div class="col-sm-2 d-grid">
+                <button type="submit" class="btn btn-buscar-filtro">
+                    <i class="fas fa-search me-2"></i> Buscar
+                </button>
+            </div>
+        </form>
+
+        <div class="crud-card p-0 shadow overflow-hidden">
+            <div class="table-scroll">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="tablaVentas">
+                        <thead class="bg-light">
+                        <tr class="text-muted small text-uppercase">
+                            <th class="ps-4">ID</th>
+                            <th class="text-center">Fecha y Hora</th>
+                            <th class="text-center">Cliente</th>
+                            <th class="text-center">Método</th>
+                            <th class="text-center">Tipo</th>
+                            <th class="text-center">Total Venta</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tbodyVentas">
+                        <tr th:if="${#lists.isEmpty(ventas)}">
+                            <td colspan="7" class="text-center py-4 text-muted">No se encontraron ventas con los filtros aplicados.</td>
+                        </tr>
+                        <tr th:each="v : ${ventas}" class="border-bottom">
+                            <td class="ps-4 fw-bold text-dynamic" th:text="'#' + ${v.idVenta}"></td>
+                            <td class="text-center" th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td class="text-center" th:text="${v.cliente.nombre + ' ' + v.cliente.apellidoPat}"></td>
+
+                            <td class="text-center">
+                                    <span th:classappend="${v.metodoPago == 'Efectivo' ? 'bg-success' :
+                                                         (v.metodoPago == 'Yape' ? 'bg-yape' :
+                                                         (v.metodoPago == 'Plin' ? 'bg-plin' : 'bg-secondary'))}"
+                                          class="badge px-3 rounded-pill text-uppercase" th:text="${v.metodoPago}">
+                                    </span>
+                            </td>
+
+                            <td class="text-center">
+                                    <span th:class="${v.tipoVenta == 'CONTADO' ? 'text-success' : 'text-warning'}" class="fw-bold small">
+                                        <i th:class="${v.tipoVenta == 'CONTADO' ? 'fas fa-check-circle' : 'fas fa-clock'}"></i>
+                                        <span th:text="${v.tipoVenta}"></span>
+                                    </span>
+                            </td>
+
+                            <td class="text-center">
+                                    <span class="fw-bold text-dynamic">
+                                        S/ <span th:text="${#numbers.formatDecimal(v.totalVenta, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                    </span>
+                            </td>
+
+                            <td class="text-center">
+                                <div class="acciones-boton">
+                                    <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1"
+                                            th:onclick="'verDetalleVenta(' + ${v.idVenta} + ')'" title="Ver Detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm rounded-circle" title="Imprimir"
+                                            style="background-color: #6c757d; color: white; border: none; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
+            <div class="text-muted small text-dynamic">
+                Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link border-0 shadow-sm"
+                           th:href="@{/ventas(page=${currentPage - 1}, buscar=${buscar}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:if="${i >= currentPage - 2 and i <= currentPage + 2}"
+                        th:classappend="${i == currentPage} ? 'active'">
+                        <a class="page-link rounded shadow-sm border-0"
+                           th:href="@{/ventas(page=${i}, buscar=${buscar}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
+                           th:text="${i + 1}"></a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                        <a class="page-link border-0 shadow-sm"
+                           th:href="@{/ventas(page=${currentPage + 1}, buscar=${buscar}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</main>
+<div class="modal fade" id="modalVerDetalleVenta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 15px">
+            <div class="modal-header border-0 bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-invoice-dollar me-2 text-info"></i>Comprobante de Venta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <label class="text-muted small d-block">CLIENTE</label>
+                        <span id="detClienteVenta" class="fw-bold text-dynamic fs-5"></span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <label class="text-muted small d-block">FECHA DE VENTA</label>
+                        <span id="detFechaVenta" class="fw-bold text-dynamic fs-5"></span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm border-top">
+                        <thead class="bg-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-end">Precio Unit.</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                        </thead>
+                        <tbody id="detCuerpoVenta"></tbody>
+                        <tfoot>
+                            <tr class="fs-5 fw-bold">
+                                <td colspan="3" class="text-end pt-3 text-dynamic">TOTAL DE VENTA:</td>
+                                <td class="text-end pt-3 text-primary">S/ <span id="detTotalVenta">0.00</span></td>
+                            </tr>
+
+                            <tr id="filaDetPago" class="d-none">
+                                <td colspan="3" class="text-end text-success">MONTO PAGADO (INICIAL):</td>
+                                <td class="text-end text-success">S/ <span id="detMontoPagado">0.00</span></td>
+                            </tr>
+
+                            <tr id="filaDetSaldo" class="d-none border-top">
+                                <td colspan="3" class="text-end fw-bold text-danger">SALDO PENDIENTE (DEUDA):</td>
+                                <td class="text-end fw-bold text-danger">S/ <span id="detSaldoPendiente">0.00</span></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/menu.js}"></script>
+<script>
+    // Filtro rápido por JS (Opcional, similar al de compras)
+    document.getElementById('filtroVentasJS').addEventListener('keyup', function() {
+        let valor = this.value.toLowerCase();
+        let filas = document.querySelectorAll('#tablaVentas tbody tr');
+        filas.forEach(f => {
+            f.style.display = f.innerText.toLowerCase().includes(valor) ? '' : 'none';
+        });
+    });
+
+    function verDetalleVenta(id) {
+        fetch('/ventas/api/' + id)
+            .then(response => {
+                if (!response.ok) throw new Error('Venta no encontrada');
+                return response.json();
+            })
+            .then(data => {
+                // 1. Llenamos los datos de la cabecera
+                document.getElementById('detClienteVenta').innerText = data.cliente.nombreCompleto;
+                const fecha = new Date(data.fecha);
+                document.getElementById('detFechaVenta').innerText = fecha.toLocaleString();
+
+                // --- LÓGICA DE MONTOS (CAMBIO AQUÍ) ---
+                const total = parseFloat(data.totalVenta);
+                const pagado = parseFloat(data.montoPagado) || 0;
+                const saldo = total - pagado;
+
+                document.getElementById('detTotalVenta').innerText = total.toFixed(2);
+
+                // Elementos de la UI para deudas (IDs que pusimos en el tfoot)
+                const filaPago = document.getElementById('filaDetPago');
+                const filaSaldo = document.getElementById('filaDetSaldo');
+
+                if (data.tipoVenta === 'CREDITO') {
+                    document.getElementById('detMontoPagado').innerText = pagado.toFixed(2);
+                    document.getElementById('detSaldoPendiente').innerText = saldo.toFixed(2);
+
+                    if(filaPago) filaPago.classList.remove('d-none');
+                    if(filaSaldo) filaSaldo.classList.remove('d-none');
+                } else {
+                    if(filaPago) filaPago.classList.add('d-none');
+                    if(filaSaldo) filaSaldo.classList.add('d-none');
+                }
+
+                // 2. Construimos las filas de la tabla de productos (Se mantiene igual)
+                let html = '';
+                data.detalles.forEach(d => {
+                    let subtotal = d.cantidad * d.precioVenta;
+                    html += `
+                <tr>
+                    <td>${d.producto.nombreProducto}</td>
+                    <td class="text-center">${d.cantidad}</td>
+                    <td class="text-end">S/ ${parseFloat(d.precioVenta).toFixed(2)}</td>
+                    <td class="text-end fw-bold">S/ ${subtotal.toFixed(2)}</td>
+                </tr>`;
+                });
+
+                // 3. Inyectamos las filas
+                document.getElementById('detCuerpoVenta').innerHTML = html;
+
+                // 4. Mostramos el modal
+                const modalElement = document.getElementById('modalVerDetalleVenta');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            })
+            .catch(error => {
+                console.error(error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el detalle de la venta',
+                    background: '#1a1a1a',
+                    color: '#fff',
+                    confirmButtonColor: '#07e80b'
+                });
+            });
+    }
+</script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thymeleaf procesará estas variables de forma segura
+        /*[+
+        const successMsg = [[${success}]];
+        const errorMsg = [[${error}]];
+        +]*/
+
+        if (successMsg) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Operación Exitosa!',
+                text: successMsg,
+                background: '#1a1a1a',
+                color: '#ffffff',
+                confirmButtonColor: '#07e80b', // Tu verde neón
+                iconColor: '#07e80b'
+            });
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención',
+                text: errorMsg,
+                background: '#1a1a1a',
+                color: '#ffffff',
+                confirmButtonColor: '#d33'
+            });
+        }
+    });
+</script>
+
+
+</body>
+</html>

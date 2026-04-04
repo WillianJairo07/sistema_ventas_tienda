@@ -1,0 +1,273 @@
+/* ==========================================================================
+   1. REGLAS BASE Y PREVENCIÓN DE "FLASH" (MODO OSCURO)
+   ========================================================================== */
+html.dark-mode {
+    background-color: #0b0e14 !important;
+}
+
+/* Evitar que los iconos del switch de temas se muevan al cargar */
+.theme-switch label i {
+    transition: none !important;
+}
+
+/* --- TEXTOS DINÁMICOS --- */
+.text-dynamic, .text-muted-dynamic {
+    transition: color 0.3s ease;
+}
+
+html.dark-mode .text-dynamic { color: #ffffff !important; }
+html.dark-mode .text-muted-dynamic { color: rgba(255, 255, 255, 0.7) !important; }
+
+/* ==========================================================================
+   2. TABLAS Y CONTENEDORES (CRUD)
+   ========================================================================== */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+}
+
+.custom-table tbody tr {
+    background-color: transparent !important;
+    transition: background-color 0.2s ease;
+}
+
+.custom-table tbody tr:hover {
+    background-color: rgba(75, 108, 183, 0.05) !important;
+}
+
+/* Modo Oscuro para Tablas */
+html.dark-mode .crud-card {
+    background-color: #1a1f2b !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px;
+}
+
+html.dark-mode .custom-table th,
+html.dark-mode .custom-table td {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark-mode .custom-table thead th {
+    border-bottom: 2px solid #444 !important;
+}
+
+html.dark-mode .custom-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* ==========================================================================
+   3. BOTONES Y ACCIONES
+   ========================================================================== */
+.btn-new-cat {
+    background-color: #4b6cb7 !important;
+    color: white !important;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-weight: normal;
+    transition: 0.3s ease;
+}
+
+.btn-new-cat:hover {
+    background-color: #3b5998 !important;
+    transform: translateY(-2px);
+}
+
+/* Unificación de estilos para .btn-secondary */
+.btn-secondary {
+    padding: 10px 22px !important;
+    border-radius: 10px !important;
+    min-width: 130px;
+    text-align: center;
+
+    background-color: #dc3545 !important; /* rojo más vivo */
+    color: #fff !important;
+    border: none !important;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #b02a37 !important; /* rojo oscuro al pasar el mouse */
+    transform: translateY(-1px);
+}
+
+.btn-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: background-color 0.2s ease;
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.btn-edit:hover {
+    background-color: #ffca2c;
+}
+
+.btn-delete {
+    background-color: #ff4d4d;
+    color: #fff;
+}
+
+.btn-delete:hover {
+    background-color: #ff5c5c;
+}
+
+/* ==========================================================================
+   4. COMPONENTES ESPECÍFICOS (PRODUCTOS, STOCK, BUSCADOR)
+   ========================================================================== */
+.search-container {
+    position: relative;
+    max-width: 250px;
+}
+
+.search-container input {
+    padding-right: 35px;
+    border-radius: 10px;
+}
+
+.search-container i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    pointer-events: none;
+}
+
+.badge-stock, .badge-categoria {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.badge-stock {
+    min-width: 45px;
+}
+
+.nombre-prod {
+    font-weight: 500;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Colores Stock */
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+
+
+/* ==========================================================================
+   5. MODALES Y FORMULARIOS (MODO OSCURO)
+   ========================================================================== */
+html.dark-mode .modal-content {
+    background-color: #1c222d;
+    color: white;
+}
+
+html.dark-mode .form-control,
+html.dark-mode .form-select,
+html.dark-mode .input-group-text {
+    background-color: #252b36;
+    border-color: #444;
+    color: white !important;
+}
+
+html.dark-mode .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html.dark-mode .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+/* ==========================================================================
+   6. RESPONSIVE Y ESTADOS (MEDIA QUERIES)
+   ========================================================================== */
+
+
+/* MÓVIL (VERTICAL) */
+@media (max-width: 576px) {
+    /* --- TUS ESTILOS EXISTENTES (Se mantienen intactos) --- */
+    .custom-table th,
+    .custom-table td {
+        padding: 10px 8px !important;
+        font-size: 0.85rem;
+    }
+    .btn-circle {
+        width: 32px;
+        height: 32px;
+    }
+    .crud-card {
+        padding: 15px !important;
+    }
+    .custom-table td:nth-child(2) {
+        white-space: normal;
+        min-width: 120px;
+    }
+    .modal-dialog {
+        margin-top: 80px !important;
+        display: flex;
+        align-items: flex-start;
+        min-height: calc(100% - 80px);
+    }
+
+    /* --- AJUSTES DE TAMAÑO DE FUENTE (0.8rem) --- */
+
+    /* 1. Buscador y su placeholder (Añadido #buscadorPOS) */
+    #inputBusqueda,
+    #inputBusqueda::placeholder,
+    #buscadorPOS,
+    #buscadorPOS::placeholder {
+        font-size: 0.8rem !important;
+    }
+
+    /* 2. Botones: Agregar, Cerrar y Guardar */
+    .btn-new-cat,
+    .modal-footer .btn-secondary,
+    .label-btn-cancelar,
+    .modal-footer .btn-new-cat {
+        font-size: 0.8rem !important;
+    }
+
+    /* 3. Inputs, Selects y Etiquetas (Quitamos .modal-body para que sea global) */
+    .form-control,
+    .form-select,
+    .input-group-text,
+    .form-label {
+        font-size: 0.8rem !important;
+    }
+
+    /* Ajuste extra para que el panel de total no se vea gigante */
+    h2.text-success {
+        font-size: 1.8rem !important;
+    }
+}
+
+
+
+

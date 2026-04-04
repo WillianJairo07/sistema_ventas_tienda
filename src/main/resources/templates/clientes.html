@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Categorias - Sistema de Ventas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <script th:src="@{/js/tema.js}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link th:href="@{/css/menu.css}" rel="stylesheet">
+    <link th:href="@{/css/menu1.css}" rel="stylesheet">
+    <link th:href="@{/css/modal.css}" rel="stylesheet">
+    <style>
+
+            /* --- ESTILO BASE --- */
+            /* Agrupamos todas las clases para que compartan la transición y el hover */
+        .btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 500;
+            white-space: nowrap;
+            border-radius: 8px; /* Redondeado uniforme */
+        }
+
+        /* EFECTO HOVER: Aquí aplicamos el levantamiento a todos los botones */
+        .btn-ver-inactivos:hover,
+        .btn-new-cat:hover,
+        .btn-ver-activos:hover {
+            transform: translateY(-2px) !important; /* Se levanta 4px */
+            filter: brightness(1.1); /* Brilla un poco */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra para dar profundidad */
+        }
+
+
+        .btn-ver-inactivos,.btn-ver-activos  {
+            background-color: #198754 !important;
+            color: #ffffff !important;
+            border: none;
+        }
+
+        /* Color Azul para el botón de Agregar (opcional si usas btn-primary de Bootstrap) */
+        .btn-new-cat {
+            background-color: #4b6cb7 !important;
+            color: #fff !important;
+            border: none;
+        }
+
+        /* --- RESPONSIVE ESPECÍFICO --- */
+
+        /* Comportamiento debajo de la descripción (< 1270px) */
+        @media (max-width: 1270px) {
+            .header-container {
+                flex-direction: column !important;
+            }
+
+            .controles-wrapper {
+                justify-content: space-between;
+                margin-top: 15px; /* Más espacio con la descripción */
+                width: 100% !important;
+                gap: 15px; /* Separación entre buscador y botones */
+            }
+
+            .btn-group-adaptive {
+                gap: 10px !important; /* SEPARACIÓN ENTRE LOS DOS BOTONES */
+            }
+
+            .custom-search-adaptive {
+                max-width: 450px;
+            }
+        }
+
+        /* MÓVIL (< 576px) */
+        @media (max-width: 576px) {
+            .controles-wrapper {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px;
+            }
+
+            .custom-search-adaptive {
+                width: 100% !important;
+                max-width: none !important;
+                order: -1;
+                margin-right: 0 !important;
+            }
+
+            .btn-group-adaptive {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                width: 100% !important;
+                gap: 10px !important;
+            }
+
+            .btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
+                font-size: 0.75rem !important;
+                height: 45px;
+            }
+        }
+
+        /* DESKTOP AMPLIO (> 1271px) */
+        @media (min-width: 1271px) {
+            .header-container {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+
+            .controles-wrapper {
+                justify-content: flex-end;
+                max-width: 70%;
+            }
+
+            .custom-search-adaptive {
+                min-width: 350px;
+                max-width: 500px;
+                margin-right: 20px;
+            }
+
+            .btn-group-adaptive {
+                gap: 12px;
+            }
+        }
+    </style>
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- Topbar -->
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="content" id="mainContent">
+    <div class="container-fluid">
+        <div class="header-container d-flex flex-column justify-content-between align-items-start mb-4 gap-3">
+            <div class="header-text text-start">
+                <h2 class="fw-bold text-dynamic mb-1">Gestión de Clientes</h2>
+                <p class="text-muted-dynamic mb-0 small">Administra aquí tus clientes.</p>
+            </div>
+
+            <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
+                <div class="search-container custom-search-adaptive flex-grow-1">
+                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Buscar por nombre, apellido o ID..." onkeyup="filtrarClientes()">
+                    <i class="fas fa-search"></i>
+                </div>
+
+                <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
+                    <a th:if="${verInactivos}" th:href="@{/clientes}" class="btn btn-ver-activos shadow-sm">
+                        <i class="fas fa-eye"></i> <span>Ver Activos</span>
+                    </a>
+
+                    <a th:unless="${verInactivos}" th:href="@{/clientes(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
+                        <i class="fas fa-eye-slash"></i> <span>Ver Inactivos</span>
+                    </a>
+
+                    <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="nuevoFormulario()">
+                        <i class="fas fa-plus-circle"></i> <span>Nuevo Cliente</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="crud-card p-4 shadow">
+            <div class="table-responsive">
+                <table class="table custom-table align-middle" id="tablaClientes">
+                    <thead>
+                    <tr class="text-dynamic">
+                        <th class="ps-4">ID</th>
+                        <th>NOMBRE COMPLETO</th>
+                        <th>FECHA REGISTRO</th>
+                        <th class="text-center">ACCIONES</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${clientes}" class="fade-in">
+                        <td class="ps-4 fw-bold text-neon" th:text="${c.idCliente}"></td>
+                        <td class="nombre-cli">
+                            <span class="text-dynamic" th:text="${c.nombre}"></span>
+                            <span class="text-muted-dynamic" th:text="${c.apellidoPat + ' ' + (c.apellidoMat ?: '')}"></span>
+                        </td>
+                        <td class="text-muted-dynamic" th:text="${#temporals.format(c.fechaRegistro, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <th:block th:if="${c.estado}">
+                                    <button class="btn-circle btn-edit" title="Editar"
+                                            th:onclick="'editarCliente(' + ${c.idCliente} + ')'"
+                                            data-bs-toggle="modal" data-bs-target="#modalCliente">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-circle btn-delete" title="Deshabilitar"
+                                            th:onclick="'confirmarEliminar(' + ${c.idCliente} + ')'">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </th:block>
+
+                                <th:block th:if="${!c.estado}">
+                                    <button class="btn-circle btn-restore" title="Restaurar Cliente"
+                                            th:onclick="'confirmarRestaurar(' + ${c.idCliente} + ')'">
+                                        <i class="fas fa-trash-restore"></i>
+                                    </button>
+                                </th:block>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(clientes)}">
+                        <td colspan="4" class="text-center py-4 text-muted-dynamic">No se encontraron clientes.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg custom-modal" style="border-radius: 15px">
+            <div class="modal-header border-0 p-4" style="background: linear-gradient(45deg, #4b6cb7, #182848); border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title fw-bold text-white" id="modalTitulo">Nuevo Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/clientes/guardar}" th:object="${cliente}" method="post">
+                <div class="modal-body p-4">
+                    <input type="hidden" th:field="*{idCliente}" id="idCliente">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dynamic">Nombre</label>
+                        <div class="input-group custom-input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" th:field="*{nombre}" id="nombre" class="form-control"
+                                   placeholder="Ej: Jairo" required autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-dynamic">Apellido Paterno</label>
+                            <input type="text" th:field="*{apellidoPat}" id="apellidoPat" class="form-control"
+                                   placeholder="Quispe" required autocomplete="off">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-dynamic">Apellido Materno</label>
+                            <input type="text" th:field="*{apellidoMat}" id="apellidoMat" class="form-control"
+                                   placeholder="Canazas" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-new-cat px-4 rounded-pill shadow-neon" style="border-radius: 8px !important;">
+                        <i class="fas fa-save me-1"></i> Guardar Cliente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/menu.js}"></script>
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        /* Usamos esta sintaxis de comentarios /*[[...]]*\/ para que el editor
+           (IntelliJ/VS Code) no marque error de sintaxis, pero Thymeleaf sí lo lea.
+        */
+        const successMsg = /*[[${success}]]*/ null;
+        const errorMsg = /*[[${error}]]*/ null;
+        const isDark = document.body.classList.contains('dark-mode');
+
+        // Alerta de Éxito
+        if (successMsg) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Operación Exitosa!',
+                text: successMsg,
+                background: isDark ? '#1a1d21' : '#fff',
+                color: isDark ? '#fff' : '#000',
+                confirmButtonColor: '#07e80b', // Tu Verde Neón
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        // Alerta de Error
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en la solicitud',
+                text: errorMsg,
+                background: isDark ? '#1a1d21' : '#fff',
+                color: isDark ? '#fff' : '#000',
+                confirmButtonColor: '#ff4d4d' // Rojo Neón
+            });
+        }
+    });
+
+    // --- FILTRADO EN TIEMPO REAL ---
+    function filtrarClientes() {
+        const input = document.getElementById("inputBusqueda").value.toLowerCase();
+        const filas = document.querySelectorAll("#tablaClientes tbody tr");
+
+        filas.forEach(fila => {
+            // Buscamos en el nombre completo (clase nombre-cli) y en el ID (primera celda)
+            const nombreCompleto = fila.querySelector(".nombre-cli")?.innerText.toLowerCase() || "";
+            const idCliente = fila.querySelector("td:first-child")?.innerText.toLowerCase() || "";
+
+            if (nombreCompleto.includes(input) || idCliente.includes(input)) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+        });
+    }
+
+    // --- MANEJO DEL MODAL (NUEVO / EDITAR) ---
+    function nuevoFormulario() {
+        document.getElementById('modalTitulo').innerText = 'Nuevo Cliente';
+        document.getElementById('idCliente').value = '';
+
+        // Limpiamos los campos del formulario
+        document.getElementById('nombre').value = '';
+        document.getElementById('apellidoPat').value = '';
+        document.getElementById('apellidoMat').value = '';
+
+        // Focus automático al nombre al abrir
+        setTimeout(() => {
+            document.getElementById('nombre').focus();
+        }, 450);
+    }
+
+    function editarCliente(id) {
+        document.getElementById('modalTitulo').innerText = 'Editar Cliente';
+
+        // Fetch a la ruta que creamos en el Controller
+        fetch(`/clientes/editar/${id}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Error al obtener datos");
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById('idCliente').value = data.idCliente;
+                document.getElementById('nombre').value = data.nombre || '';
+                document.getElementById('apellidoPat').value = data.apellidoPat || '';
+                document.getElementById('apellidoMat').value = data.apellidoMat || '';
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'No se pudieron cargar los datos del cliente', 'error');
+            });
+    }
+
+    // --- ALERTAS DE CONFIRMACIÓN ---
+    function confirmarEliminar(id) {
+        const isDark = document.body.classList.contains('dark-mode');
+
+        Swal.fire({
+            title: '¿Deshabilitar cliente?',
+            text: "Se moverá a la lista de inactivos (Papelera).",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff4d4d',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, deshabilitar',
+            cancelButtonText: 'Cancelar',
+            background: isDark ? '#1a1d21' : '#fff',
+            color: isDark ? '#fff' : '#000'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/clientes/eliminar/${id}`;
+            }
+        });
+    }
+
+    function confirmarRestaurar(id) {
+        const isDark = document.body.classList.contains('dark-mode');
+
+        Swal.fire({
+            title: '¿Restaurar cliente?',
+            text: "El cliente volverá a aparecer en el catálogo activo.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#07e80b',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, restaurar',
+            cancelButtonText: 'Cancelar',
+            background: isDark ? '#1a1d21' : '#fff',
+            color: isDark ? '#fff' : '#000'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/clientes/restaurar/${id}`;
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+/* El fondo oscuro del modal debe estar sobre el sidebar (1200) */
+.modal-backdrop {
+    z-index: 1300 !important;
+}
+
+/* La ventana del modal debe estar sobre el fondo (1300) */
+.modal {
+    z-index: 1400 !important;
+}
+
+/* Aseguramos que las alertas de SweetAlert2 no queden tapadas por nada */
+.swal2-container {
+    z-index: 2000 !important;
+}

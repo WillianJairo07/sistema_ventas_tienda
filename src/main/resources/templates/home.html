@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Sistema de Ventas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <script th:src="@{/js/tema.js}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/menu.css}" rel="stylesheet">
+
+    <style>
+        /* Solo dejamos lo que NO está en menu.css o es exclusivo de esta página */
+
+        /* --- TARJETAS SÓLIDAS Y LIMPIAS (JJairo Style) --- */
+        .bg-dashboard-card {
+            /* Color sólido que bloquea cualquier reflejo de la navbar */
+            background: #1a1f2b !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 20px;
+
+            /* Eliminamos CUALQUIER rastro de transparencia/blur */
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Colores dinámicos para los textos (para que funcionen con el switch) */
+        html.dark-mode .dynamic-title,
+        html.dark-mode .dynamic-value { color: #ffffff !important; }
+        html.dark-mode .dynamic-subtitle { color: rgba(255, 255, 255, 0.85) !important; }
+        html.dark-mode .dynamic-label { color: #adb5bd !important; }
+        html.dark-mode .dynamic-input { background: #1e1e1e; color: #fff; border-color: #444; }
+
+        html.light-mode .bg-dashboard-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+
+        }
+        html.light-mode .dynamic-title,
+        html.light-mode .dynamic-value { color: #0f172a !important; }
+        html.light-mode .dynamic-subtitle { color: #334155 !important; }
+        html.light-mode .dynamic-label { color: #64748b !important; }
+        html.light-mode .dynamic-input { background: #fff; color: #000; border-color: #cbd5e1; }
+
+        .icon-box {
+            width: 48px; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; flex-shrink: 0;
+        }
+
+        .circle-icon-box {
+            width: 65px; height: 65px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 0.55rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.3s ease-in-out,
+            box-shadow 0.3s ease-in-out,
+            transform 0.3s ease-in-out,
+            color 0.3s ease-in-out;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+            box-shadow: 0 6px 16px rgba(255, 193, 7, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning:active {
+            background-color: #d39e00;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transform: translateY(1px);
+        }
+
+        hr.border-warning {
+            background-color: #ffc107 !important; /* mismo color que el botón */
+            border: none;                          /* quita borde por defecto */
+            height: 4px;                            /* grosor deseado */
+        }
+
+
+
+    </style>
+
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- Topbar -->
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="content" id="mainContent">
+    <div class="container-fluid">
+        <div class="mb-4">
+            <h2 class="fw-bold mb-1 dynamic-title">Panel de Control</h2>
+            <p class="dynamic-subtitle">
+                Este es el resumen de actividad del mes <span th:text="${nombreUsuario}" style="color: #0fc56d; font-weight: 700; text-shadow: 0 0 10px rgba(52,207,57,0.3);"></span>.
+            </p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm p-3 h-100 bg-dashboard-card">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-primary text-white rounded-3 me-3"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div>
+                            <p class="small fw-bold mb-0 dynamic-label text-uppercase">Ventas del Mes</p>
+                            <h4 class="fw-bold mb-0 dynamic-value" th:text="${'S/ ' + (totalVentasMes != null ? totalVentasMes : '0.00')}">S/ 0.00</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm p-3 h-100 bg-dashboard-card">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-info text-white rounded-3 me-3"><i class="fas fa-shopping-basket"></i></div>
+                        <div>
+                            <p class="small fw-bold mb-0 dynamic-label text-uppercase">Compras del Mes</p>
+                            <h4 class="fw-bold mb-0 dynamic-value" th:text="${'S/ ' + (totalComprasMes != null ? totalComprasMes : '0.00')}">S/ 0.00</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm p-3 h-100 bg-dashboard-card">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-danger text-white rounded-3 me-3"><i class="fas fa-user-clock"></i></div>
+                        <div>
+                            <p class="small fw-bold mb-0 dynamic-label text-uppercase">Deudores</p>
+                            <h4 class="fw-bold mb-0 dynamic-value" th:text="${cantidadDeudores != null ? cantidadDeudores : '0'}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm p-3 h-100 bg-dashboard-card">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-warning text-dark rounded-3 me-3"><i class="fas fa-coins"></i></div>
+                        <div>
+                            <p class="small fw-bold mb-0 dynamic-label text-uppercase">Total Deudas</p>
+                            <h4 class="fw-bold mb-0 dynamic-value" th:text="${'S/ ' + (totalDeudas != null ? totalDeudas : '0.00')}">S/ 0.00</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm p-4 bg-dashboard-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0 dynamic-value"><i class="far fa-chart-bar me-2"></i> Ventas del día</h5>
+                        <input type="date" id="fechaFiltro" class="form-control form-control-sm w-auto dynamic-input">
+                    </div>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="ventasHoraChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 p-4 bg-dashboard-card border-top border-warning border-4 text-center h-100 shadow-lg">
+                    <div class="text-center mb-4 mt-2">
+                        <div class="circle-icon-box bg-warning bg-opacity-10 rounded-circle d-inline-flex">
+                            <i class="fas fa-exclamation-triangle text-warning fs-3"></i>
+                        </div>
+                    </div>
+                    <h2 class="fw-bold dynamic-value mb-1" th:text="${productosCriticos != null ? productosCriticos : '0'}">0</h2>
+                    <p class="fw-bold dynamic-label small text-uppercase mb-4">Productos con bajo stock</p>
+                    <hr class="opacity-10 border-warning">
+                    <p class="small dynamic-subtitle px-2 mb-4">Necesitan reposición inmediata.</p>
+                    <a href="/productos" class="btn btn-warning w-100 py-2 shadow-sm text-dark">
+                        <i class="fas fa-box-open me-2"></i>Ir a Productos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/menu.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        const canvas = document.getElementById('ventasHoraChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        let datosServidor = /*[[${datosVentas}]]*/ []; // Asegúrate que tu Controller envíe este atributo
+        const datosVentas = (datosServidor && datosServidor.length > 0) ? datosServidor : [0, 0, 0, 0, 0, 0, 0, 0];
+
+        let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(7, 232, 11, 0.4)');
+        gradient.addColorStop(1, 'rgba(7, 232, 11, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+                datasets: [{
+                    label: 'Ventas S/',
+                    data: datosVentas,
+                    borderColor: '#0fc56d',
+                    borderWidth: 3,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 2,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#0fc56d'
+                }]
+            },
+            // Dentro de las opciones de tu Chart
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grace: '5%', // Evita el corte visual en móviles
+                        ticks: {
+                            // Esto hace que el color cambie según la clase del body
+                            color: document.documentElement.classList.contains('dark-mode') ? '#aaa' : '#666'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: document.documentElement.classList.contains('dark-mode') ? '#aaa' : '#666'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>
