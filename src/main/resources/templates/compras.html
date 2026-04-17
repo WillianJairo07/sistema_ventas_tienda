@@ -17,7 +17,7 @@
     <link th:href="@{/css/modal.css}" rel="stylesheet">
     <link th:href="@{/css/vencom.css}" rel="stylesheet">
     <style>
-        /* 1. Variables de tema (Mensaje Vacío - Estilo Minimalista) */
+
         html.light-mode {
             --vacio-principal: #151515;
             --vacio-secundario: rgba(108, 117, 125, 0.7);
@@ -26,13 +26,13 @@
         }
 
         html.dark-mode {
-            --vacio-principal: rgb(255 255 255 / 0.72); /* Un poco más tenue */
+            --vacio-principal: rgb(255 255 255 / 0.72);
             --vacio-secundario: rgba(255, 255, 255, 0.3);
             --vacio-icono: rgb(255 255 255 / 0.34);
             --vacio-glow: none;
         }
 
-        /* 2. BLOQUEO DE SELECCIÓN Y HOVER */
+
         #tbodyDetalles tr,
         #tbodyDetalles td,
         #tbodyDetalles span,
@@ -48,7 +48,7 @@
             --bs-table-accent-bg: transparent !important;
         }
 
-        /* 3. EXCEPCIONES PARA INPUTS Y BOTONES */
+
         #tbodyDetalles input {
             user-select: text !important;
             -webkit-user-select: text !important;
@@ -60,15 +60,15 @@
             cursor: pointer !important;
         }
 
-        /* 4. Estilos del mensaje vacío (Más pequeño y optimizado) */
+
         .fila-vacia-dinamica td {
-            padding: 60px 0 !important; /* Reducido de 80px a 60px */
+            padding: 60px 0 !important;
             border: none !important;
             background: transparent !important;
         }
 
         .icono-carrito {
-            font-size: 2.8rem !important; /* Reducido de 3rem a 2.5rem */
+            font-size: 2.8rem !important;
             margin-bottom: 0.8rem;
             display: block;
             color: var(--vacio-icono) !important;
@@ -79,12 +79,12 @@
 
         .texto-principal {
             font-weight: 400 !important;
-            font-size: 1rem !important; /* Reducido de 1.1rem a 0.95rem */
+            font-size: 1rem !important;
             margin-bottom: 0;
             color: var(--vacio-principal) !important;
         }
 
-        /* 5. Cabecera y Badges */
+
         html.dark-mode .custom-table thead tr {
             background-color: #2A3651FF !important;
             border-bottom: 2px solid #171f39 !important;
@@ -109,7 +109,7 @@
             border-color: #254187 !important;
         }
 
-        /* 6. Botón Nuevo */
+
         [data-bs-target="#modalProducto"] {
             display: inline-flex !important;
             align-items: center !important;
