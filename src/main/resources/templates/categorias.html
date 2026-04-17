@@ -76,7 +76,7 @@
                                 </th:block>
 
                                 <th:block th:if="${!cat.estado}">
-                                    <a th:href="@{/categorias/restaurar/{id}(id=${cat.idCategoria})}" class="btn-circle btn-edit"  title="Restaurar">
+                                    <a th:href="@{/categorias/restaurar/{id}(id=${cat.idCategoria})}" class="btn-circle btn-restore"  title="Restaurar">
                                         <i class="fas fa-trash-restore"></i>
                                     </a>
                                 </th:block>

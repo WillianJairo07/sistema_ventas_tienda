@@ -427,3 +427,9 @@ html.dark-mode .dropdown-item i { color: #ffffff !important; }
 }
 .page-item.active .page-link { background: #4b6cb7 !important; color: #fff !important; }
 [data-bs-theme="dark"] .page-link { background: #1e293b !important; color: #94a3b8 !important; }
+
+
+.btn-restore {
+    background-color: #28a745 !important;
+    color: white !important;
+}

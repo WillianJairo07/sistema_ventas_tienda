@@ -119,20 +119,20 @@
                         <div class="input-group custom-input-group">
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                             <input type="text" th:field="*{nombre}" id="nombre" class="form-control"
-                                   placeholder="Ej: Jairo" required autocomplete="off">
+                                   placeholder="Escribe tu nombre" required autocomplete="off">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-dynamic">Apellido Paterno</label>
+                            <label class="form-label fw-bold text-dynamic" >Apellido Paterno</label>
                             <input type="text" th:field="*{apellidoPat}" id="apellidoPat" class="form-control"
-                                   placeholder="Quispe" required autocomplete="off">
+                                   placeholder="Apellido paterno" required autocomplete="off">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-dynamic">Apellido Materno</label>
                             <input type="text" th:field="*{apellidoMat}" id="apellidoMat" class="form-control"
-                                   placeholder="Canazas" autocomplete="off">
+                                   placeholder="Apellido materno" autocomplete="off">
                         </div>
                     </div>
                 </div>
@@ -162,9 +162,7 @@
                 text: successMsg,
                 background: isDark ? '#1a1d21' : '#fff',
                 color: isDark ? '#fff' : '#000',
-                confirmButtonColor: '#07e80b',
-                timer: 3000,
-                timerProgressBar: true
+                showConfirmButton: false
             });
         }
 
@@ -176,7 +174,7 @@
                 text: errorMsg,
                 background: isDark ? '#1a1d21' : '#fff',
                 color: isDark ? '#fff' : '#000',
-                confirmButtonColor: '#ff4d4d'
+                showConfirmButton: false
             });
         }
     });
@@ -266,7 +264,7 @@
             text: "El cliente volverá a aparecer en el catálogo activo.",
             icon: 'info',
             showCancelButton: true,
-            confirmButtonColor: '#07e80b',
+            confirmButtonColor: '#198754',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, restaurar',
             cancelButtonText: 'Cancelar',
