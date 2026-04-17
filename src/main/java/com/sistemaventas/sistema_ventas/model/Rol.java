@@ -1,5 +1,6 @@
 package com.sistemaventas.sistema_ventas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.List;
@@ -17,5 +18,6 @@ public class Rol {
     private String nombreRol;
 
     @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     private List<Usuario> usuarios;
 }

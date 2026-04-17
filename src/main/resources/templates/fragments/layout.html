@@ -14,21 +14,22 @@
         <span>SISTEMA VENTAS</span>
     </div>
     <div class="sidebar-menu">
-        <a href="/home"><i class="fas fa-th-large"></i> Inicio</a>
-        <a href="/categorias"><i class="fas fa-tags"></i> Categorías</a>
-        <a href="/productos"><i class="fas fa-box"></i> Productos</a>
-        <a href="/proveedores"><i class="fas fa-truck"></i> Proveedores</a>
-        <a href="/compras/nueva"><i class="fas fa-file-import"></i> Compras</a>
-        <a href="/compras"><i class="fas fa-list-alt"></i> Historial de Compras</a>
-        <a href="/clientes"><i class="fas fa-user-friends"></i> Clientes</a>
-        <a href="/ventas/nueva"><i class="fas fa-shopping-cart"></i> Realizar Venta</a>
-        <a href="/ventas"><i class="fas fa-history"></i> Historial de Ventas</a>
-        <a href="/pagos"><i class="fas fa-hand-holding-usd"></i> Cuentas por Cobrar</a>
+        <a th:href="@{/home}"><i class="fas fa-th-large"></i> Inicio</a>
+        <a th:href="@{/categorias}"><i class="fas fa-tags"></i> Categorías</a>
+        <a th:href="@{/productos}"><i class="fas fa-box"></i> Productos</a>
+        <a th:href="@{/proveedores}"><i class="fas fa-truck"></i> Proveedores</a>
+        <a th:href="@{/compras/nueva}"><i class="fas fa-file-import"></i> Compras</a>
+        <a th:href="@{/compras}"><i class="fas fa-list-alt"></i> Historial de Compras</a>
+        <a th:href="@{/clientes}"><i class="fas fa-user-friends"></i> Clientes</a>
+        <a th:href="@{/ventas/nueva}"><i class="fas fa-shopping-cart"></i> Realizar Venta</a>
+        <a th:href="@{/ventas}"><i class="fas fa-history"></i> Historial de Ventas</a>
+        <a th:href="@{/pagos}"><i class="fas fa-hand-holding-usd"></i> Cuentas por Cobrar</a>
 
-        <a href="/usuarios" sec:authorize="hasRole('ADMIN')"><i class="fas fa-users-cog"></i> Usuarios</a>
+        <a th:href="@{/usuarios}" sec:authorize="hasRole('ADMIN')">
+            <i class="fas fa-users-cog"></i> Usuarios
+        </a>
 
-        <a href="/perfil"><i class="fas fa-user-circle"></i> Mi Perfil </a>
-
+        <a th:href="@{/perfil}"><i class="fas fa-user-circle"></i> Mi Perfil</a>
         <form th:action="@{/logout}" method="post" style="margin-top: auto;">
             <button type="submit" class="btn-logout">
                 <i class="fas fa-power-off"></i> Cerrar sesión

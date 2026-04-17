@@ -1,5 +1,6 @@
 package com.sistemaventas.sistema_ventas.model;
 
+
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.List;

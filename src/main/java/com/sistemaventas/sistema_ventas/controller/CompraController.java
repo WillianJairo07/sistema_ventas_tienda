@@ -67,8 +67,8 @@ public class CompraController {
         try {
             if (principal == null) throw new RuntimeException("Sesión inválida.");
 
-            // Asignar el usuario que inició sesión a la compra
-            usuarioRepository.findByUsername(principal.getName())
+            // CORRECCIÓN AQUÍ: Usamos el nombre exacto del método del Repository
+            usuarioRepository.findByUsernameIgnoreCase(principal.getName())
                     .ifPresentOrElse(compra::setUsuario, () -> {
                         throw new RuntimeException("Usuario no encontrado.");
                     });
@@ -81,12 +81,10 @@ public class CompraController {
                 flash.addFlashAttribute("success", "¡Orden de compra registrada con éxito!");
             }
 
-            // REDIRECCIÓN CORRECTA: Después de guardar, vamos al historial
             return "redirect:/compras/historial";
 
         } catch (Exception e) {
             flash.addFlashAttribute("error", "Error: " + e.getMessage());
-            // Si falla, lo mantenemos en el formulario (editar o nueva)
             return (compra.getIdCompra() != null)
                     ? "redirect:/compras/editar/" + compra.getIdCompra()
                     : "redirect:/compras/nueva";

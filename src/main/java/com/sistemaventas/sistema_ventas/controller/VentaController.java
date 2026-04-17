@@ -74,7 +74,8 @@ public class VentaController {
         try {
             if (principal == null) throw new RuntimeException("Sesión no válida.");
 
-            Usuario usuarioLogueado = usuarioRepository.findByUsername(principal.getName())
+            // CORRECCIÓN: Usamos IgnoreCase para que no falle por mayúsculas/minúsculas
+            Usuario usuarioLogueado = usuarioRepository.findByUsernameIgnoreCase(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
             venta.setUsuario(usuarioLogueado);
@@ -83,11 +84,12 @@ public class VentaController {
                 venta.setTipoVenta(venta.getTipoVenta().toUpperCase());
             }
 
-            // CAMBIO AQUÍ: Capturamos la venta guardada para tener el ID
+            // Registramos la venta y capturamos el objeto guardado
             Venta ventaGuardada = ventaService.registrarVenta(venta);
 
             flash.addFlashAttribute("success", "¡Venta realizada con éxito!");
-            // AGREGAMOS EL ID PARA QUE EL FRONTEND LO DETECTE Y DESCARGUE EL PDF
+
+            // Enviamos el ID para el PDF en el frontend
             flash.addFlashAttribute("idVentaGenerada", ventaGuardada.getIdVenta());
 
             return "redirect:/ventas";
