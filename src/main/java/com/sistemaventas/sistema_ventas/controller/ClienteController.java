@@ -74,4 +74,24 @@ public class ClienteController {
         Cliente cliente = clienteService.buscarPorId(id);
         return (cliente != null) ? ResponseEntity.ok(cliente) : ResponseEntity.notFound().build();
     }
+
+    // --- NUEVO MÉTODO PARA VENTAS
+    @PostMapping("/guardar-rapido")
+    @ResponseBody
+    public ResponseEntity<?> guardarRapido(@RequestBody Cliente cliente) {
+        try {
+            // Dejamos que el service limpie, valide duplicados y guarde.
+            // Ahora que el service devuelve 'Cliente', recibimos el objeto guardado aquí.
+            Cliente guardado = clienteService.guardar(cliente);
+
+            return ResponseEntity.ok(guardado);
+
+        } catch (IllegalArgumentException e) {
+            // Esto atrapará tus mensajes de "Nombre duplicado" o "Campos vacíos" del Service
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            // Esto atrapa cualquier error inesperado de base de datos
+            return ResponseEntity.internalServerError().body("Error al registrar cliente: " + e.getMessage());
+        }
+    }
 }

@@ -3,12 +3,16 @@ package com.sistemaventas.sistema_ventas.controller;
 import com.sistemaventas.sistema_ventas.model.Usuario;
 import com.sistemaventas.sistema_ventas.model.Venta;
 import com.sistemaventas.sistema_ventas.repository.ClienteRepository;
+import com.sistemaventas.sistema_ventas.repository.PagoRepository;
 import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import com.sistemaventas.sistema_ventas.repository.UsuarioRepository;
+import com.sistemaventas.sistema_ventas.service.TicketService;
 import com.sistemaventas.sistema_ventas.service.VentaService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,8 +32,9 @@ public class VentaController {
     @Autowired private VentaService ventaService;
     @Autowired private ProductoRepository productoRepository;
     @Autowired private ClienteRepository clienteRepository;
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private TicketService ticketService;
+    @Autowired private PagoRepository pagoRepository;
 
     // 1. VER HISTORIAL DE VENTAS
 
@@ -74,14 +79,17 @@ public class VentaController {
 
             venta.setUsuario(usuarioLogueado);
 
-            // --- AGREGAR ESTO PARA EVITAR ERROR DE CONSTRAINT ---
             if (venta.getTipoVenta() != null) {
                 venta.setTipoVenta(venta.getTipoVenta().toUpperCase());
             }
-            // ----------------------------------------------------
 
-            ventaService.registrarVenta(venta);
+            // CAMBIO AQUÍ: Capturamos la venta guardada para tener el ID
+            Venta ventaGuardada = ventaService.registrarVenta(venta);
+
             flash.addFlashAttribute("success", "¡Venta realizada con éxito!");
+            // AGREGAMOS EL ID PARA QUE EL FRONTEND LO DETECTE Y DESCARGUE EL PDF
+            flash.addFlashAttribute("idVentaGenerada", ventaGuardada.getIdVenta());
+
             return "redirect:/ventas";
 
         } catch (Exception e) {
@@ -90,6 +98,24 @@ public class VentaController {
         }
     }
 
+    // 4. NUEVO ENDPOINT: GENERAR EL PDF DEL TICKET
+    @GetMapping("/ticket/pdf/{id}")
+    @ResponseBody
+    public ResponseEntity<byte[]> descargarTicket(@PathVariable Integer id) {
+        try {
+            Venta v = ventaService.buscarPorId(id);
+            byte[] contents = ticketService.generarTicketPDF(v);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            // "inline" para que el navegador intente abrirlo/imprimirlo directamente
+            headers.setContentDispositionFormData("inline", "ticket_" + id + ".pdf");
+
+            return ResponseEntity.ok().headers(headers).body(contents);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     // 4. API PARA EL MODAL (IGUAL QUE EN COMPRAS)
     @GetMapping("/api/{id}")
     @ResponseBody
@@ -98,19 +124,32 @@ public class VentaController {
         Venta v = ventaService.buscarPorId(id);
         if (v == null) return ResponseEntity.notFound().build();
 
+        // 1. CALCULAMOS EL TOTAL PAGADO Y SALDO PENDIENTE REAL
+        java.math.BigDecimal totalPagado = pagoRepository.totalPagadoVenta(id);
+        if (totalPagado == null) totalPagado = java.math.BigDecimal.ZERO;
+
+        java.math.BigDecimal saldoPendiente = v.getTotalVenta().subtract(totalPagado);
+
         Map<String, Object> json = new HashMap<>();
         json.put("idVenta", v.getIdVenta());
         json.put("fecha", v.getFecha());
         json.put("metodoPago", v.getMetodoPago());
         json.put("totalVenta", v.getTotalVenta());
+        json.put("tipoVenta", v.getTipoVenta());
 
-        // --- NUEVOS CAMPOS PARA EL MODAL DE DEUDA ---
-        json.put("tipoVenta", v.getTipoVenta()); // CONTADO o CREDITO
-        json.put("montoPagado", v.getMontoPagado()); // La inicial que dejó el cliente
-        // --------------------------------------------
+        // --- NUEVO: MONTO CON EL QUE PAGÓ EL CLIENTE ---
+        // Si la venta es CONTADO, usamos el montoPagado de la entidad.
+        // Si es nulo por algún error viejo, por defecto ponemos el totalVenta.
+        json.put("montoPagado", v.getMontoPagado() != null ? v.getMontoPagado() : v.getTotalVenta());
 
+        // --- INFORMACIÓN DE PAGOS/ABONOS ---
+        json.put("totalPagado", totalPagado);     // Suma de todos los abonos realizados
+        json.put("saldoPendiente", saldoPendiente); // Lo que falta cobrar
+
+        // Datos del Cliente
         json.put("cliente", Map.of("nombreCompleto", v.getCliente().getNombre() + " " + v.getCliente().getApellidoPat()));
 
+        // Detalles de productos
         List<Map<String, Object>> detallesJson = v.getDetalles().stream().map(d -> {
             Map<String, Object> det = new HashMap<>();
             det.put("cantidad", d.getCantidad());

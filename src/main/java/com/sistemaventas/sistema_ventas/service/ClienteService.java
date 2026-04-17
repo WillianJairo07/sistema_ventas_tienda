@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClienteService {
@@ -22,8 +23,8 @@ public class ClienteService {
     }
 
     @Transactional
-    public void guardar(Cliente cliente) {
-        // --- LIMPIEZA Y FORMATEO (Garantiza orden en la BD) ---
+    public Cliente guardar(Cliente cliente) {
+        // 1. Limpieza de texto (Mantiene tu BD ordenada)
         String nombreLimpio = limpiarTexto(cliente.getNombre());
         String apePatLimpio = limpiarTexto(cliente.getApellidoPat());
         String apeMatLimpio = limpiarTexto(cliente.getApellidoMat());
@@ -32,34 +33,35 @@ public class ClienteService {
             throw new IllegalArgumentException("Nombre y Apellido Paterno son obligatorios.");
         }
 
-        // --- LÓGICA DE AUTO-REVIVIR / DUPLICADOS ---
+        // 2. Lógica para registros nuevos (cuando idCliente es null)
         if (cliente.getIdCliente() == null) {
-            // Buscamos si ya existe en la "papelera" para restaurarlo
-            Cliente inactivo = clienteRepository.findByNombreIgnoreCaseAndApellidoPatIgnoreCaseAndApellidoMatIgnoreCaseAndEstadoFalse(
-                    nombreLimpio, apePatLimpio, apeMatLimpio).orElse(null);
+            // Buscamos si el cliente existe en TOTAL (activos + inactivos)
+            Optional<Cliente> existenteOpt = clienteRepository.findByNombreIgnoreCaseAndApellidoPatIgnoreCaseAndApellidoMatIgnoreCase(
+                    nombreLimpio, apePatLimpio, apeMatLimpio);
 
-            if (inactivo != null) {
-                inactivo.setEstado(true);
-                // Si el modelo tiene DNI, podrías actualizarlo aquí: inactivo.setDni(cliente.getDni());
-                clienteRepository.save(inactivo);
-                return;
+            if (existenteOpt.isPresent()) {
+                Cliente existente = existenteOpt.get();
+
+                if (!existente.isEstado()) {
+                    // ESCENARIO A: Estaba en la "papelera" -> Lo revivimos
+                    existente.setEstado(true);
+                    return clienteRepository.save(existente);
+                } else {
+                    // ESCENARIO B: Ya está activo -> Error para evitar duplicado real
+                    throw new IllegalArgumentException("¡ERROR! Este cliente ya se encuentra registrado y activo.");
+                }
             }
 
-            // Validación de duplicados en registros activos
-            if (clienteRepository.existsByNombreIgnoreCaseAndApellidoPatIgnoreCaseAndApellidoMatIgnoreCase(
-                    nombreLimpio, apePatLimpio, apeMatLimpio)) {
-                throw new IllegalArgumentException("¡ERROR! Este cliente ya se encuentra registrado y activo.");
-            }
-
-            cliente.setEstado(true); // Nace activo
+            // Si no existe ni rastro de él, nace activo
+            cliente.setEstado(true);
         }
 
-        // --- ASIGNACIÓN DE DATOS FORMATEADOS ---
+        // 3. Seteo de datos limpios y guardado final
         cliente.setNombre(nombreLimpio);
         cliente.setApellidoPat(apePatLimpio);
         cliente.setApellidoMat(apeMatLimpio);
 
-        clienteRepository.save(cliente);
+        return clienteRepository.save(cliente);
     }
 
     @Transactional

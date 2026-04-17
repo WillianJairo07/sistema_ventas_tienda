@@ -1,26 +1,64 @@
 /* ==========================================================================
-   1. REGLAS BASE Y PREVENCIÓN DE "FLASH" (MODO OSCURO)
+   VARIABLES (TEMA BASE)
    ========================================================================== */
-html.dark-mode {
-    background-color: #0b0e14 !important;
+
+:root {
+    /* Colores principales */
+    --primary: #4b6cb7;
+    --primary-hover: #3b5998;
+
+    --danger: #dc3545;
+    --danger-hover: #b02a37;
+
+    --warning: #ffc107;
+
+    /* Fondos dark */
+    --dark-bg: #0b0e14;
+    --card-dark: #1a1f2b;
+    --modal-dark: #1c222d;
+    --input-dark: #252b36;
+
+    /* Textos */
+    --text-light: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.7);
+
+    /* Bordes */
+    --border-dark: rgba(255, 255, 255, 0.1);
+    --border-soft: rgba(255, 255, 255, 0.05);
 }
 
-/* Evitar que los iconos del switch de temas se muevan al cargar */
+
+/* ==========================================================================
+   BASE / DARK MODE
+   ========================================================================== */
+
+html.dark-mode {
+    background-color: var(--dark-bg) !important;
+}
+
 .theme-switch label i {
     transition: none !important;
 }
 
-/* --- TEXTOS DINÁMICOS --- */
-.text-dynamic, .text-muted-dynamic {
+/* Textos dinámicos */
+.text-dynamic,
+.text-muted-dynamic {
     transition: color 0.3s ease;
 }
 
-html.dark-mode .text-dynamic { color: #ffffff !important; }
-html.dark-mode .text-muted-dynamic { color: rgba(255, 255, 255, 0.7) !important; }
+html.dark-mode .text-dynamic {
+    color: var(--text-light) !important;
+}
+
+html.dark-mode .text-muted-dynamic {
+    color: var(--text-muted) !important;
+}
+
 
 /* ==========================================================================
-   2. TABLAS Y CONTENEDORES (CRUD)
+   TABLAS / CRUD
    ========================================================================== */
+
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -36,18 +74,19 @@ html.dark-mode .text-muted-dynamic { color: rgba(255, 255, 255, 0.7) !important;
     background-color: rgba(75, 108, 183, 0.05) !important;
 }
 
-/* Modo Oscuro para Tablas */
+/* Card CRUD */
 html.dark-mode .crud-card {
-    background-color: #1a1f2b !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--card-dark) !important;
+    border: 1px solid var(--border-dark) !important;
     border-radius: 20px;
 }
 
+/* Tabla dark */
 html.dark-mode .custom-table th,
 html.dark-mode .custom-table td {
     background-color: transparent !important;
-    color: #ffffff !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-light) !important;
+    border-bottom: 1px solid var(--border-soft) !important;
 }
 
 html.dark-mode .custom-table thead th {
@@ -58,42 +97,45 @@ html.dark-mode .custom-table tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
+
 /* ==========================================================================
-   3. BOTONES Y ACCIONES
+   BOTONES
    ========================================================================== */
+
 .btn-new-cat {
-    background-color: #4b6cb7 !important;
+    background-color: var(--primary) !important;
     color: white !important;
     border: none;
     border-radius: 10px;
     padding: 10px 22px;
-    font-weight: normal;
     transition: 0.3s ease;
 }
 
 .btn-new-cat:hover {
-    background-color: #3b5998 !important;
+    background-color: var(--primary-hover) !important;
     transform: translateY(-2px);
 }
 
-/* Unificación de estilos para .btn-secondary */
+/* Botón secundario (rojo) */
 .btn-secondary {
+    background-color: var(--danger) !important;
+    color: white !important;
+    border: none !important;
+
     padding: 10px 22px !important;
     border-radius: 10px !important;
     min-width: 130px;
     text-align: center;
 
-    background-color: #dc3545 !important; /* rojo más vivo */
-    color: #fff !important;
-    border: none !important;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn-secondary:hover {
-    background-color: #b02a37 !important; /* rojo oscuro al pasar el mouse */
+    background-color: var(--danger-hover) !important;
     transform: translateY(-1px);
 }
 
+/* Botones circulares */
 .btn-circle {
     width: 38px;
     height: 38px;
@@ -106,7 +148,7 @@ html.dark-mode .custom-table tbody tr:hover {
 }
 
 .btn-edit {
-    background-color: #ffc107;
+    background-color: var(--warning);
     color: #000;
 }
 
@@ -123,9 +165,11 @@ html.dark-mode .custom-table tbody tr:hover {
     background-color: #ff5c5c;
 }
 
+
 /* ==========================================================================
-   4. COMPONENTES ESPECÍFICOS (PRODUCTOS, STOCK, BUSCADOR)
+   COMPONENTES
    ========================================================================== */
+
 .search-container {
     position: relative;
     max-width: 250px;
@@ -145,7 +189,9 @@ html.dark-mode .custom-table tbody tr:hover {
     pointer-events: none;
 }
 
-.badge-stock, .badge-categoria {
+/* Badges */
+.badge-stock,
+.badge-categoria {
     display: inline-block;
     padding: 6px 14px;
     border-radius: 8px;
@@ -166,35 +212,27 @@ html.dark-mode .custom-table tbody tr:hover {
     white-space: nowrap;
 }
 
-/* Colores Stock */
-.bg-success {
-    background-color: #28a745 !important;
-}
-
-.bg-danger {
-    background-color: #dc3545 !important;
-}
-
-.bg-secondary {
-    background-color: #6c757d !important;
-}
-
+/* Estados stock */
+.bg-success { background-color: #28a745 !important; }
+.bg-danger { background-color: var(--danger) !important; }
+.bg-secondary { background-color: #6c757d !important; }
 
 
 /* ==========================================================================
-   5. MODALES Y FORMULARIOS (MODO OSCURO)
+   MODALES / FORMULARIOS (DARK MODE)
    ========================================================================== */
+
 html.dark-mode .modal-content {
-    background-color: #1c222d;
-    color: white;
+    background-color: var(--modal-dark);
+    color: var(--text-light);
 }
 
 html.dark-mode .form-control,
 html.dark-mode .form-select,
 html.dark-mode .input-group-text {
-    background-color: #252b36;
+    background-color: var(--input-dark);
     border-color: #444;
-    color: white !important;
+    color: var(--text-light) !important;
 }
 
 html.dark-mode .form-control::placeholder {
@@ -205,30 +243,33 @@ html.dark-mode .form-select {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
+
 /* ==========================================================================
-   6. RESPONSIVE Y ESTADOS (MEDIA QUERIES)
+   RESPONSIVE
    ========================================================================== */
 
-
-/* MÓVIL (VERTICAL) */
 @media (max-width: 576px) {
-    /* --- TUS ESTILOS EXISTENTES (Se mantienen intactos) --- */
+
     .custom-table th,
     .custom-table td {
         padding: 10px 8px !important;
         font-size: 0.85rem;
     }
+
     .btn-circle {
         width: 32px;
         height: 32px;
     }
+
     .crud-card {
         padding: 15px !important;
     }
+
     .custom-table td:nth-child(2) {
         white-space: normal;
         min-width: 120px;
     }
+
     .modal-dialog {
         margin-top: 80px !important;
         display: flex;
@@ -236,25 +277,11 @@ html.dark-mode .form-select {
         min-height: calc(100% - 80px);
     }
 
-    /* --- AJUSTES DE TAMAÑO DE FUENTE (0.8rem) --- */
-
-    /* 1. Buscador y su placeholder (Añadido #buscadorPOS) */
+    /* Tipografía compacta */
     #inputBusqueda,
     #inputBusqueda::placeholder,
     #buscadorPOS,
-    #buscadorPOS::placeholder {
-        font-size: 0.8rem !important;
-    }
-
-    /* 2. Botones: Agregar, Cerrar y Guardar */
-    .btn-new-cat,
-    .modal-footer .btn-secondary,
-    .label-btn-cancelar,
-    .modal-footer .btn-new-cat {
-        font-size: 0.8rem !important;
-    }
-
-    /* 3. Inputs, Selects y Etiquetas (Quitamos .modal-body para que sea global) */
+    #buscadorPOS::placeholder,
     .form-control,
     .form-select,
     .input-group-text,
@@ -262,12 +289,243 @@ html.dark-mode .form-select {
         font-size: 0.8rem !important;
     }
 
-    /* Ajuste extra para que el panel de total no se vea gigante */
+    .btn-new-cat,
+    .modal-footer .btn-secondary,
+    .label-btn-cancelar {
+        font-size: 0.8rem !important;
+    }
+
     h2.text-success {
         font-size: 1.8rem !important;
     }
 }
 
 
+/* TABLAS (GLOBAL + MODALES) */
+html.dark-mode .table,
+html.dark-mode .table th,
+html.dark-mode .table td,
+html.dark-mode #modalVerDetalleVenta .text-muted {
+    background-color: transparent !important;
+    color: #fff !important;
+    border-color: #333;
+}
 
+/* THEAD GENERAL */
+html.dark-mode .table thead {
+    background-color: #1f1f1f !important;
+}
+
+/* DIFERENCIA SOLO PARA VENTA */
+html.dark-mode #modalVerDetalleVenta .table thead {
+    background-color: #2A3651FF !important;
+}
+
+/* HOVER TABLA */
+html.dark-mode .table tbody tr:hover {
+    background-color: inherit !important;
+}
+
+/* TEXTOS DARK */
+html.dark-mode .text-muted,
+html.dark-mode small.text-muted {
+    color: #adb5bd !important;
+}
+
+html.dark-mode .text-dynamic {
+    color: #ffffff !important;
+}
+
+html.dark-mode .fa-truck-loading {
+    color: #0dcaf0 !important;
+}
+
+html.dark-mode .text-warning-emphasis {
+    color: #ffca28 !important;
+    background: transparent !important;
+}
+
+/* =========================================
+   MODALES (AMBOS)
+========================================= */
+#modalVerDetalle .modal-content,
+#modalVerDetalleVenta .modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+#modalVerDetalle .modal-header,
+#modalVerDetalleVenta .modal-header {
+    background: linear-gradient(45deg, #4b6cb7, #182848);
+    color: #fff;
+    border-radius: 15px 15px 0 0;
+}
+
+/* =========================================
+   BOTONES PRINCIPALES
+========================================= */
+.btn-nueva-orden,
+.btn-buscar-filtro {
+    background-color: #4b6cb7 !important;
+    color: #fff !important;
+    border: none;
+    padding: 10px 22px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-nueva-orden { border-radius: 10px; }
+
+.btn-buscar-filtro {
+    border-radius: 20px;
+    margin-top: 30px;
+}
+
+/* HOVER */
+.btn-nueva-orden:hover,
+.btn-buscar-filtro:hover {
+    background-color: #3e5898 !important;
+    transform: translateY(-1px);
+}
+
+/* =========================================
+   BOTONES DE ACCIÓN
+========================================= */
+.acciones-boton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.acciones-boton .btn {
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+/* SOPORTE PARA AMBOS ESTILOS (Bootstrap + custom) */
+.acciones-boton .btn-outline-info,
+.btn-ver-detalle {
+    background-color: #17a2b8 !important;
+}
+
+.acciones-boton .btn-outline-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.acciones-boton .btn-outline-success,
+.btn-imprimir-ticket {
+    background-color: #198754 !important;
+}
+
+/* HOVER */
+.acciones-boton .btn:hover {
+    transform: translateY(-1.5px);
+    filter: brightness(90%);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+/* =========================================
+   BADGES
+========================================= */
+.bg-yape {
+    background-color: #742284 !important;
+    color: #fff !important;
+}
+
+.bg-plin {
+    background-color: #00d1ce !important;
+    color: #fff !important;
+}
+
+/* =========================================
+   TABLA AJUSTES
+========================================= */
+.crud-card .table td {
+    white-space: normal;
+}
+
+.crud-card .table td:nth-child(3) {
+    word-break: break-word;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table th,
+    .table td {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    #modalVerDetalle .table th,
+    #modalVerDetalle .table td,
+    #modalVerDetalleVenta .table th,
+    #modalVerDetalleVenta .table td {
+        padding: 0.3rem 0.6rem;
+    }
+
+    .acciones-boton .btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .acciones-boton .btn i {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .mb-4.d-flex.justify-content-between,
+    .mb-4.d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .mb-4.d-flex > div {
+        width: 100%;
+    }
+
+    .btn-nueva-orden,
+    .btn-buscar-filtro {
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-buscar-filtro {
+        margin-top: 10px;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.3rem 0.6rem;
+    }
+
+    .acciones-boton .btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.8rem;
+    }
+}
 

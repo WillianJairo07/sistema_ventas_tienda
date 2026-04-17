@@ -11,23 +11,20 @@
     <link th:href="@{/css/menu.css}" rel="stylesheet">
 
     <style>
-        /* Solo dejamos lo que NO está en menu.css o es exclusivo de esta página */
-
-        /* --- TARJETAS SÓLIDAS Y LIMPIAS (JJairo Style) --- */
         .bg-dashboard-card {
-            /* Color sólido que bloquea cualquier reflejo de la navbar */
+
             background: #1a1f2b !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 20px;
 
-            /* Eliminamos CUALQUIER rastro de transparencia/blur */
+
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
 
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Colores dinámicos para los textos (para que funcionen con el switch) */
+
         html.dark-mode .dynamic-title,
         html.dark-mode .dynamic-value { color: #ffffff !important; }
         html.dark-mode .dynamic-subtitle { color: rgba(255, 255, 255, 0.85) !important; }
@@ -84,9 +81,9 @@
         }
 
         hr.border-warning {
-            background-color: #ffc107 !important; /* mismo color que el botón */
-            border: none;                          /* quita borde por defecto */
-            height: 4px;                            /* grosor deseado */
+            background-color: #ffc107 !important;
+            border: none;
+            height: 4px;
         }
 
 
@@ -200,7 +197,7 @@
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
 
-        let datosServidor = /*[[${datosVentas}]]*/ []; // Asegúrate que tu Controller envíe este atributo
+        let datosServidor = /*[[${datosVentas}]]*/ [];
         const datosVentas = (datosServidor && datosServidor.length > 0) ? datosServidor : [0, 0, 0, 0, 0, 0, 0, 0];
 
         let gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -224,14 +221,14 @@
                     pointHoverBackgroundColor: '#0fc56d'
                 }]
             },
-            // Dentro de las opciones de tu Chart
+
             options: {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grace: '5%', // Evita el corte visual en móviles
+                        grace: '5%',
                         ticks: {
-                            // Esto hace que el color cambie según la clase del body
+
                             color: document.documentElement.classList.contains('dark-mode') ? '#aaa' : '#666'
                         }
                     },

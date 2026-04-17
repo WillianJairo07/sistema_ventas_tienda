@@ -36,11 +36,11 @@ public class DataInitializer implements CommandLineRunner {
             // 2. Crear el Usuario
             Usuario admin = new Usuario();
             admin.setNombre("Jairo");
-            admin.setUsername("admin");
+            admin.setUsername("willianjairo07");
 
             // AQUÍ OCURRE EL HASHEO:
             // Usamos el passwordEncoder que definiste en SecurityConfig
-            admin.setPassword(passwordEncoder.encode("admin12345"));
+            admin.setPassword(passwordEncoder.encode("jairo1elproxd"));
 
             admin.setEstado(true);
             admin.setRoles(List.of(adminRol));

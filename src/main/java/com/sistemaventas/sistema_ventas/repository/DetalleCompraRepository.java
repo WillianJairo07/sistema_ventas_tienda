@@ -12,6 +12,6 @@ import java.util.List;
 public interface DetalleCompraRepository extends JpaRepository<DetalleCompra, Integer> {
 
     boolean existsByProductoIdProducto(Integer idProducto);
-    // En DetalleCompraRepository.java
+
     List<DetalleCompra> findByProductoAndStockActualGreaterThanOrderByCompraFechaAsc(Producto producto, BigDecimal stock);
 }

@@ -17,22 +17,22 @@
     <link th:href="@{/css/modal.css}" rel="stylesheet">
     <link th:href="@{/css/vencom.css}" rel="stylesheet">
     <style>
-        /* 1. Variables de tema (Mensaje Vacío) */
+        /* 1. Variables de tema (Mensaje Vacío - Estilo Minimalista) */
         html.light-mode {
-            --vacio-principal: #6c757d;
+            --vacio-principal: #151515;
             --vacio-secundario: rgba(108, 117, 125, 0.7);
-            --vacio-icono: #208b58;
-            --vacio-glow: drop-shadow(0 0 10px rgba(7, 232, 11, 0.4));
+            --vacio-icono: rgb(69 69 69 / 0.63);
+            --vacio-glow: none;
         }
 
         html.dark-mode {
-            --vacio-principal: #ffffff;
-            --vacio-secundario: rgba(255, 255, 255, 0.6);
-            --vacio-icono: #208b58;
-            --vacio-glow: drop-shadow(0 0 10px rgba(7, 232, 11, 0.4));
+            --vacio-principal: rgb(255 255 255 / 0.72); /* Un poco más tenue */
+            --vacio-secundario: rgba(255, 255, 255, 0.3);
+            --vacio-icono: rgb(255 255 255 / 0.34);
+            --vacio-glow: none;
         }
 
-        /* 2. BLOQUEO DE SELECCIÓN Y HOVER (Para que la tabla sea estática) */
+        /* 2. BLOQUEO DE SELECCIÓN Y HOVER */
         #tbodyDetalles tr,
         #tbodyDetalles td,
         #tbodyDetalles span,
@@ -43,59 +43,53 @@
             cursor: default !important;
         }
 
-        /* NUEVO: Quita el resaltado gris al pasar el mouse (Hover) */
         #tbodyDetalles tr:hover {
             background-color: transparent !important;
             --bs-table-accent-bg: transparent !important;
         }
 
-        /* 3. EXCEPCIONES CRUCIALES (Para que puedas editar y borrar) */
+        /* 3. EXCEPCIONES PARA INPUTS Y BOTONES */
         #tbodyDetalles input {
             user-select: text !important;
             -webkit-user-select: text !important;
             cursor: text !important;
-            pointer-events: auto !important; /* Garantiza que el clic funcione */
+            pointer-events: auto !important;
         }
 
         #tbodyDetalles .btn, #tbodyDetalles i {
-            cursor: pointer !important; /* El tacho de basura debe mostrar la mano */
+            cursor: pointer !important;
         }
 
-        /* 4. Estilos visuales del mensaje vacío */
+        /* 4. Estilos del mensaje vacío (Más pequeño y optimizado) */
         .fila-vacia-dinamica td {
-            padding: 100px 0 !important;
+            padding: 60px 0 !important; /* Reducido de 80px a 60px */
             border: none !important;
             background: transparent !important;
         }
 
         .icono-carrito {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
+            font-size: 2.8rem !important; /* Reducido de 3rem a 2.5rem */
+            margin-bottom: 0.8rem;
             display: block;
             color: var(--vacio-icono) !important;
-            filter: var(--vacio-glow) !important;
+            filter: none !important;
             transition: all 0.3s ease;
+            opacity: 0.6;
         }
 
         .texto-principal {
-            font-weight: bold;
-            font-size: 1.25rem;
-            margin-bottom: 5px;
+            font-weight: 400 !important;
+            font-size: 1rem !important; /* Reducido de 1.1rem a 0.95rem */
+            margin-bottom: 0;
             color: var(--vacio-principal) !important;
         }
 
-        .texto-secundario {
-            font-size: 0.95rem;
-            color: var(--vacio-secundario) !important;
-        }
-
-        /* Elimina el fondo blanco forzado en Modo Oscuro */
+        /* 5. Cabecera y Badges */
         html.dark-mode .custom-table thead tr {
             background-color: #2A3651FF !important;
             border-bottom: 2px solid #171f39 !important;
         }
 
-        /* Hace que los títulos sean legibles en Modo Oscuro */
         html.dark-mode .custom-table thead th {
             color: #ffffff !important;
             text-transform: uppercase;
@@ -103,35 +97,30 @@
             padding: 15px 10px !important;
         }
 
-        /* MODO CLARO (Por defecto) */
         .badge-unidad {
             background-color: #f1f3f5 !important;
-            color: #212529 !important; /* Texto oscuro para que se vea en blanco */
+            color: #212529 !important;
             border: 1px solid #dee2e6 !important;
         }
 
-        /* MODO OSCURO (Solo cambia el color) */
         html.dark-mode .badge-unidad {
             background-color: rgb(42, 54, 81) !important;
-            color: #ffffff !important; /* Tu verde neón */
+            color: #ffffff !important;
             border-color: #254187 !important;
         }
 
-        /* FORZAR BOTÓN NUEVO EN UNA SOLA FILA */
+        /* 6. Botón Nuevo */
         [data-bs-target="#modalProducto"] {
             display: inline-flex !important;
             align-items: center !important;
-            white-space: nowrap !important; /* Evita que el texto salte abajo */
-            flex-direction: row !important;  /* Asegura que sea horizontal */
+            white-space: nowrap !important;
+            flex-direction: row !important;
         }
 
-        /* Ajuste de margen del icono para que no choque */
         [data-bs-target="#modalProducto"] i {
             margin-right: 6px !important;
-            margin-bottom: 0 !important; /* Quita posibles márgenes que lo empujen arriba */
+            margin-bottom: 0 !important;
         }
-
-
     </style>
 
 </head>
@@ -284,7 +273,6 @@
                                     <input type="date" th:field="*{fecha}" class="form-control bg-transparent text-dynamic border-start-0 fecha-llegada" required>
                                 </div>
                             </div>
-
                             <div class="contenedor-total-ticket shadow-sm">
                                 <span class="titulo-total">TOTAL A COBRAR</span>
                                 <div class="monto-total">
@@ -372,9 +360,9 @@
         return texto
             .trim()
             .toLowerCase()
-            .normalize("NFD")                   // Descompone caracteres (á -> a + ´)
-            .replace(/[\u0300-\u036f]/g, "")    // Elimina las tildes
-            .replace(/\s+/g, "");               // ELIMINA TODOS LOS ESPACIOS
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, "");
     }
 
     function embellecerNombre(texto) {
@@ -400,9 +388,9 @@
             const nombre = opcion.value;
             const precio = parseFloat(opcion.getAttribute('data-precio'));
             const barcode = opcion.getAttribute('data-barcode');
-            const unidad = opcion.getAttribute('data-unidad'); // <--- NUEVO
+            const unidad = opcion.getAttribute('data-unidad');
 
-            ejecutarAgregar(id, nombre, precio, barcode, unidad); // <--- PASAR UNIDAD
+            ejecutarAgregar(id, nombre, precio, barcode, unidad);
             this.value = "";
             this.focus();
         }
@@ -411,7 +399,6 @@
     function ejecutarAgregar(id, nombre, precio, barcode, unidad = 'UNIDAD') {
         const filaExistente = document.getElementById(`f_${id}`);
 
-        // 1. Si el producto ya está en la tabla, solo le damos foco a la cantidad
         if (filaExistente && id > 0) {
             const inputCant = filaExistente.querySelector('.input-cantidad');
             inputCant.focus();
@@ -421,7 +408,6 @@
 
         const esPesable = (unidad === 'KG');
 
-        // 2. Definimos la fila con las 6 CELDAS (TD) para que coincida con tu cabecera
         const fila = `
     <tr id="f_${id}" data-id="${id}" class="align-middle border-bottom">
         <td class="ps-4 py-3">
@@ -429,14 +415,12 @@
             <span class="fw-bold text-dynamic d-block">${nombre}</span>
             <small class="text-muted-dynamic">Cód: ${barcode}</small>
         </td>
-
         <td class="text-center">
             <input type="number" step="0.01"
                    class="form-control form-control-sm text-center fw-bold input-precio"
                    value="${precio.toFixed(2)}" oninput="actualizarTotales()" onclick="this.select()"
                    style="width: 110px !important; height: 38px !important; margin: auto; border: 1px solid #ced4da;">
         </td>
-
         <td class="text-center">
             <input type="number"
                   step="${esPesable ? '0.001' : '1'}"
@@ -446,14 +430,11 @@
                   onclick="this.select()"
                   style="width: 100px !important; height: 38px !important; border: 1px solid #ced4da !important; margin: auto;">
         </td>
-
         <td class="text-center">
             <span class="badge badge-unidad">${unidad}</span>
             <input type="hidden" class="prod-unidad" value="${unidad}">
         </td>
-
         <td class="fw-bold text-dynamic">S/ <span class="subtotal-fila">0.00</span></td>
-
         <td class="text-center">
             <button type="button" onclick="quitar('${id}')"
                     class="btn btn-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -465,35 +446,28 @@
 
         const tbody = document.getElementById("tbodyDetalles");
         const filaVacia = document.getElementById("filaVacia");
-
-        // 3. Quitamos el mensaje de "carrito vacío" si existe
         if (filaVacia) filaVacia.remove();
 
-        // 4. Insertamos al principio de la tabla
         tbody.insertAdjacentHTML('afterbegin', fila);
-
-        // 5. IMPORTANTE: Recalcular totales y asignar los "name" para Spring Boot
         actualizarTotales();
 
-        // 6. Limpiar el buscador y darle foco para seguir escaneando
-        const buscador = document.getElementById('buscadorCompra');
         if (buscador) {
             buscador.value = '';
             buscador.focus();
         }
     }
 
-    // Nueva función para permitir borrar el campo pero evitar números negativos/decimales
-    function validarCantidadMinima(input) {
-        // Si el usuario borra todo, permitimos que quede vacío para que vea el placeholder
-        if (input.value === "") return;
 
-        // Convertimos a entero y evitamos que sea menor a 1
-        let valor = Math.floor(input.value);
-        if (valor < 1) {
-            input.value = 1;
+    function validarCantidadMinima(input) {
+        if (input.value === "") return;
+        const unidad = document.getElementById('rapidoUnidad').value;
+
+        if (unidad === 'UNIDAD') {
+            let valor = Math.floor(input.value);
+            input.value = (valor < 1) ? 1 : valor;
         } else {
-            input.value = valor;
+            // Si es KG, permitimos decimales, solo evitamos negativos
+            if (parseFloat(input.value) <= 0) input.value = 0.001;
         }
     }
 
@@ -502,8 +476,6 @@
         const precio = parseFloat(document.getElementById('rapidoPrecio').value);
         const idCat = document.getElementById('rapidoCategoria').value;
         const cantidadInput = document.getElementById('rapidoCantidad');
-
-        // 1. CAPTURAMOS LA UNIDAD (Asegúrate de tener este ID en tu <select> del modal)
         const unidad = document.getElementById('rapidoUnidad').value;
 
         if (!nombreRaw || isNaN(precio) || !idCat || !unidad) {
@@ -512,118 +484,35 @@
         }
 
         const nombreNormalizadoNuevo = normalizarTextoExtremo(nombreRaw);
-
-        // 2. Buscar duplicados en DB
         const existeEnDB = Array.from(datalist.options).some(opt =>
             normalizarTextoExtremo(opt.value) === nombreNormalizadoNuevo
         );
 
-        // 3. Buscar duplicados en la tabla actual
-        const filasTabla = document.querySelectorAll('#tbodyDetalles tr');
-        let existeEnTabla = false;
-
-        filasTabla.forEach(fila => {
-            const spanNombre = fila.querySelector('.nombre-producto-celda span');
-            if (spanNombre) {
-                let nombreEnFila = spanNombre.innerText.replace(/NUEVO/g, "").trim();
-                if (normalizarTextoExtremo(nombreEnFila) === nombreNormalizadoNuevo) {
-                    existeEnTabla = true;
-                }
-            }
-        });
-
-        if (existeEnDB || existeEnTabla) {
-            alertaPersonalizada('warning', 'Producto Duplicado',
-                'El producto "' + nombreRaw + '" ya está registrado o en tu lista actual.');
+        if (existeEnDB) {
+            alertaPersonalizada('warning', 'Producto Duplicado', 'El producto ya existe en la base de datos.');
             return;
         }
 
-        // --- PROCEDEMOS A AGREGAR ---
         const nombreFormateado = embellecerNombre(nombreRaw);
         const idTemp = Date.now() * -1;
-
-        // CAMBIO: Usamos parseFloat para permitir comprar, por ejemplo, 20.500 kg de inicio
         const cantidad = cantidadInput.value === "" ? 1 : parseFloat(cantidadInput.value);
 
-        // Insertamos la fila pasando la UNIDAD
         ejecutarAgregar(idTemp, nombreFormateado, precio, "NUEVO", unidad);
 
         setTimeout(() => {
             const fila = document.querySelector(`tr[data-id="${idTemp}"]`);
             if (fila) {
-                // AGREGAMOS EL INPUT HIDDEN DE LA UNIDAD PARA SPRING BOOT
                 fila.querySelector('td').insertAdjacentHTML('beforeend', `
-                <input type="hidden" class="prod-nombre" value="${nombreFormateado}">
-                <input type="hidden" class="prod-cat" value="${idCat}">
-                <input type="hidden" class="prod-unidad" value="${unidad}">
-            `);
-
-                // Asignamos la cantidad respetando decimales si es KG
+                    <input type="hidden" class="prod-nombre" value="${nombreFormateado}">
+                    <input type="hidden" class="prod-cat" value="${idCat}">
+                `);
                 fila.querySelector('.input-cantidad').value = (unidad === 'KG') ? cantidad.toFixed(3) : Math.floor(cantidad);
                 actualizarTotales();
             }
         }, 50);
 
-        const modalEl = document.getElementById('modalProducto');
-        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.hide();
+        bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
         document.getElementById('formProdRapido').reset();
-    }
-
-    function reindexarDetalles() {
-        // Seleccionamos solo las filas que tienen data-id (evitamos la fila de "Carrito vacío")
-        const filasProductos = document.querySelectorAll('#tbodyDetalles tr[data-id]');
-
-        filasProductos.forEach((tr, i) => {
-            // 1. IDs de Detalle y Stock Actual (Para edición y consistencia de lotes)
-            const inputIdDetalle = tr.querySelector('.det-id');
-            if (inputIdDetalle) {
-                inputIdDetalle.name = `detalles[${i}].idDetalleCompra`;
-            }
-
-            const inputStock = tr.querySelector('.det-stock-actual');
-            if (inputStock) {
-                inputStock.name = `detalles[${i}].stockActual`;
-            }
-
-            // 2. Datos básicos de la línea de compra
-            const inputProdId = tr.querySelector('.prod-id');
-            const inputPrecio = tr.querySelector('.input-precio');
-            const inputCant = tr.querySelector('.input-cantidad');
-
-            if(inputProdId) inputProdId.name = `detalles[${i}].producto.idProducto`;
-            if(inputPrecio) inputPrecio.name = `detalles[${i}].precioCompra`;
-            if(inputCant)   inputCant.name = `detalles[${i}].cantidad`;
-
-            // 3. Campos para productos NUEVOS (Creados desde el Modal Rápido)
-            const nombreInput = tr.querySelector('.prod-nombre');
-            const catInput = tr.querySelector('.prod-cat');
-            const unidadInput = tr.querySelector('.prod-unidad'); // <--- CAPTURAMOS EL NUEVO INPUT
-
-            if(nombreInput) nombreInput.name = `detalles[${i}].producto.nombreProducto`;
-            if(catInput)    catInput.name = `detalles[${i}].producto.categoria.idCategoria`;
-
-            // ESTA ES LA LÍNEA CRUCIAL PARA EL POLLO/CARNE:
-            if(unidadInput) unidadInput.name = `detalles[${i}].producto.unidadMedida`;
-        });
-    }
-
-    function validarPrecio(input) { if (parseFloat(input.value) < 0) input.value = 0; }
-
-    function modificarCantidad(id, delta) {
-        const fila = document.querySelector(`tr[data-id="${id}"]`);
-        const input = fila.querySelector('.input-cantidad');
-        const unidad = fila.getAttribute('data-unidad');
-
-        // CAMBIO: parseFloat para no perder los gramos
-        let nuevaCant = parseFloat(input.value) + delta;
-
-        const min = (unidad === 'KG') ? 0.001 : 1;
-        if (nuevaCant >= min) {
-            // Formatear a 3 decimales si es KG para evitar errores de JS (ej: 0.1 + 0.2 = 0.300000004)
-            input.value = (unidad === 'KG') ? nuevaCant.toFixed(3) : Math.round(nuevaCant);
-            actualizarTotales();
-        }
     }
 
     function actualizarTotales() {
@@ -631,29 +520,57 @@
         const filas = document.querySelectorAll('#tbodyDetalles tr[data-id]');
 
         filas.forEach((tr, i) => {
-            const cant = parseFloat(tr.querySelector('.input-cantidad').value) || 0;
-            const prec = parseFloat(tr.querySelector('.input-precio').value) || 0;
+            const cantInput = tr.querySelector('.input-cantidad');
+            const precInput = tr.querySelector('.input-precio');
+            const idInput = tr.querySelector('.prod-id');
+
+            const cant = parseFloat(cantInput.value) || 0;
+            const prec = parseFloat(precInput.value) || 0;
             const sub = cant * prec;
 
-            tr.querySelector('.subtotal-fila').innerText = sub.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const spanSubtotal = tr.querySelector('.subtotal-fila');
+            if (spanSubtotal) {
+                spanSubtotal.innerText = sub.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
             acumulado += sub;
 
-            // Reindexar nombres para que Spring Boot reciba la lista correctamente
-            const pId = tr.querySelector('.prod-id'); if(pId) pId.name = `detalles[${i}].producto.idProducto`;
-            const pPr = tr.querySelector('.input-precio'); if(pPr) pPr.name = `detalles[${i}].precioCompra`;
-            const pCa = tr.querySelector('.input-cantidad'); if(pCa) pCa.name = `detalles[${i}].cantidad`;
+            if (idInput) idInput.name = `detalles[${i}].producto.idProducto`;
+            if (precInput) precInput.name = `detalles[${i}].precioCompra`;
+            if (cantInput) cantInput.name = `detalles[${i}].cantidad`;
 
-            // Si son productos nuevos del modal
-            const pNom = tr.querySelector('.prod-nombre'); if(pNom) pNom.name = `detalles[${i}].producto.nombreProducto`;
-            const pUni = tr.querySelector('.prod-unidad'); if(pUni) pUni.name = `detalles[${i}].producto.unidadMedida`;
+            const pNom = tr.querySelector('.prod-nombre');
+            const pUni = tr.querySelector('.prod-unidad');
+            const pCat = tr.querySelector('.prod-cat');
+
+            if (pNom) pNom.name = `detalles[${i}].producto.nombreProducto`;
+            if (pCat) pCat.name = `detalles[${i}].producto.categoria.idCategoria`;
+            if (pUni) {
+                pUni.name = `detalles[${i}].producto.unidadMedida`;
+                pUni.value = pUni.value.trim().toUpperCase().substring(0, 10);
+            }
+
+            const detId = tr.querySelector('.det-id');
+            if (detId) detId.name = `detalles[${i}].idDetalleCompra`;
         });
 
-        document.getElementById("labelTotal").innerText = acumulado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const labelTotal = document.getElementById("labelTotal");
+        if (labelTotal) {
+            labelTotal.innerText = acumulado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
         const btnGuardar = document.getElementById("btnGuardar");
-        if(btnGuardar) btnGuardar.disabled = (filas.length === 0 || acumulado <= 0);
-
+        if (btnGuardar) {
+            btnGuardar.disabled = (filas.length === 0 || acumulado <= 0);
+        }
         guardarBackupTemporal();
+    }
+
+    function quitar(id) {
+        const fila = document.getElementById("f_" + id);
+        if (fila) {
+            fila.remove();
+            actualizarTotales();
+        }
     }
 
     function alertaPersonalizada(icon, title, text) {
@@ -665,84 +582,52 @@
         });
     }
 
-    function quitar(id) {
-        const fila = document.getElementById("f_" + id);
-        if (fila) {
-            fila.remove();
-            actualizarTotales();
-        }
-    }
-
     document.getElementById('formCompra').addEventListener('submit', function(e) {
         e.preventDefault();
-
         const btnGuardar = document.getElementById("btnGuardar");
 
         Swal.fire({
             title: '¿Guardar Orden?',
-            text: "Se guardará como PENDIENTE.",
+            text: "Se registrará el pedido en el sistema.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#198754',
             confirmButtonText: 'Sí, registrar',
-            cancelButtonText: 'Cancelar',
-            // Estilos dinámicos para Swal (opcional)
-            background: document.body.classList.contains('dark-mode') ? '#1c222d' : '#fff',
-            color: document.body.classList.contains('dark-mode') ? '#fff' : '#000'
+            cancelButtonText: 'Cancelar'
         }).then((r) => {
             if (r.isConfirmed) {
-                // 1. LIMPIAR EL BACKUP: Solo si se confirma el envío
                 sessionStorage.removeItem("tabla_compra_backup");
-
-                // 2. Feedback visual y bloqueo
                 btnGuardar.disabled = true;
                 btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
-
-                // 3. Enviar formulario
                 this.submit();
             }
         });
     });
 
     document.addEventListener("DOMContentLoaded", () => {
-        // 1. Recuperar datos guardados inmediatamente
         recuperarBackupTemporal();
-
-        // 2. Configuración de fechas
         const inputFechaLlegada = document.querySelector('.fecha-llegada');
         const inputFechaInicio = document.querySelector('.fecha-inicio');
 
         if (inputFechaLlegada && inputFechaInicio) {
-            // Establecer fecha mínima de llegada basada en la emisión
             const fechaMinima = inputFechaInicio.value;
             inputFechaLlegada.setAttribute('min', fechaMinima);
-
-            inputFechaLlegada.addEventListener('change', function() {
-                if (this.value < fechaMinima) {
-                    alertaPersonalizada('error', 'Fecha Inválida',
-                        'La llegada no puede ser anterior al inicio del pedido (' + fechaMinima + ')');
-                    this.value = fechaMinima;
-                }
-            });
         }
 
-        // 3. Recalcular totales con un pequeño delay
-        // Esto asegura que los subtotales y el total principal se vean bien tras recuperar el backup
-        setTimeout(() => {
-            actualizarTotales();
-        }, 100);
-
-        // 4. Foco en buscador para agilizar el trabajo
-        const buscador = document.getElementById('buscadorCompra');
+        setTimeout(() => { actualizarTotales(); }, 100);
         if (buscador) buscador.focus();
     });
 
     function guardarBackupTemporal() {
         const cuerpo = document.getElementById("tbodyDetalles");
         const filas = cuerpo.querySelectorAll('tr[data-id]');
-
-        // Solo guardamos si hay productos reales
         if (filas.length > 0) {
+            filas.forEach(fila => {
+                const inputCant = fila.querySelector('.input-cantidad');
+                const inputPrec = fila.querySelector('.input-precio');
+                if(inputCant) inputCant.setAttribute('value', inputCant.value);
+                if(inputPrec) inputPrec.setAttribute('value', inputPrec.value);
+            });
             sessionStorage.setItem("tabla_compra_backup", cuerpo.innerHTML);
         } else {
             sessionStorage.removeItem("tabla_compra_backup");
@@ -752,38 +637,25 @@
     function recuperarBackupTemporal() {
         const backup = sessionStorage.getItem("tabla_compra_backup");
         const cuerpo = document.getElementById("tbodyDetalles");
-
-        // Si hay backup y la tabla está vacía (por ejemplo, al volver de otra página)
         if (backup && cuerpo.querySelectorAll('tr[data-id]').length === 0) {
             cuerpo.innerHTML = backup;
-
-            // Re-asignar eventos de validación a los inputs recuperados
-            cuerpo.querySelectorAll('.input-cantidad').forEach(input => {
-                const fila = input.closest('tr');
-                const unidad = fila.querySelector('.badge-unidad').innerText;
-                input.oninput = function() { validarSegunUnidad(this, unidad); };
-            });
-
+            const filaVacia = document.getElementById("filaVacia");
+            if (filaVacia) filaVacia.remove();
             actualizarTotales();
         }
     }
 
     function validarSegunUnidad(input, unidad) {
-        if (input.value === "") return;
-
+        if (input.value === "" || input.value < 0) return;
         if (unidad === 'UNIDAD') {
-            // Forzar entero: si pone 1.5, se convierte en 1
-            input.value = Math.floor(input.value);
-            if(input.value < 1) input.value = 1;
+            input.value = Math.floor(input.value) || 1;
         } else {
-            // Permitir decimales (máximo 3 para KG)
             if (input.value.includes('.') && input.value.split('.')[1].length > 3) {
                 input.value = parseFloat(input.value).toFixed(3);
             }
         }
         actualizarTotales();
     }
-
 </script>
 </body>
 </html>

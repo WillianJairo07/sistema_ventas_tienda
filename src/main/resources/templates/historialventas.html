@@ -14,319 +14,6 @@
     <link th:href="@{/css/menu1.css}" rel="stylesheet">
     <link th:href="@{/css/modal.css}" rel="stylesheet">
 
-
-    <style>
-        /* =========================================
-            MODO OSCURO GENERAL
-        ========================================= */
-        html.dark-mode {
-            color-scheme: dark;
-            background-color: #121212;
-        }
-
-        /* TABLA PRINCIPAL */
-        html.dark-mode .table,
-        html.dark-mode .table th,
-        html.dark-mode .table td {
-            background-color: transparent !important;
-            color: #fff !important;
-            border-color: #333;
-        }
-
-        html.dark-mode .table thead {
-            background-color: #1f1f1f !important;
-        }
-
-        html.dark-mode .table tbody tr:hover {
-            background-color: inherit !important;
-        }
-
-        /* TABLA DEL MODAL */
-        html.dark-mode #modalVerDetalleVenta .table,
-        html.dark-mode #modalVerDetalleVenta .table th,
-        html.dark-mode #modalVerDetalleVenta .table td,
-        html.dark-mode #modalVerDetalleVenta .text-muted {
-            background-color: transparent !important;
-            color: #fff !important;
-            border-color: #333;
-        }
-
-        html.dark-mode #modalVerDetalleVenta .table thead {
-            background-color: #2A3651FF !important;
-        }
-
-        /* MODAL COMPLETO */
-        modalVerDetalleVenta .modal-content {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        }
-
-        /* HEADER MODAL (degradado) */
-        #modalVerDetalleVenta .modal-header {
-            background: linear-gradient(45deg, #4b6cb7, #182848);
-            color: #fff;
-            border-radius: 15px 15px 0 0;
-        }
-
-        /* BOTON NUEVA ORDEN */
-        .btn-nueva-orden {
-            background-color: #4b6cb7 !important;
-            color: white !important;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 22px;
-            font-weight: normal;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-
-        .btn-nueva-orden i {
-            font-size: 0.9rem;
-        }
-
-        .btn-nueva-orden:hover {
-            background-color: #4b6cb7 !important;
-            transform: none;
-        }
-
-        .btn-buscar-filtro {
-            /* COLOR Y TEXTO */
-            background-color: #4b6cb7 !important;
-            color: white !important;
-            border: none;
-            font-size: 0.85rem;
-            padding: 10px 22px;
-            white-space: nowrap;
-
-            /* REDONDEADO DE COSTADOS */
-            border-radius: 20px; /* Ajusta a 10px si lo quieres menos circular */
-
-            /* SEPARACIÓN DE ARRIBA */
-            margin-top: 30px;
-
-            /* SIN EFECTOS EXTRAS */
-            cursor: pointer;
-        }
-
-        /* Para asegurar que no cambie nada al pasar el mouse */
-        .btn-buscar-filtro:hover {
-            background-color: #4b6cb7 !important;
-            transform: none;
-            filter: none;
-        }
-
-        /* =========================================
-           BOTONES DE ACCIÓN FIJOS - CIRCULARES
-           ========================================= */
-        .acciones-boton {
-            display: flex;
-            flex-wrap: nowrap;
-            justify-content: center;  /* centrado horizontal */
-            align-items: center;      /* centrado vertical */
-            gap: 0.25rem;             /* espacio entre botones */
-        }
-
-        .acciones-boton .btn {
-            width: 36px;
-            height: 36px;
-            padding: 0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            border: none;
-            font-size: 0.9rem;
-        }
-
-        /* Colores por tipo */
-        .acciones-boton .btn-outline-info {
-            background-color: #17a2b8;
-        }
-        .acciones-boton .btn-outline-warning {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        .acciones-boton .btn-outline-success {
-            background-color: #198754;
-        }
-
-        /* Hover suave */
-        .acciones-boton .btn-outline-info:hover {
-            background-color: #138496;
-        }
-        .acciones-boton .btn-outline-warning:hover {
-            background-color: #e0a800;
-        }
-        .acciones-boton .btn-outline-success:hover {
-            background-color: #157347;
-        }
-
-        /* Icono centrado */
-        .acciones-boton .btn i {
-            display: block;
-        }
-
-        /* =========================================
-           RESPONSIVE HEADER
-           ========================================= */
-        @media (max-width: 576px) {
-            .mb-4.d-flex.justify-content-between.align-items-center {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.5rem;
-            }
-
-            .mb-4.d-flex > div {
-                width: 100%;
-            }
-
-            .btn-nueva-orden {
-                width: 100%;
-                text-align: center;
-                padding: 10px 0.5rem;
-                font-size: 0.85rem;
-            }
-        }
-
-        /* =========================================
-           TABLA PRINCIPAL CON SCROLL Y PROVEEDOR WRAP
-           ========================================= */
-        .crud-card .table td {
-            white-space: normal;
-        }
-
-        .crud-card .table td:nth-child(3) {
-            white-space: normal;
-            word-break: break-word;
-        }
-
-
-        /* =========================================
-           RESPONSIVE TABLAS Y MODAL
-           ========================================= */
-        @media (max-width: 768px) {
-            .table-responsive {
-                overflow-x: auto;
-            }
-
-            /* MÁS ESPACIO ENTRE COLUMNAS */
-            .table th, .table td {
-                font-size: 0.9rem;
-                padding: 0.4rem 0.8rem;   /* padding horizontal aumentado */
-                white-space: nowrap;
-                vertical-align: middle;   /* contenido centrado verticalmente */
-            }
-
-            #modalVerDetalle .table th,
-            #modalVerDetalle .table td {
-                font-size: 0.9rem;
-                padding: 0.3rem 0.6rem;   /* más espacio horizontal en modal */
-                vertical-align: middle;
-            }
-
-            #modalVerDetalle tfoot td {
-                font-size: 0.9rem;
-                padding-top: 0.5rem;
-            }
-
-            .acciones-boton .btn {
-                width: 30px;
-                height: 30px;
-                font-size: 0.9rem;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .table th, .table td {
-                font-size: 0.9rem;
-                padding: 0.3rem 0.6rem;   /* espacio horizontal para móviles */
-                vertical-align: middle;
-            }
-
-            .acciones-boton .btn {
-                width: 26px;
-                height: 26px;
-                font-size: 0.8rem;
-            }
-        }
-
-        /* EFECTO HOVER: MICRO-LEVANTAMIENTO Y COLOR MÁS OSCURO */
-
-        /* EFECTO HOVER: MICRO-LEVANTAMIENTO Y COLOR MÁS OSCURO */
-
-        .btn-nueva-orden:hover,
-        .btn-buscar-filtro:hover {
-            background-color: #3e5898 !important; /* Azul un toque más oscuro */
-            transform: translateY(-1px) !important; /* Levantamiento mínimo */
-            box-shadow: none !important;            /* Sin sombra */
-            transition: all 0.2s ease;              /* Movimiento suave */
-        }
-
-        /* Aplicar transición base para que el retorno sea suave al quitar el mouse */
-        .btn-nueva-orden,
-        .btn-buscar-filtro {
-            transition: all 0.2s ease;
-        }
-
-        .bg-yape {
-            background-color: #742284 !important; /* Morado Yape */
-            color: white !important;
-        }
-
-        .bg-plin {
-            background-color: #00d1ce !important; /* Turquesa Plin */
-            color: white !important;
-        }
-
-
-
-        /* PAGINACIÓN COMPACTA */
-        .pagination { gap: 5px; }
-
-        .page-link {
-            border: none !important;
-            color: #64748b !important;
-            background: #fff !important;
-            padding: 8px 16px !important;
-            border-radius: 8px !important;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: 0.2s;
-        }
-
-        /* Estado Activo y Hover */
-        .page-item.active .page-link {
-            background: #4b6cb7 !important;
-            color: #fff !important;
-            box-shadow: 0 4px 10px rgba(75, 108, 183, 0.3) !important;
-        }
-
-        .page-link:hover:not(.active) {
-            background: #f1f5f9 !important;
-            color: #4b6cb7 !important;
-        }
-
-        /* Deshabilitado */
-        .page-item.disabled .page-link {
-            background: #f8fafc !important;
-            color: #cbd5e1 !important;
-            box-shadow: none;
-        }
-
-        /* MODO OSCURO (Solo lo necesario) */
-        [data-bs-theme="dark"] .page-link {
-            background: #1e293b !important;
-            color: #94a3b8 !important;
-        }
-
-        [data-bs-theme="dark"] .page-link:hover:not(.active) {
-            background: #334155 !important;
-            color: #fff !important;
-        }
-    </style>
-
 </head>
 <body>
 <!-- Sidebar -->
@@ -417,12 +104,14 @@
 
                             <td class="text-center">
                                 <div class="acciones-boton">
-                                    <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1"
+                                    <button type="button" class="btn btn-ver-detalle"
                                             th:onclick="'verDetalleVenta(' + ${v.idVenta} + ')'" title="Ver Detalle">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm rounded-circle" title="Imprimir"
-                                            style="background-color: #6c757d; color: white; border: none; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+
+                                    <button type="button" class="btn btn-imprimir-ticket"
+                                            th:onclick="'abrirTicketVenta(' + ${v.idVenta} + ')'"
+                                            title="Imprimir Ticket">
                                         <i class="fas fa-print"></i>
                                     </button>
                                 </div>
@@ -448,7 +137,9 @@
                     </li>
 
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                        th:if="${i >= currentPage - 2 and i <= currentPage + 2}"
+                        th:if="${(currentPage == 0 and i < 3) or
+                    (currentPage == totalPages - 1 and i > totalPages - 4) or
+                    (i >= currentPage - 1 and i <= currentPage + 1)}"
                         th:classappend="${i == currentPage} ? 'active'">
                         <a class="page-link rounded shadow-sm border-0"
                            th:href="@{/ventas(page=${i}, buscar=${buscar}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
@@ -470,7 +161,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius: 15px">
             <div class="modal-header border-0 bg-dark text-white p-4">
-                <h5 class="modal-title fw-bold"><i class="fas fa-file-invoice-dollar me-2 text-info"></i>Comprobante de Venta</h5>
+                <h5 class="modal-title fw-bold">Comprobante de Venta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -496,18 +187,26 @@
                         </thead>
                         <tbody id="detCuerpoVenta"></tbody>
                         <tfoot>
-                            <tr class="fs-5 fw-bold">
+                            <tr class="fs-5 fw-bold border-top">
                                 <td colspan="3" class="text-end pt-3 text-dynamic">TOTAL DE VENTA:</td>
                                 <td class="text-end pt-3 text-primary">S/ <span id="detTotalVenta">0.00</span></td>
                             </tr>
 
-                            <tr id="filaDetPago" class="d-none">
-                                <td colspan="3" class="text-end text-success">MONTO PAGADO (INICIAL):</td>
-                                <td class="text-end text-success">S/ <span id="detMontoPagado">0.00</span></td>
+                            <tr id="filaDetPagaCon" class="d-none">
+                                <td colspan="3" class="text-end text-muted small">EFECTIVO RECIBIDO:</td>
+                                <td class="text-end text-muted small">S/ <span id="detMontoRecibido">0.00</span></td>
+                            </tr>
+                            <tr id="filaDetVuelto" class="d-none">
+                                <td colspan="3" class="text-end fw-bold text-info">VUELTO ENTREGADO:</td>
+                                <td class="text-end fw-bold text-info">S/ <span id="detVueltoEntregado">0.00</span></td>
                             </tr>
 
+                            <tr id="filaDetPago" class="d-none">
+                                <td colspan="3" class="text-end text-success fw-bold">PAGO / ABONO REALIZADO:</td>
+                                <td class="text-end text-success fw-bold">S/ <span id="detTotalPagado">0.00</span></td>
+                            </tr>
                             <tr id="filaDetSaldo" class="d-none border-top">
-                                <td colspan="3" class="text-end fw-bold text-danger">SALDO PENDIENTE (DEUDA):</td>
+                                <td colspan="3" class="text-end fw-bold text-danger">SALDO PENDIENTE:</td>
                                 <td class="text-end fw-bold text-danger">S/ <span id="detSaldoPendiente">0.00</span></td>
                             </tr>
                         </tfoot>
@@ -521,7 +220,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script>
-    // Filtro rápido por JS (Opcional, similar al de compras)
+
     document.getElementById('filtroVentasJS').addEventListener('keyup', function() {
         let valor = this.value.toLowerCase();
         let filas = document.querySelectorAll('#tablaVentas tbody tr');
@@ -530,6 +229,16 @@
         });
     });
 
+
+    function abrirTicketVenta(id) {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = '/ventas/ticket/pdf/' + id;
+        document.body.appendChild(iframe);
+        // Limpieza del iframe después de un momento
+        setTimeout(() => document.body.removeChild(iframe), 2000);
+    }
+
     function verDetalleVenta(id) {
         fetch('/ventas/api/' + id)
             .then(response => {
@@ -537,34 +246,58 @@
                 return response.json();
             })
             .then(data => {
-                // 1. Llenamos los datos de la cabecera
+
                 document.getElementById('detClienteVenta').innerText = data.cliente.nombreCompleto;
                 const fecha = new Date(data.fecha);
                 document.getElementById('detFechaVenta').innerText = fecha.toLocaleString();
 
-                // --- LÓGICA DE MONTOS (CAMBIO AQUÍ) ---
-                const total = parseFloat(data.totalVenta);
-                const pagado = parseFloat(data.montoPagado) || 0;
-                const saldo = total - pagado;
+
+                const total = parseFloat(data.totalVenta) || 0;
+                const montoRecibido = parseFloat(data.montoPagado) || 0;
+                const totalAbonos = parseFloat(data.totalPagado) || 0;
+                const saldo = parseFloat(data.saldoPendiente) || 0;
 
                 document.getElementById('detTotalVenta').innerText = total.toFixed(2);
 
-                // Elementos de la UI para deudas (IDs que pusimos en el tfoot)
-                const filaPago = document.getElementById('filaDetPago');
-                const filaSaldo = document.getElementById('filaDetSaldo');
 
-                if (data.tipoVenta === 'CREDITO') {
-                    document.getElementById('detMontoPagado').innerText = pagado.toFixed(2);
+                const fPagaCon = document.getElementById('filaDetPagaCon');
+                const fVuelto = document.getElementById('filaDetVuelto');
+                const fPago = document.getElementById('filaDetPago');
+                const fSaldo = document.getElementById('filaDetSaldo');
+
+
+
+                if (data.tipoVenta === 'CONTADO') {
+
+                    fPagaCon.classList.remove('d-none');
+                    fVuelto.classList.remove('d-none');
+                    fPago.classList.add('d-none');
+                    fSaldo.classList.add('d-none');
+
+                    const vuelto = montoRecibido - total;
+                    document.getElementById('detMontoRecibido').innerText = montoRecibido.toFixed(2);
+                    document.getElementById('detVueltoEntregado').innerText = (vuelto > 0 ? vuelto : 0).toFixed(2);
+
+                } else {
+
+                    fPagaCon.classList.add('d-none');
+                    fVuelto.classList.add('d-none');
+                    fPago.classList.remove('d-none');
+                    fSaldo.classList.remove('d-none');
+
+                    document.getElementById('detTotalPagado').innerText = totalAbonos.toFixed(2);
                     document.getElementById('detSaldoPendiente').innerText = saldo.toFixed(2);
 
-                    if(filaPago) filaPago.classList.remove('d-none');
-                    if(filaSaldo) filaSaldo.classList.remove('d-none');
-                } else {
-                    if(filaPago) filaPago.classList.add('d-none');
-                    if(filaSaldo) filaSaldo.classList.add('d-none');
+
+                    const contenedorSaldo = document.getElementById('detSaldoPendiente').parentElement;
+                    if(saldo <= 0) {
+                        contenedorSaldo.classList.replace('text-danger', 'text-success');
+                    } else {
+                        contenedorSaldo.classList.replace('text-success', 'text-danger');
+                    }
                 }
 
-                // 2. Construimos las filas de la tabla de productos (Se mantiene igual)
+
                 let html = '';
                 data.detalles.forEach(d => {
                     let subtotal = d.cantidad * d.precioVenta;
@@ -576,61 +309,57 @@
                     <td class="text-end fw-bold">S/ ${subtotal.toFixed(2)}</td>
                 </tr>`;
                 });
-
-                // 3. Inyectamos las filas
                 document.getElementById('detCuerpoVenta').innerHTML = html;
 
-                // 4. Mostramos el modal
-                const modalElement = document.getElementById('modalVerDetalleVenta');
-                const modal = new bootstrap.Modal(modalElement);
+
+                const modal = new bootstrap.Modal(document.getElementById('modalVerDetalleVenta'));
                 modal.show();
             })
             .catch(error => {
                 console.error(error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar el detalle de la venta',
-                    background: '#1a1a1a',
-                    color: '#fff',
-                    confirmButtonColor: '#07e80b'
-                });
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el detalle' });
             });
     }
 </script>
+
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        // Thymeleaf procesará estas variables de forma segura
-        /*[+
-        const successMsg = [[${success}]];
-        const errorMsg = [[${error}]];
-        +]*/
+        const successMsg = /*[[${success}]]*/ null;
+        const errorMsg = /*[[${error}]]*/ null;
+        const idVentaTicket = /*[[${idVentaGenerada}]]*/ null;
+
+
+        const configComun = {
+            confirmButtonColor: '#4b6cb7',
+            background: '#ffffff',
+            color: '#333333'
+        };
 
         if (successMsg) {
             Swal.fire({
+                ...configComun,
                 icon: 'success',
                 title: '¡Operación Exitosa!',
                 text: successMsg,
-                background: '#1a1a1a',
-                color: '#ffffff',
-                confirmButtonColor: '#07e80b', // Tu verde neón
-                iconColor: '#07e80b'
+                iconColor: '#4b6cb7'
             });
+
+
+            if (idVentaTicket) {
+                abrirTicketVenta(idVentaTicket);
+            }
         }
 
         if (errorMsg) {
             Swal.fire({
+                ...configComun,
                 icon: 'error',
                 title: 'Atención',
                 text: errorMsg,
-                background: '#1a1a1a',
-                color: '#ffffff',
                 confirmButtonColor: '#d33'
             });
         }
     });
 </script>
-
-
 </body>
 </html>

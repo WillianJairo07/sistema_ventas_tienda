@@ -55,4 +55,9 @@ public class Compra {
 
     @Column(name = "fecha_recepcion")
     private LocalDateTime fechaRecepcion;
+
+    @Column(name = "tipo_comprobante", length = 20)
+    private String tipoComprobante;
+
+
 }

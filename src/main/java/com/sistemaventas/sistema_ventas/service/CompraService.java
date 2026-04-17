@@ -138,14 +138,17 @@ public class CompraService {
     }
 
     @Transactional
-    public void confirmarRecepcion(Integer idCompra) {
+    public void confirmarRecepcion(Integer idCompra, String tipoComprobante) {
         Compra compra = compraRepository.findById(idCompra)
                 .orElseThrow(() -> new RuntimeException("Compra no encontrada"));
 
+        // Verificamos que no se haya procesado antes
         if (!"PENDIENTE".equals(compra.getEstado())) {
             throw new RuntimeException("Esta compra ya fue completada.");
         }
 
+        // 1. ASIGNAMOS LOS NUEVOS DATOS DE RECEPCIÓN
+        compra.setTipoComprobante(tipoComprobante); // <--- El nuevo campo
         compra.setFechaRecepcion(LocalDateTime.now());
 
         for (DetalleCompra detalle : compra.getDetalles()) {
@@ -153,21 +156,23 @@ public class CompraService {
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
             // --- CORRECCIÓN CLAVE: Suma de stock con BigDecimal ---
-            // Usamos .add() porque ya no son Integers
             BigDecimal stockActualEnProducto = prod.getStock() != null ? prod.getStock() : BigDecimal.ZERO;
+
+            // Sumamos la cantidad recibida al stock general del producto
             prod.setStock(stockActualEnProducto.add(detalle.getCantidad()));
 
-            // Aseguramos que el lote tenga su stock inicial completo
+            // El stockActual del detalle (lote) se inicializa con la cantidad que acaba de llegar
             detalle.setStockActual(detalle.getCantidad());
 
             productoRepository.save(prod);
         }
 
+        // 2. CAMBIAMOS EL ESTADO Y GUARDAMOS
         compra.setEstado("COMPLETADA");
         compraRepository.save(compra);
     }
-    // --- MÉTODOS DE APOYO (Lógica Interna) ---
 
+    // --- MÉTODOS DE APOYO (Lógica Interna) ---
     private void calcularYAsignarTotal(Compra compra) {
         BigDecimal total = compra.getDetalles().stream()
                 .map(d -> {
@@ -184,28 +189,38 @@ public class CompraService {
     private void procesarProducto(DetalleCompra detalle, List<Producto> existentes) {
         Producto prod = detalle.getProducto();
 
+        // Si el ID es <= 0 (como el idTemp del JS), lo tratamos como nuevo
         if (prod.getIdProducto() != null && prod.getIdProducto() <= 0) prod.setIdProducto(null);
 
         if (prod.getIdProducto() == null) {
             String nombreBusqueda = limpiarTexto(prod.getNombreProducto());
-            Producto productoReal = existentes.stream()
+
+            // 1. Verificar si ya existe por nombre para no duplicar
+            Producto productoExistente = existentes.stream()
                     .filter(p -> limpiarTexto(p.getNombreProducto()).equals(nombreBusqueda))
                     .findFirst()
                     .orElse(null);
 
-            if (productoReal != null) {
-                detalle.setProducto(productoReal);
+            if (productoExistente != null) {
+                detalle.setProducto(productoExistente);
             } else {
-                // Si es nuevo, inicializamos stock en ZERO (BigDecimal)
+                // 2. ES UN PRODUCTO REALMENTE NUEVO
                 prod.setStock(BigDecimal.ZERO);
-                if (prod.getPrecio() == null) prod.setPrecio(BigDecimal.ZERO);
+                prod.setEstado(true); // <--- IMPORTANTE: que nazca activo
 
-                // IMPORTANTE: Asegúrate de que el objeto prod traiga la unidad_medida del front
+                if (prod.getPrecio() == null) prod.setPrecio(BigDecimal.ZERO);
                 if (prod.getUnidadMedida() == null) prod.setUnidadMedida("UNIDAD");
 
+                // VALIDACIÓN DE CATEGORÍA:
+                // Si el front mandó el ID de categoría, Spring lo mete en prod.getCategoria().getIdCategoria()
+                if (prod.getCategoria() == null || prod.getCategoria().getIdCategoria() == null) {
+                    throw new RuntimeException("Debe seleccionar una categoría para el producto nuevo: " + prod.getNombreProducto());
+                }
+
+                // Guardamos el nuevo producto antes de asignarlo al detalle
                 Producto nuevoGuardado = productoRepository.save(prod);
                 detalle.setProducto(nuevoGuardado);
-                existentes.add(nuevoGuardado);
+                existentes.add(nuevoGuardado); // Actualizamos la lista local para el siguiente ciclo del loop
             }
         }
     }

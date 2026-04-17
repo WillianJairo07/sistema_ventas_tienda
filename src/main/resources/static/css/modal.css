@@ -12,3 +12,13 @@
 .swal2-container {
     z-index: 2000 !important;
 }
+
+
+.pagination { gap: 5px; }
+.page-link {
+    border: none !important; color: #64748b !important; background: #fff !important;
+    padding: 8px 16px !important; border-radius: 8px !important; font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s;
+}
+.page-item.active .page-link { background: #4b6cb7 !important; color: #fff !important; }
+[data-bs-theme="dark"] .page-link { background: #1e293b !important; color: #94a3b8 !important; }

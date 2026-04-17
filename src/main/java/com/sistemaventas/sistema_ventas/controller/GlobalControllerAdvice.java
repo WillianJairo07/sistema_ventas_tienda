@@ -1,26 +1,29 @@
 package com.sistemaventas.sistema_ventas.controller;
 
-import com.sistemaventas.sistema_ventas.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import java.security.Principal;
 
-@ControllerAdvice // Esto hace que funcione para TODOS los controladores
+@ControllerAdvice
 public class GlobalControllerAdvice {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @ModelAttribute("nombreUsuario") // El nombre que usas en Thymeleaf ${nombreUsuario}
-    public String añadirNombreUsuario(Principal principal) {
-        if (principal == null) {
+    @ModelAttribute("nombreUsuario")
+    public String añadirNombreUsuario(Authentication authentication) {
+        // 1. Si no hay nadie logueado o la sesión expiró
+        if (authentication == null || !authentication.isAuthenticated()) {
             return "Invitado";
         }
 
-        // Buscamos el nombre real en la base de datos
-        return usuarioRepository.findByUsername(principal.getName())
-                .map(u -> u.getNombre())
-                .orElse("Usuario");
+        // 2. Obtenemos el objeto Principal (el usuario logueado)
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            // Retorna el username (ej: "admin" o "juan.perez")
+            return ((UserDetails) principal).getUsername();
+        }
+
+        // 3. Fallback por si el principal es un String (poco común en configuraciones estándar)
+        return authentication.getName();
     }
 }

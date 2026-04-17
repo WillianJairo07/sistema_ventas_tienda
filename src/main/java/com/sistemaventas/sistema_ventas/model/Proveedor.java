@@ -1,7 +1,7 @@
 package com.sistemaventas.sistema_ventas.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+        import lombok.Data;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 

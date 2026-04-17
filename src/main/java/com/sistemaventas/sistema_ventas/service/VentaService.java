@@ -2,7 +2,7 @@ package com.sistemaventas.sistema_ventas.service;
 
 import com.sistemaventas.sistema_ventas.model.*;
 import com.sistemaventas.sistema_ventas.repository.DetalleCompraRepository;
-import com.sistemaventas.sistema_ventas.repository.DeudaRepository;
+import com.sistemaventas.sistema_ventas.repository.PagoRepository;
 import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import com.sistemaventas.sistema_ventas.repository.VentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class VentaService {
     private DetalleCompraRepository detalleCompraRepository;
 
     @Autowired
-    private DeudaRepository deudaRepository;
+    private PagoRepository pagoRepository;
 
 
     @Transactional
@@ -39,19 +39,18 @@ public class VentaService {
             throw new RuntimeException("No se puede realizar una venta sin productos.");
         }
 
+        // --- LÓGICA DE STOCK Y PEPS (SE MANTIENE IGUAL) ---
         for (DetalleVenta detalle : venta.getDetalles()) {
             Producto producto = productoRepository.findById(detalle.getProducto().getIdProducto())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
             BigDecimal cantidadAVender = detalle.getCantidad();
 
-            // 1. VALIDACIÓN DE STOCK
             if (producto.getStock().compareTo(cantidadAVender) < 0) {
                 throw new RuntimeException("Stock insuficiente para: " + producto.getNombreProducto()
                         + " (Disponible: " + producto.getStock() + " " + producto.getUnidadMedida() + ")");
             }
 
-            // 2. LÓGICA DE LOTES (PEPS)
             List<DetalleCompra> lotes = detalleCompraRepository
                     .findByProductoAndStockActualGreaterThanOrderByCompraFechaAsc(producto, BigDecimal.ZERO);
 
@@ -71,38 +70,39 @@ public class VentaService {
                 detalleCompraRepository.save(lote);
             }
 
-            // 3. ACTUALIZAR STOCK GENERAL
             producto.setStock(producto.getStock().subtract(cantidadAVender));
             productoRepository.save(producto);
 
             detalle.setVenta(venta);
         }
 
-        // --- GUARDAMOS LA VENTA PRIMERO ---
+        // --- 1. GUARDAMOS LA VENTA ---
+        // Importante: Asegúrate de que la Venta también tenga la fecha/hora actual si tu modelo lo requiere
+        if (venta.getFecha() == null) {
+            venta.setFecha(java.time.LocalDateTime.now());
+        }
+
         Venta ventaGuardada = ventaRepository.save(venta);
 
-        // --- LÓGICA DE DEUDA (SOLO SI ES CRÉDITO) ---
-        if ("CREDITO".equalsIgnoreCase(ventaGuardada.getTipoVenta())) {
-            Deuda nuevaDeuda = new Deuda();
-            nuevaDeuda.setVenta(ventaGuardada);
+        // --- 2. NUEVA LÓGICA DE PAGOS ---
+        BigDecimal pagoInicial = ventaGuardada.getMontoPagado() != null ? ventaGuardada.getMontoPagado() : BigDecimal.ZERO;
 
-            // Calculamos: Total - Monto Pagado (Inicial)
-            BigDecimal total = ventaGuardada.getTotalVenta() != null ? ventaGuardada.getTotalVenta() : BigDecimal.ZERO;
-            BigDecimal pagoInicial = ventaGuardada.getMontoPagado() != null ? ventaGuardada.getMontoPagado() : BigDecimal.ZERO;
-            BigDecimal saldoPendiente = total.subtract(pagoInicial);
+        if (pagoInicial.compareTo(BigDecimal.ZERO) > 0) {
+            Pago primerPago = new Pago();
+            primerPago.setVenta(ventaGuardada);
+            primerPago.setMonto(pagoInicial);
 
-            // Solo creamos deuda si realmente hay un saldo pendiente
-            if (saldoPendiente.compareTo(BigDecimal.ZERO) > 0) {
-                nuevaDeuda.setMontoDeuda(saldoPendiente);
-                nuevaDeuda.setEstado(false); // false = Sigue debiendo
-                nuevaDeuda.setFechaPago(null);
-                deudaRepository.save(nuevaDeuda);
-            }
+            // CAMBIO CLAVE: Usamos LocalDateTime para que coincida con tu modelo Pago
+            primerPago.setFecha(java.time.LocalDateTime.now());
+
+            primerPago.setMetodoPago(ventaGuardada.getMetodoPago() != null ? ventaGuardada.getMetodoPago() : "EFECTIVO");
+            primerPago.setNota("Pago inicial realizado al momento de la venta.");
+
+            pagoRepository.save(primerPago);
         }
 
         return ventaGuardada;
     }
-
 
     public Page<Venta> obtenerVentasPaginadas(String buscar, String fechaDesde, String fechaHasta, int page, int size) {
         // 1. Traemos todo en un solo viaje a la BD usando tu método optimizado

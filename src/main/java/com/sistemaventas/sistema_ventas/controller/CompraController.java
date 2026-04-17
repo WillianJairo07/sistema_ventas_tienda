@@ -99,14 +99,26 @@ public class CompraController {
     }
 
     @GetMapping("/confirmar/{id}")
-    public String confirmarCompra(@PathVariable Integer id, RedirectAttributes attribute) {
+    public String confirmarCompra(@PathVariable Integer id,
+                                  @RequestParam("tipo") String tipoComprobante, // <--- RECIBIMOS EL DATO
+                                  RedirectAttributes attribute) {
         try {
-            compraService.confirmarRecepcion(id);
-            // El mensaje se guarda en el FlashAttribute
-            attribute.addFlashAttribute("success", "Pedido aceptado exitosamente");
+            // Validamos que no llegue vacío por seguridad del negocio
+            if (tipoComprobante == null || tipoComprobante.isEmpty()) {
+                throw new RuntimeException("Debe seleccionar el tipo de comprobante (BOLETA o FACTURA)");
+            }
+
+            // Pasamos ambos datos al service
+            compraService.confirmarRecepcion(id, tipoComprobante);
+
+            // El mensaje ahora es más específico
+            attribute.addFlashAttribute("success", "Pedido aceptado con " + tipoComprobante + " exitosamente");
+
         } catch (Exception e) {
+            // Si algo falla (ej. compra no encontrada), el error viaja al historial
             attribute.addFlashAttribute("error", "Error al procesar: " + e.getMessage());
         }
+
         // REDIRIGE DIRECTO AL HISTORIAL
         return "redirect:/compras/historial";
     }
@@ -133,15 +145,20 @@ public class CompraController {
         Map<String, Object> json = new HashMap<>();
         json.put("idCompra", c.getIdCompra());
         json.put("fecha", c.getFecha());
-        json.put("fechaInicio", c.getFechaInicio()); // Enviamos también fecha de creación
-        json.put("fechaRecepcion", c.getFechaRecepcion()); // <--- ESTA ES LA LÍNEA NUEVA
+        json.put("fechaInicio", c.getFechaInicio());
+        json.put("fechaRecepcion", c.getFechaRecepcion());
         json.put("estado", c.getEstado());
         json.put("total", c.getTotal());
+
+        // --- ESTA ES LA LÍNEA QUE FALTABA ---
+        json.put("tipoComprobante", c.getTipoComprobante());
+        // ------------------------------------
+
         json.put("proveedor", Map.of("nombre", c.getProveedor().getNombre()));
 
-        // El resto del mapeo de detalles se mantiene igual...
         List<Map<String, Object>> detallesJson = c.getDetalles().stream().map(d -> {
             Map<String, Object> det = new HashMap<>();
+            // Usamos scale para asegurar que el JSON lleve los decimales correctos
             det.put("cantidad", d.getCantidad());
             det.put("precioCompra", d.getPrecioCompra());
 
@@ -149,7 +166,7 @@ public class CompraController {
                 det.put("producto", Map.of(
                         "nombreProducto", d.getProducto().getNombreProducto(),
                         "codigoBarras", d.getProducto().getCodigoBarras() != null ? d.getProducto().getCodigoBarras() : "N/A",
-                        "unidadMedida", d.getProducto().getUnidadMedida() // <--- AGREGA ESTO
+                        "unidadMedida", d.getProducto().getUnidadMedida() != null ? d.getProducto().getUnidadMedida() : "UNIDAD"
                 ));
             }
             return det;

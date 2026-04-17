@@ -13,118 +13,7 @@
     <link th:href="@{/css/menu1.css}" rel="stylesheet">
     <link th:href="@{/css/modal.css}" rel="stylesheet">
     <style>
-        /* --- ESTILO BASE --- */
-        /* Agrupamos todas las clases para que compartan la transición y el hover */
-        .btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-weight: 500;
-            white-space: nowrap;
-            border-radius: 8px; /* Redondeado uniforme */
-        }
 
-        /* EFECTO HOVER: Aquí aplicamos el levantamiento a todos los botones */
-        .btn-ver-inactivos:hover,
-        .btn-new-cat:hover,
-        .btn-ver-activos:hover {
-            transform: translateY(-2px) !important; /* Se levanta 4px */
-            filter: brightness(1.1); /* Brilla un poco */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra para dar profundidad */
-        }
-
-
-        .btn-ver-inactivos,.btn-ver-activos  {
-            background-color: #198754 !important;
-            color: #ffffff !important;
-            border: none;
-        }
-
-        /* Color Azul para el botón de Agregar (opcional si usas btn-primary de Bootstrap) */
-        .btn-new-cat {
-            background-color: #4b6cb7 !important;
-            color: #fff !important;
-            border: none;
-        }
-
-        /* --- RESPONSIVE ESPECÍFICO --- */
-
-        /* Comportamiento debajo de la descripción (< 1270px) */
-        @media (max-width: 1270px) {
-            .header-container {
-                flex-direction: column !important;
-            }
-
-            .controles-wrapper {
-                justify-content: space-between;
-                margin-top: 15px; /* Más espacio con la descripción */
-                width: 100% !important;
-                gap: 15px; /* Separación entre buscador y botones */
-            }
-
-            .btn-group-adaptive {
-                gap: 10px !important; /* SEPARACIÓN ENTRE LOS DOS BOTONES */
-            }
-
-            .custom-search-adaptive {
-                max-width: 450px;
-            }
-        }
-
-        /* MÓVIL (< 576px) */
-        @media (max-width: 576px) {
-            .controles-wrapper {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 12px;
-            }
-
-            .custom-search-adaptive {
-                width: 100% !important;
-                max-width: none !important;
-                order: -1;
-                margin-right: 0 !important;
-            }
-
-            .btn-group-adaptive {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr;
-                width: 100% !important;
-                gap: 10px !important;
-            }
-
-            .btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
-                font-size: 0.75rem !important;
-                height: 45px;
-            }
-        }
-
-        /* DESKTOP AMPLIO (> 1271px) */
-        @media (min-width: 1271px) {
-            .header-container {
-                flex-direction: row !important;
-                align-items: center !important;
-            }
-
-            .controles-wrapper {
-                justify-content: flex-end;
-                max-width: 70%;
-            }
-
-            .custom-search-adaptive {
-                min-width: 350px;
-                max-width: 500px;
-                margin-right: 20px;
-            }
-
-            .btn-group-adaptive {
-                gap: 12px;
-            }
-        }
-
-        /* Flecha por defecto (tema claro) */
         html.light-mode .btn-toggle-lotes i {
             color: black;
         }
@@ -147,20 +36,18 @@
             border-color: transparent !important; /* Por si es un borde */
         }
 
-
-        /* Modo Claro (Gris muy suave) */
         .lote-detalle-container {
             background-color: #f9f9f9;
         }
 
-        /* Modo Oscuro (Sincronizado con tu HTML) */
+
         html.dark-mode .lote-detalle-container {
-            background-color: #2b2e32; /* Gris oscuro profesional */
+            background-color: #2b2e32;
         }
 
         html.dark-mode .table-lotes-custom {
-            color: #ffffff !important; /* Texto blanco puro */
-            border-color: #444; /* Bordes sutiles */
+            color: #ffffff !important;
+            border-color: #444;
         }
 
         html.dark-mode .table-lotes-custom thead th {
@@ -168,27 +55,26 @@
             background-color: #343a40;
         }
 
-        /* Anula el efecto hover en todas las filas de la tabla */
+
         .custom-table tbody tr:hover {
             background-color: transparent !important;
             color: inherit !important;
         }
 
-        /* Específicamente para el modo oscuro si usas html.dark-mode */
+
         html.dark-mode .custom-table tbody tr:hover {
             background-color: transparent !important;
             color: inherit !important;
         }
 
-        /* Si la tabla de lotes (el desplegable) también lo tiene, lo quitamos aquí */
         .table-lotes-custom tbody tr:hover {
             background-color: transparent !important;
         }
 
 
-        /* Color verde para restaurar (más intuitivo) */
+
         .btn-restore {
-            background-color: #28a745; /* Un verde sólido y profesional */
+            background-color: #28a745 !important;
             color: white !important;
         }
 
@@ -362,6 +248,31 @@
                 </table>
             </div>
         </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
+            <div class="text-muted-dynamic small">
+                Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
+            </div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0"> <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage - 1}, verInactivos=${param.verInactivos})}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                    <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:if="${(currentPage == 0 and i < 3) or (currentPage == totalPages - 1 and i > totalPages - 4) or (i >= currentPage - 1 and i <= currentPage + 1)}"
+                        th:classappend="${i == currentPage} ? 'active'"> <a class="page-link shadow-sm" th:href="@{/productos(page=${i}, verInactivos=${param.verInactivos})}" th:text="${i + 1}"></a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                        <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage + 1}, verInactivos=${param.verInactivos})}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
 </main>
 
@@ -392,8 +303,8 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dynamic">Unidad de Medida</label>
                         <select th:field="*{unidadMedida}" id="unidadMedida" class="form-select" required>
-                            <option value="UNIDAD">Unidad (Abarrotes/Latas)</option>
-                            <option value="KG">Kilogramos (Carnes/Pollo/Granel)</option>
+                            <option value="UNIDAD">Unidad</option>
+                            <option value="KG">Kilogramos</option>
                         </select>
                     </div>
 
@@ -433,12 +344,11 @@
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", function() {
-        // --- 1. CAPTURA DE MENSAJES DEL SERVIDOR ---
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
         const isDark = document.body.classList.contains('dark-mode');
 
-        // Configuración base para SweetAlert2
+
         const swalBase = {
             background: isDark ? '#1a1d21' : '#fff',
             color: isDark ? '#fff' : '#000'
@@ -466,7 +376,7 @@
             });
         }
 
-        // --- 2. SINCRONIZACIÓN DE TEMA (Radio Buttons) ---
+
         const temaActual = localStorage.getItem('tema-seleccionado') || 'dark-mode';
         const darkRadio = document.getElementById('darkMode');
         const lightRadio = document.getElementById('lightMode');
@@ -475,25 +385,21 @@
         else if (lightRadio) lightRadio.checked = true;
     });
 
-    // --- 3. FILTRADO EN TIEMPO REAL ---
-    // --- 1. FILTRADO CORREGIDO ---
+
+
     function filtrarProductos() {
         const input = document.getElementById("inputBusqueda").value.toLowerCase();
-        // Solo iteramos sobre las filas de productos, ignoramos las de lotes para que no se rompa el DOM
         const filasProductos = document.querySelectorAll(".producto-fila");
 
         filasProductos.forEach(fila => {
             const nombre = fila.querySelector(".nombre-prod")?.innerText.toLowerCase() || "";
             const codigo = fila.querySelector(".td-codigo")?.innerText.toLowerCase() || "";
-
-            // Obtenemos la fila de lotes asociada (es el siguiente hermano)
             const filaLotes = fila.nextElementSibling;
 
             if (nombre.includes(input) || codigo.includes(input)) {
                 fila.style.display = "";
             } else {
                 fila.style.display = "none";
-                // Si ocultamos el producto, también forzamos el cierre de su detalle de lotes
                 if (filaLotes && filaLotes.classList.contains('lotes-fila')) {
                     filaLotes.style.display = "none";
                     const icono = fila.querySelector('.btn-toggle-lotes i');
@@ -503,7 +409,6 @@
         });
     }
 
-    // --- 4. FUNCIONES DEL CRUD ---
     function nuevoFormulario() {
         document.getElementById('modalTitulo').innerText = 'Nuevo Producto';
         document.getElementById('idProducto').value = '';
@@ -512,9 +417,9 @@
         document.getElementById('precio').value = '';
         document.getElementById('stock').value = '';
         document.getElementById('categoriaSelect').value = '';
-        document.getElementById('unidadMedida').value = 'UNIDAD'; // Reset a Unidad
+        document.getElementById('unidadMedida').value = 'UNIDAD';
 
-        // Al ser nuevo, permitimos editar stock
+
         document.getElementById('stock').readOnly = false;
         document.getElementById('stockHelp').style.display = 'none';
 
@@ -532,7 +437,7 @@
                 document.getElementById('precio').value = data.precio;
                 document.getElementById('stock').value = data.stock;
 
-                // CARGAR UNIDAD DE MEDIDA
+
                 if(data.unidadMedida) {
                     document.getElementById('unidadMedida').value = data.unidadMedida;
                 }
@@ -541,8 +446,7 @@
                     document.getElementById('categoriaSelect').value = data.categoria.idCategoria;
                 }
 
-                // BLOQUEO DE SEGURIDAD: Si ya tiene ID, el stock se maneja por compras
-                // (Como definimos en el ProductoService)
+
                 document.getElementById('stock').readOnly = true;
                 document.getElementById('stockHelp').style.display = 'block';
             })
@@ -556,7 +460,7 @@
             text: "El producto se moverá a la lista de inactivos.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ff4d4d', // Rojo para eliminar
+            confirmButtonColor: '#ff4d4d',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar',

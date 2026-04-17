@@ -12,43 +12,50 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Importante: Las contraseñas en la DB deben estar encriptadas con BCrypt
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-
-                // 1. PRIMERO: Deshabilitar caché (Debe ir antes de authorizeHttpRequests)
-                .headers(headers -> headers
-                        .cacheControl(cache -> cache.disable())
-                        .frameOptions(frame -> frame.sameOrigin()) // Opcional: para seguridad de marcos
+                // 0. CSRF: Ignorar solo rutas específicas de APIs o guardados rápidos sin token
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/clientes/guardar-rapido")
                 )
-                // 2. SEGUNDO: Autorización
+
+                // 1. HEADERS: Mantenemos frameOptions para permitir modales/iframes del mismo origen
+                .headers(headers -> headers
+                                .frameOptions(frame -> frame.sameOrigin())
+                )
+
+                // 2. AUTORIZACIÓN: Rutas públicas y protegidas
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/css/**", "/js/**", "/img/**").permitAll()
+                        .requestMatchers("/login", "/css/**", "/js/**", "/img/**", "/webjars/**").permitAll()
+                        .requestMatchers("/clientes/guardar-rapido").authenticated()
                         .anyRequest().authenticated()
                 )
-                // 3. TERCERO: Login
+
+                // 3. LOGIN: Configuración de entrada
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/home", true) // El 'true' fuerza a que siempre vaya a home tras login
+                        .defaultSuccessUrl("/home", true) // 'true' obliga a ir al home tras loguear
                         .permitAll()
                 )
-                // 4. CUARTO: Logout (Aquí está el refuerzo)
+
+                // 4. LOGOUT: Limpieza completa de sesión
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
-                        .invalidateHttpSession(true)    // Mata la sesión en servidor
-                        .clearAuthentication(true)      // Borra los datos del usuario actual
-                        .deleteCookies("JSESSIONID", "remember-me") // Borra las cookies
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID", "remember-me")
                         .permitAll()
                 )
-                // 5. QUINTO: Control de Sesión (Evita que sesiones viejas revivan)
+
+                // 5. SESIÓN: Evita ataques de fijación de sesión y limita a 1 sesión activa
                 .sessionManagement(session -> session
-                        .sessionFixation().migrateSession() // Protege contra fijación de sesión
-                        .maximumSessions(1) // Solo una sesión a la vez
+                        .sessionFixation().migrateSession()
+                        .maximumSessions(1)
                 );
 
         return http.build();

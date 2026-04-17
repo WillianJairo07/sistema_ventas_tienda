@@ -12,120 +12,6 @@
     <link th:href="@{/css/menu.css}" rel="stylesheet">
     <link th:href="@{/css/menu1.css}" rel="stylesheet">
     <link th:href="@{/css/modal.css}" rel="stylesheet">
-    <style>
-
-            /* --- ESTILO BASE --- */
-            /* Agrupamos todas las clases para que compartan la transición y el hover */
-        .btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-weight: 500;
-            white-space: nowrap;
-            border-radius: 8px; /* Redondeado uniforme */
-        }
-
-        /* EFECTO HOVER: Aquí aplicamos el levantamiento a todos los botones */
-        .btn-ver-inactivos:hover,
-        .btn-new-cat:hover,
-        .btn-ver-activos:hover {
-            transform: translateY(-2px) !important; /* Se levanta 4px */
-            filter: brightness(1.1); /* Brilla un poco */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra para dar profundidad */
-        }
-
-
-        .btn-ver-inactivos,.btn-ver-activos  {
-            background-color: #198754 !important;
-            color: #ffffff !important;
-            border: none;
-        }
-
-        /* Color Azul para el botón de Agregar (opcional si usas btn-primary de Bootstrap) */
-        .btn-new-cat {
-            background-color: #4b6cb7 !important;
-            color: #fff !important;
-            border: none;
-        }
-
-        /* --- RESPONSIVE ESPECÍFICO --- */
-
-        /* Comportamiento debajo de la descripción (< 1270px) */
-        @media (max-width: 1270px) {
-            .header-container {
-                flex-direction: column !important;
-            }
-
-            .controles-wrapper {
-                justify-content: space-between;
-                margin-top: 15px; /* Más espacio con la descripción */
-                width: 100% !important;
-                gap: 15px; /* Separación entre buscador y botones */
-            }
-
-            .btn-group-adaptive {
-                gap: 10px !important; /* SEPARACIÓN ENTRE LOS DOS BOTONES */
-            }
-
-            .custom-search-adaptive {
-                max-width: 450px;
-            }
-        }
-
-        /* MÓVIL (< 576px) */
-        @media (max-width: 576px) {
-            .controles-wrapper {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 12px;
-            }
-
-            .custom-search-adaptive {
-                width: 100% !important;
-                max-width: none !important;
-                order: -1;
-                margin-right: 0 !important;
-            }
-
-            .btn-group-adaptive {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr;
-                width: 100% !important;
-                gap: 10px !important;
-            }
-
-            .btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
-                font-size: 0.75rem !important;
-                height: 45px;
-            }
-        }
-
-        /* DESKTOP AMPLIO (> 1271px) */
-        @media (min-width: 1271px) {
-            .header-container {
-                flex-direction: row !important;
-                align-items: center !important;
-            }
-
-            .controles-wrapper {
-                justify-content: flex-end;
-                max-width: 70%;
-            }
-
-            .custom-search-adaptive {
-                min-width: 350px;
-                max-width: 500px;
-                margin-right: 20px;
-            }
-
-            .btn-group-adaptive {
-                gap: 12px;
-            }
-        }
-    </style>
-    </style>
 </head>
 <body>
 
@@ -264,14 +150,11 @@
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", function() {
-        /* Usamos esta sintaxis de comentarios /*[[...]]*\/ para que el editor
-           (IntelliJ/VS Code) no marque error de sintaxis, pero Thymeleaf sí lo lea.
-        */
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
         const isDark = document.body.classList.contains('dark-mode');
 
-        // Alerta de Éxito
+
         if (successMsg) {
             Swal.fire({
                 icon: 'success',
@@ -279,13 +162,13 @@
                 text: successMsg,
                 background: isDark ? '#1a1d21' : '#fff',
                 color: isDark ? '#fff' : '#000',
-                confirmButtonColor: '#07e80b', // Tu Verde Neón
+                confirmButtonColor: '#07e80b',
                 timer: 3000,
                 timerProgressBar: true
             });
         }
 
-        // Alerta de Error
+
         if (errorMsg) {
             Swal.fire({
                 icon: 'error',
@@ -293,12 +176,12 @@
                 text: errorMsg,
                 background: isDark ? '#1a1d21' : '#fff',
                 color: isDark ? '#fff' : '#000',
-                confirmButtonColor: '#ff4d4d' // Rojo Neón
+                confirmButtonColor: '#ff4d4d'
             });
         }
     });
 
-    // --- FILTRADO EN TIEMPO REAL ---
+
     function filtrarClientes() {
         const input = document.getElementById("inputBusqueda").value.toLowerCase();
         const filas = document.querySelectorAll("#tablaClientes tbody tr");
@@ -316,7 +199,7 @@
         });
     }
 
-    // --- MANEJO DEL MODAL (NUEVO / EDITAR) ---
+
     function nuevoFormulario() {
         document.getElementById('modalTitulo').innerText = 'Nuevo Cliente';
         document.getElementById('idCliente').value = '';
@@ -326,7 +209,7 @@
         document.getElementById('apellidoPat').value = '';
         document.getElementById('apellidoMat').value = '';
 
-        // Focus automático al nombre al abrir
+
         setTimeout(() => {
             document.getElementById('nombre').focus();
         }, 450);
@@ -335,7 +218,7 @@
     function editarCliente(id) {
         document.getElementById('modalTitulo').innerText = 'Editar Cliente';
 
-        // Fetch a la ruta que creamos en el Controller
+
         fetch(`/clientes/editar/${id}`)
             .then(res => {
                 if (!res.ok) throw new Error("Error al obtener datos");
@@ -353,7 +236,7 @@
             });
     }
 
-    // --- ALERTAS DE CONFIRMACIÓN ---
+
     function confirmarEliminar(id) {
         const isDark = document.body.classList.contains('dark-mode');
 

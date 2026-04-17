@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
-    // Spring Data JPA creará la consulta automáticamente
+
     Optional<Usuario> findByUsername(String username);
 }
