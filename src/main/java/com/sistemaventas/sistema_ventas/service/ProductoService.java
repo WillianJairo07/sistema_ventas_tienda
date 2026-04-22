@@ -4,8 +4,11 @@ import com.sistemaventas.sistema_ventas.model.Producto;
 import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // IMPORTANTE
+import org.springframework.data.domain.PageRequest; // IMPORTANTE
+import org.springframework.data.domain.Pageable; // IMPORTANTE
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.math.BigDecimal;
 
 @Service
@@ -14,12 +17,11 @@ public class ProductoService {
     @Autowired
     private ProductoRepository productoRepository;
 
-    public List<Producto> listarTodos() {
-        return productoRepository.findByEstadoTrueOptimized();
-    }
-
-    public List<Producto> listarSoloInactivos() {
-        return productoRepository.findByEstadoFalseOptimized();
+    public Page<Producto> listarPaginado(boolean estado, String buscar, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        // Si el buscador está vacío, le pasamos null para que el Query lo ignore
+        String termino = (buscar != null && !buscar.trim().isEmpty()) ? buscar.trim() : null;
+        return productoRepository.findByEstadoPaginado(estado, termino, pageable);
     }
 
     @Transactional
@@ -33,22 +35,18 @@ public class ProductoService {
 
     @Transactional
     public void guardar(Producto producto) {
-        // Limpiamos el nombre primero
         String nombreLimpio = producto.getNombreProducto().trim().replaceAll("\\s+", " ");
 
-        // --- NUEVA VALIDACIÓN DE STOCK VS LOTES (Soportando BigDecimal) ---
+        // --- VALIDACIÓN DE STOCK VS LOTES (BigDecimal) ---
         if (producto.getIdProducto() != null) {
             Producto productoExistente = productoRepository.findById(producto.getIdProducto()).orElse(null);
 
             if (productoExistente != null && productoExistente.getDetallesCompra() != null) {
-                // Sumamos el stockActual de todos sus lotes usando BigDecimal
                 BigDecimal sumaStockLotes = productoExistente.getDetallesCompra().stream()
                         .filter(lote -> lote != null && lote.getStockActual() != null)
                         .map(lote -> lote.getStockActual())
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                // Si tiene lotes y el usuario intentó cambiar el stock manualmente
-                // Comparamos usando compareTo != 0
                 if (sumaStockLotes.compareTo(BigDecimal.ZERO) > 0 &&
                         producto.getStock().compareTo(sumaStockLotes) != 0) {
                     throw new IllegalArgumentException("No puedes modificar el stock manualmente. " +
@@ -56,7 +54,6 @@ public class ProductoService {
                 }
             }
         }
-        // ------------------------------------------
 
         // 1. Lógica de Auto-revivir
         Producto inactivo = productoRepository.findByNombreProductoIgnoreCaseAndEstadoFalse(nombreLimpio);
@@ -64,7 +61,7 @@ public class ProductoService {
             inactivo.setEstado(true);
             inactivo.setPrecio(producto.getPrecio());
             inactivo.setStock(producto.getStock());
-            inactivo.setUnidadMedida(producto.getUnidadMedida()); // Sincronizamos unidad
+            inactivo.setUnidadMedida(producto.getUnidadMedida());
             inactivo.setCodigoBarras(producto.getCodigoBarras());
             inactivo.setCategoria(producto.getCategoria());
             productoRepository.save(inactivo);
@@ -79,7 +76,6 @@ public class ProductoService {
         producto.setNombreProducto(nombreLimpio);
         producto.setEstado(true);
 
-        // Si por alguna razón la unidad llega nula, por defecto es UNIDAD
         if (producto.getUnidadMedida() == null) producto.setUnidadMedida("UNIDAD");
 
         productoRepository.save(producto);
@@ -106,7 +102,6 @@ public class ProductoService {
         if (p.getPrecio() == null || p.getPrecio().compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("Precio inválido.");
 
-        // CORRECCIÓN: Validación de stock con BigDecimal
         if (p.getStock() == null || p.getStock().compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("Stock inválido.");
 

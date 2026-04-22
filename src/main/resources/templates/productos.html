@@ -87,20 +87,23 @@
         <div class="header-container d-flex flex-column justify-content-between align-items-start mb-4 gap-3">
             <div class="header-text text-start">
                 <h2 class="fw-bold text-dynamic mb-1">Gestión de Productos</h2>
-                <p class="text-muted-dynamic mb-0 small">Administra aqui todos tus productos</p>
+                <p class="text-muted-dynamic mb-0 small">Administra aquí todos tus productos</p>
             </div>
 
             <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
-                <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Buscar producto..." onkeyup="filtrarProductos()">
+                <form th:action="@{/productos}" method="get" class="search-container custom-search-adaptive flex-grow-1">
+                    <input type="hidden" name="verInactivos" th:value="${verInactivos}">
+
+                    <input type="text" name="buscar" th:value="${buscar}"
+                           class="form-control" placeholder="Busca por nombre o código...">
                     <i class="fas fa-search"></i>
-                </div>
+                </form>
 
                 <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-                    <a th:if="${param.verInactivos == null}" th:href="@{/productos(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
+                    <a th:if="${!verInactivos}" th:href="@{/productos(verInactivos=true, buscar=${buscar})}" class="btn btn-ver-inactivos shadow-sm">
                         <i class="fas fa-eye-slash"></i> <span>Ver Inactivos</span>
                     </a>
-                    <a th:if="${param.verInactivos != null}" th:href="@{/productos}" class="btn btn-ver-activos shadow-sm">
+                    <a th:if="${verInactivos}" th:href="@{/productos(verInactivos=false, buscar=${buscar})}" class="btn btn-ver-activos shadow-sm">
                         <i class="fas fa-eye"></i> <span>Ver Activos</span>
                     </a>
                     <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="nuevoFormulario()">
@@ -117,7 +120,7 @@
                     <tr class="text-dynamic">
                         <th></th>
                         <th class="ps-4">ID</th>
-                        <th>CÓDIGO</th>
+                        <th >CÓDIGO</th>
                         <th>PRODUCTO</th>
                         <th>CATEGORÍA</th>
                         <th>PRECIO VENTA</th>
@@ -179,7 +182,6 @@
                                 </div>
                             </td>
                         </tr>
-
                         <tr th:id="'lotes-' + ${p.idProducto}" class="lotes-fila" style="display:none;">
                             <td colspan="8" class="p-0">
                                 <div class="p-3 lote-detalle-container">
@@ -195,41 +197,14 @@
                                         <tbody class="text-center">
                                         <tr th:each="lote : ${p.detallesCompra}" th:if="${lote != null and lote.stockActual > 0}">
                                             <td th:text="${lote.idDetalleCompra}"></td>
-
                                             <td>
                                                 <span th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.cantidad, 1, 3) : #numbers.formatInteger(lote.cantidad, 1)}"></span>
                                                 <small th:text="${p.unidadMedida}"></small>
                                             </td>
-
                                             <td th:text="${lote.precioCompra != null} ? 'S/ ' + ${#numbers.formatDecimal(lote.precioCompra, 1, 2)} : 'S/ 0.00'"></td>
-
                                             <td class="fw-bold text-success">
                                                 <span th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.stockActual, 1, 3) : #numbers.formatInteger(lote.stockActual, 1)}"></span>
                                                 <small th:text="${p.unidadMedida}"></small>
-                                            </td>
-                                        </tr>
-
-                                        <tr th:each="lote : ${p.detallesCompra}" th:if="${lote != null and lote.stockActual <= 0}" class="agotado-row" style="display:none; background-color: #f8f9fa;">
-                                            <td th:text="${lote.idDetalleCompra}"></td>
-                                            <td>
-                                                <span th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.cantidad, 1, 3) : #numbers.formatInteger(lote.cantidad, 1)}"></span>
-                                                <small class="text-muted" th:text="${p.unidadMedida}"></small>
-                                            </td>
-                                            <td th:text="${lote.precioCompra != null} ? 'S/ ' + ${#numbers.formatDecimal(lote.precioCompra, 1, 2)} : 'S/ 0.00'"></td>
-                                            <td><span class="badge bg-secondary">Agotado</span></td>
-                                        </tr>
-
-                                        <tr th:if="${p.detallesCompra == null or p.detallesCompra.isEmpty()}">
-                                            <td colspan="4" class="text-muted py-3">
-                                                <i class="fas fa-info-circle me-1"></i> No hay registros de compras/lotes para este producto.
-                                            </td>
-                                        </tr>
-
-                                        <tr th:if="${p.detallesCompra != null and !p.detallesCompra.isEmpty()}">
-                                            <td colspan="4" class="text-center bg-light">
-                                                <button class="btn btn-sm btn-link text-decoration-none" type="button" onclick="toggleAgotados(this)">
-                                                    <i class="fas fa-eye me-1"></i> Mostrar/Ocultar Agotados
-                                                </button>
                                             </td>
                                         </tr>
                                         </tbody>
@@ -242,25 +217,28 @@
                 </table>
             </div>
         </div>
+
         <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
             <div class="text-muted-dynamic small">
                 Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
             </div>
 
             <nav>
-                <ul class="pagination pagination-sm mb-0"> <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage - 1}, verInactivos=${param.verInactivos})}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
 
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                         th:if="${(currentPage == 0 and i < 3) or (currentPage == totalPages - 1 and i > totalPages - 4) or (i >= currentPage - 1 and i <= currentPage + 1)}"
-                        th:classappend="${i == currentPage} ? 'active'"> <a class="page-link shadow-sm" th:href="@{/productos(page=${i}, verInactivos=${param.verInactivos})}" th:text="${i + 1}"></a>
+                        th:classappend="${i == currentPage} ? 'active'">
+                        <a class="page-link shadow-sm" th:href="@{/productos(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
                     </li>
 
                     <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                        <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage + 1}, verInactivos=${param.verInactivos})}">
+                        <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
@@ -269,7 +247,6 @@
         </div>
     </div>
 </main>
-
 <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
@@ -342,7 +319,6 @@
         const errorMsg = /*[[${error}]]*/ null;
         const isDark = document.body.classList.contains('dark-mode');
 
-
         const swalBase = {
             background: isDark ? '#1a1d21' : '#fff',
             color: isDark ? '#fff' : '#000'
@@ -355,8 +331,7 @@
                 title: '¡Logrado!',
                 text: successMsg,
                 timer: 2000,
-                showConfirmButton: false,
-                confirmButtonColor: '#07e80b'
+                showConfirmButton: false
             });
         }
 
@@ -370,38 +345,16 @@
             });
         }
 
-
+        // Manejo de tema (puedes mantenerlo si usas esta lógica)
         const temaActual = localStorage.getItem('tema-seleccionado') || 'dark-mode';
         const darkRadio = document.getElementById('darkMode');
         const lightRadio = document.getElementById('lightMode');
-
         if (temaActual === 'dark-mode' && darkRadio) darkRadio.checked = true;
         else if (lightRadio) lightRadio.checked = true;
     });
 
-
-
-    function filtrarProductos() {
-        const input = document.getElementById("inputBusqueda").value.toLowerCase();
-        const filasProductos = document.querySelectorAll(".producto-fila");
-
-        filasProductos.forEach(fila => {
-            const nombre = fila.querySelector(".nombre-prod")?.innerText.toLowerCase() || "";
-            const codigo = fila.querySelector(".td-codigo")?.innerText.toLowerCase() || "";
-            const filaLotes = fila.nextElementSibling;
-
-            if (nombre.includes(input) || codigo.includes(input)) {
-                fila.style.display = "";
-            } else {
-                fila.style.display = "none";
-                if (filaLotes && filaLotes.classList.contains('lotes-fila')) {
-                    filaLotes.style.display = "none";
-                    const icono = fila.querySelector('.btn-toggle-lotes i');
-                    if (icono) icono.style.transform = 'rotate(0deg)';
-                }
-            }
-        });
-    }
+    // --- SE ELIMINÓ filtrarProductos() ---
+    // Ya no es necesaria porque la búsqueda se procesa en el servidor (Spring).
 
     function nuevoFormulario() {
         document.getElementById('modalTitulo').innerText = 'Nuevo Producto';
@@ -412,7 +365,6 @@
         document.getElementById('stock').value = '';
         document.getElementById('categoriaSelect').value = '';
         document.getElementById('unidadMedida').value = 'UNIDAD';
-
 
         document.getElementById('stock').readOnly = false;
         document.getElementById('stockHelp').style.display = 'none';
@@ -431,16 +383,10 @@
                 document.getElementById('precio').value = data.precio;
                 document.getElementById('stock').value = data.stock;
 
+                if(data.unidadMedida) document.getElementById('unidadMedida').value = data.unidadMedida;
+                if(data.categoria) document.getElementById('categoriaSelect').value = data.categoria.idCategoria;
 
-                if(data.unidadMedida) {
-                    document.getElementById('unidadMedida').value = data.unidadMedida;
-                }
-
-                if(data.categoria && data.categoria.idCategoria) {
-                    document.getElementById('categoriaSelect').value = data.categoria.idCategoria;
-                }
-
-
+                // Bloqueamos stock en edición porque se maneja por compras/lotes
                 document.getElementById('stock').readOnly = true;
                 document.getElementById('stockHelp').style.display = 'block';
             })
@@ -449,6 +395,9 @@
 
     function confirmarEliminar(id) {
         const isDark = document.body.classList.contains('dark-mode');
+        // Capturamos si estamos viendo inactivos para que al borrar no nos regrese a la lista de activos
+        const verInactivos = /*[[${verInactivos}]]*/ false;
+
         Swal.fire({
             title: '¿Eliminar producto?',
             text: "El producto se moverá a la lista de inactivos.",
@@ -462,21 +411,17 @@
             color: isDark ? '#fff' : '#000'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = `/productos/eliminar/${id}`;
+                // Añadimos el parámetro verInactivos a la URL de redirección
+                window.location.href = `/productos/eliminar/${id}?verInactivos=` + verInactivos;
             }
         });
     }
 
     function toggleLotes(idFila, btn) {
         const fila = document.getElementById(idFila);
-
-        if (!fila) {
-            console.error("Error: No se encontró el elemento con ID:", idFila);
-            return;
-        }
+        if (!fila) return;
 
         const icono = btn.querySelector('i');
-
         if (fila.style.display === 'none' || fila.style.display === '') {
             fila.style.display = 'table-row';
             if (icono) icono.style.transform = 'rotate(90deg)';
