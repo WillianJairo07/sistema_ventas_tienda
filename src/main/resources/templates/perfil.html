@@ -9,45 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link th:href="@{/css/menu.css}" rel="stylesheet">
-
-    <style>
-        /* Estilo para los badges de roles en el perfil */
-        .bg-info-soft {
-            background-color: rgba(75, 108, 183, 0.1) !important;
-            color: #4b6cb7 !important;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-
-        /* Línea divisoria dinámica */
-        .border-dynamic {
-            opacity: 0.1;
-            border-color: var(--vacio-principal);
-        }
-
-        /* Reutilizamos el estilo de "una sola pieza" para los inputs */
-        .custom-group {
-            border: 1px solid var(--search-border);
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-
-        .custom-group:focus-within {
-            border-color: #4b6cb7 !important;
-            box-shadow: 0 0 0 1px #4b6cb7 !important;
-        }
-
-        .custom-group .form-control:focus {
-            box-shadow: none !important;
-            border: none !important;
-        }
-
-        /* Modo Oscuro específico para perfil */
-        html.dark-mode .bg-info-soft {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            color: #cbd5e0 !important;
-        }
-    </style>
 </head>
 <body>
 

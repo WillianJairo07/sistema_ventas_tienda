@@ -32,9 +32,7 @@
    BASE / DARK MODE
    ========================================================================== */
 
-html.dark-mode {
-    background-color: var(--dark-bg) !important;
-}
+
 
 .theme-switch label i {
     transition: none !important;

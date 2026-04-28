@@ -31,12 +31,7 @@
 
             <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
                 <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text"
-                           id="inputBusqueda"
-                           class="form-control"
-                           th:value="${buscar}"
-                           placeholder="Buscar categoría"
-                           onkeyup="manejarBusqueda(event)">
+                    <input type="text" id="inputBusqueda" class="form-control" th:value="${buscar}" placeholder="Buscar categoría" onkeyup="manejarBusqueda(event)">
                     <i class="fas fa-search"></i>
                 </div>
 
@@ -92,31 +87,29 @@
                     </tbody>
                 </table>
             </div>
-
-            <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3">
-                <div class="text-muted small">
-                    Página <span th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
-                </div>
-                <nav>
-                    <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                            <a class="page-link" th:href="@{/categorias(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                            th:classappend="${i == currentPage} ? 'active'">
-                            <a class="page-link" th:href="@{/categorias(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
-                        </li>
-                        <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
-                            <a class="page-link" th:href="@{/categorias(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+        </div> <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3 px-2">
+        <div class="text-muted small">
+            Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
         </div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link shadow-sm" th:href="@{/categorias(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                    th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link shadow-sm" th:href="@{/categorias(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                    <a class="page-link shadow-sm" th:href="@{/categorias(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
     </div>
 </main>
 
