@@ -3,6 +3,7 @@ package com.sistemaventas.sistema_ventas.controller;
 import com.sistemaventas.sistema_ventas.model.Proveedor;
 import com.sistemaventas.sistema_ventas.service.ProveedorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,30 +18,41 @@ public class ProveedorController {
     private ProveedorService service;
 
     @GetMapping
-    public String listar(@RequestParam(name = "verInactivos", required = false) Boolean verInactivos, Model model) {
-        // Usamos una variable booleana limpia para decidir qué lista mostrar
-        boolean mostrarInactivos = (verInactivos != null && verInactivos);
+    public String listar(
+            @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "buscar", required = false) String buscar,
+            Model model) {
 
-        model.addAttribute("proveedores", mostrarInactivos ?
-                service.listarSoloInactivos() :
-                service.listarTodos());
+        int size = 10;
+        boolean estadoABuscar = !verInactivos;
+
+        Page<Proveedor> paginaProveedores = service.listarPaginado(estadoABuscar, buscar, page, size);
+
+        model.addAttribute("proveedores", paginaProveedores.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", paginaProveedores.getTotalPages());
+        model.addAttribute("verInactivos", verInactivos);
+        model.addAttribute("buscar", buscar);
 
         model.addAttribute("proveedor", new Proveedor());
         return "proveedores";
     }
 
     @PostMapping("/guardar")
-    public String guardar(@ModelAttribute Proveedor proveedor, RedirectAttributes flash) {
+    public String guardar(@ModelAttribute Proveedor proveedor,
+                          @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
+                          RedirectAttributes flash) {
         try {
             service.guardar(proveedor);
             flash.addFlashAttribute("success", "Proveedor procesado correctamente.");
         } catch (IllegalArgumentException e) {
-            // Capturamos el error de validación (nombre duplicado, etc.)
             flash.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
             flash.addFlashAttribute("error", "Error inesperado al guardar el proveedor.");
         }
-        return "redirect:/proveedores";
+        // Redirigimos manteniendo el estado de la vista (Activos o Inactivos)
+        return "redirect:/proveedores" + (verInactivos ? "?verInactivos=true" : "");
     }
 
     @GetMapping("/restaurar/{id}")
@@ -48,7 +60,6 @@ public class ProveedorController {
         try {
             service.restaurar(id);
             flash.addFlashAttribute("success", "Proveedor restaurado con éxito.");
-            // Al restaurar, volvemos a la lista principal para ver al proveedor activo
             return "redirect:/proveedores";
         } catch (Exception e) {
             flash.addFlashAttribute("error", "No se pudo restaurar el proveedor.");
@@ -57,15 +68,16 @@ public class ProveedorController {
     }
 
     @GetMapping("/eliminar/{id}")
-    public String eliminar(@PathVariable Integer id, RedirectAttributes flash) {
+    public String eliminar(@PathVariable Integer id,
+                           @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
+                           RedirectAttributes flash) {
         try {
-            // El service ahora hace el cambio de estado (borrado lógico)
             service.eliminar(id);
             flash.addFlashAttribute("success", "El proveedor ha sido enviado a inactivos.");
         } catch (Exception e) {
             flash.addFlashAttribute("error", "No se pudo deshabilitar el proveedor.");
         }
-        return "redirect:/proveedores";
+        return "redirect:/proveedores" + (verInactivos ? "?verInactivos=true" : "");
     }
 
     @GetMapping("/editar/{id}")

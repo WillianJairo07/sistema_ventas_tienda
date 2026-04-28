@@ -91,13 +91,13 @@
             </div>
 
             <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
-                <form th:action="@{/productos}" method="get" class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="hidden" name="verInactivos" th:value="${verInactivos}">
-
-                    <input type="text" name="buscar" th:value="${buscar}"
-                           class="form-control" placeholder="Busca por nombre o código...">
+                <div class="search-container custom-search-adaptive flex-grow-1">
+                    <input type="text" id="inputBusqueda" class="form-control"
+                           th:value="${buscar}"
+                           placeholder="Busca por nombre o código..."
+                           onkeyup="manejarBusqueda(event)">
                     <i class="fas fa-search"></i>
-                </form>
+                </div>
 
                 <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
                     <a th:if="${!verInactivos}" th:href="@{/productos(verInactivos=true, buscar=${buscar})}" class="btn btn-ver-inactivos shadow-sm">
@@ -118,9 +118,9 @@
                 <table class="table custom-table align-middle" id="tablaProductos">
                     <thead>
                     <tr class="text-dynamic">
-                        <th></th>
+                        <th style="width: 50px;"></th>
                         <th class="ps-4">ID</th>
-                        <th >CÓDIGO</th>
+                        <th>CÓDIGO</th>
                         <th>PRODUCTO</th>
                         <th>CATEGORÍA</th>
                         <th>PRECIO VENTA</th>
@@ -137,21 +137,18 @@
                                     <i class="fas fa-chevron-right" style="transition: transform 0.3s;"></i>
                                 </button>
                             </td>
-
-                            <td class="ps-4 fw-bold" th:text="${p.idProducto}"></td>
+                            <td class="ps-4 fw-bold text-neon" th:text="${p.idProducto}"></td>
                             <td th:text="${p.codigoBarras} ?: 'SIN CÓDIGO'" class="text-muted small td-codigo"></td>
-                            <td class="nombre-prod" th:text="${p.nombreProducto} ?: 'SIN NOMBRE'"></td>
+                            <td class="nombre-prod text-dynamic fw-semibold" th:text="${p.nombreProducto}"></td>
                             <td>
-                                <span class="badge bg-transparent text-primary fw-bold p-0 badge-categoria"
+                                <span class="badge-categoria-tag"
                                       th:text="${p.categoria != null ? p.categoria.nombreCategoria : 'SIN CATEGORÍA'}">
                                 </span>
                             </td>
-                            <td class="fw-bold" th:text="${p.precio != null} ? 'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)} : 'S/ 0.00'"></td>
-
+                            <td class="fw-bold text-dynamic" th:text="${p.precio != null} ? 'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)} : 'S/ 0.00'"></td>
                             <td>
                                 <div th:with="esKilo=${p.unidadMedida == 'KG'}">
                                     <span th:if="${p.stock == 0}" class="badge-stock bg-secondary text-white">Agotado</span>
-
                                     <span th:if="${p.stock > 0}"
                                           th:class="${p.stock <= 5} ? 'badge-stock bg-danger text-white' : 'badge-stock bg-success text-white'">
                                         <span th:text="${esKilo ? #numbers.formatDecimal(p.stock, 1, 3) : #numbers.formatInteger(p.stock, 1)}"></span>
@@ -162,20 +159,15 @@
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
                                     <th:block th:if="${p.estado}">
-                                        <button class="btn-circle btn-edit"
-                                                th:onclick="'editarProducto(' + ${p.idProducto} + ')'"
-                                                data-bs-toggle="modal" data-bs-target="#modalProducto">
+                                        <button class="btn-circle btn-edit" th:onclick="'editarProducto(' + ${p.idProducto} + ')'" data-bs-toggle="modal" data-bs-target="#modalProducto">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <a href="javascript:void(0)" class="btn-circle btn-delete"
-                                           th:onclick="'confirmarEliminar(' + ${p.idProducto} + ')'">
+                                        <button class="btn-circle btn-delete" th:onclick="'confirmarEliminar(' + ${p.idProducto} + ')'">
                                             <i class="fas fa-trash-alt"></i>
-                                        </a>
+                                        </button>
                                     </th:block>
-
                                     <th:block th:if="${!p.estado}">
-                                        <a th:href="@{/productos/restaurar/{id}(id=${p.idProducto})}"
-                                           class="btn-circle btn-restore shadow-sm" title="Restaurar Producto">
+                                        <a th:href="@{/productos/restaurar/{id}(id=${p.idProducto})}" class="btn-circle btn-restore" title="Restaurar">
                                             <i class="fas fa-trash-restore"></i>
                                         </a>
                                     </th:block>
@@ -183,29 +175,23 @@
                             </td>
                         </tr>
                         <tr th:id="'lotes-' + ${p.idProducto}" class="lotes-fila" style="display:none;">
-                            <td colspan="8" class="p-0">
-                                <div class="p-3 lote-detalle-container">
-                                    <table class="table table-sm table-bordered mb-0 table-lotes-custom">
-                                        <thead>
-                                        <tr class="text-center text-muted">
+                            <td colspan="8" class="p-0 border-0">
+                                <div class="p-3 lote-detalle-container" style="background: rgba(0,0,0,0.02);">
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="table-light">
+                                        <tr>
                                             <th>N° Lote</th>
-                                            <th>Cantidad/Peso inicial</th>
+                                            <th>Cant. Inicial</th>
                                             <th>Precio Compra</th>
-                                            <th>Stock/Peso restante</th>
+                                            <th>Stock Actual</th>
                                         </tr>
                                         </thead>
-                                        <tbody class="text-center">
+                                        <tbody>
                                         <tr th:each="lote : ${p.detallesCompra}" th:if="${lote != null and lote.stockActual > 0}">
                                             <td th:text="${lote.idDetalleCompra}"></td>
-                                            <td>
-                                                <span th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.cantidad, 1, 3) : #numbers.formatInteger(lote.cantidad, 1)}"></span>
-                                                <small th:text="${p.unidadMedida}"></small>
-                                            </td>
-                                            <td th:text="${lote.precioCompra != null} ? 'S/ ' + ${#numbers.formatDecimal(lote.precioCompra, 1, 2)} : 'S/ 0.00'"></td>
-                                            <td class="fw-bold text-success">
-                                                <span th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.stockActual, 1, 3) : #numbers.formatInteger(lote.stockActual, 1)}"></span>
-                                                <small th:text="${p.unidadMedida}"></small>
-                                            </td>
+                                            <td th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.cantidad, 1, 3) : #numbers.formatInteger(lote.cantidad, 1)}"></td>
+                                            <td th:text="'S/ ' + ${#numbers.formatDecimal(lote.precioCompra, 1, 2)}"></td>
+                                            <td class="fw-bold text-success" th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.stockActual, 1, 3) : #numbers.formatInteger(lote.stockActual, 1)}"></td>
                                         </tr>
                                         </tbody>
                                     </table>
@@ -222,7 +208,6 @@
             <div class="text-muted-dynamic small">
                 Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
             </div>
-
             <nav>
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
@@ -230,13 +215,11 @@
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
-
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                        th:if="${(currentPage == 0 and i < 3) or (currentPage == totalPages - 1 and i > totalPages - 4) or (i >= currentPage - 1 and i <= currentPage + 1)}"
+                        th:if="${i >= currentPage - 1 and i <= currentPage + 1}"
                         th:classappend="${i == currentPage} ? 'active'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
                     </li>
-
                     <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
                             <i class="fas fa-chevron-right"></i>
@@ -314,6 +297,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
+    // --- VARIABLES GLOBALES DE ESTADO ---
+    const CURRENT_VER_INACTIVOS = /*[[${verInactivos}]]*/ false;
+    const CURRENT_BUSQUEDA = /*[[${buscar}]]*/ '';
+
     document.addEventListener("DOMContentLoaded", function() {
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
@@ -345,7 +332,7 @@
             });
         }
 
-        // Manejo de tema (puedes mantenerlo si usas esta lógica)
+        // Manejo de tema
         const temaActual = localStorage.getItem('tema-seleccionado') || 'dark-mode';
         const darkRadio = document.getElementById('darkMode');
         const lightRadio = document.getElementById('lightMode');
@@ -353,9 +340,45 @@
         else if (lightRadio) lightRadio.checked = true;
     });
 
-    // --- SE ELIMINÓ filtrarProductos() ---
-    // Ya no es necesaria porque la búsqueda se procesa en el servidor (Spring).
+    // --- NUEVA LÓGICA DE BÚSQUEDA HÍBRIDA ---
+    function manejarBusqueda(event) {
+        const texto = document.getElementById("inputBusqueda").value.toLowerCase();
 
+        // 1. SI PRESIONA ENTER: Búsqueda profunda en Servidor (Spring Boot)
+        if (event.key === 'Enter') {
+            window.location.href = `/productos?buscar=${encodeURIComponent(texto)}&verInactivos=${CURRENT_VER_INACTIVOS}`;
+            return;
+        }
+
+        // 2. MIENTRAS ESCRIBE: Filtro visual instantáneo (Frontend)
+        const filasProducto = document.querySelectorAll(".producto-fila");
+
+        filasProducto.forEach(fila => {
+            const nombre = fila.querySelector(".nombre-prod")?.innerText.toLowerCase() || "";
+            const codigo = fila.querySelector(".td-codigo")?.innerText.toLowerCase() || "";
+            const categoria = fila.querySelector(".badge-categoria-tag")?.innerText.toLowerCase() || "";
+            const id = fila.querySelector(".text-neon")?.innerText.toLowerCase() || "";
+
+            if (nombre.includes(texto) || codigo.includes(texto) || categoria.includes(texto) || id.includes(texto)) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+
+                // Si ocultamos el producto, también ocultamos su fila de lotes si estaba expandida
+                const idLoteFila = fila.querySelector(".btn-toggle-lotes")
+                    ?.getAttribute("onclick")
+                    ?.match(/'([^']+)'/)?.[1];
+                if(idLoteFila) {
+                    const loteFila = document.getElementById(idLoteFila);
+                    if(loteFila) loteFila.style.display = "none";
+                    const icono = fila.querySelector(".btn-toggle-lotes i");
+                    if(icono) icono.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+    }
+
+    // --- FUNCIONES DE FORMULARIO Y EDICIÓN ---
     function nuevoFormulario() {
         document.getElementById('modalTitulo').innerText = 'Nuevo Producto';
         document.getElementById('idProducto').value = '';
@@ -386,18 +409,15 @@
                 if(data.unidadMedida) document.getElementById('unidadMedida').value = data.unidadMedida;
                 if(data.categoria) document.getElementById('categoriaSelect').value = data.categoria.idCategoria;
 
-                // Bloqueamos stock en edición porque se maneja por compras/lotes
                 document.getElementById('stock').readOnly = true;
                 document.getElementById('stockHelp').style.display = 'block';
             })
             .catch(err => console.error('Error:', err));
     }
 
+    // --- ACCIONES DE ELIMINAR / RESTAURAR ---
     function confirmarEliminar(id) {
         const isDark = document.body.classList.contains('dark-mode');
-        // Capturamos si estamos viendo inactivos para que al borrar no nos regrese a la lista de activos
-        const verInactivos = /*[[${verInactivos}]]*/ false;
-
         Swal.fire({
             title: '¿Eliminar producto?',
             text: "El producto se moverá a la lista de inactivos.",
@@ -411,12 +431,13 @@
             color: isDark ? '#fff' : '#000'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Añadimos el parámetro verInactivos a la URL de redirección
-                window.location.href = `/productos/eliminar/${id}?verInactivos=` + verInactivos;
+                // Redirigimos respetando el estado de la búsqueda y filtros
+                window.location.href = `/productos/eliminar/${id}?verInactivos=${CURRENT_VER_INACTIVOS}&buscar=${encodeURIComponent(CURRENT_BUSQUEDA)}`;
             }
         });
     }
 
+    // --- MANEJO DE LOTES Y TABLAS ---
     function toggleLotes(idFila, btn) {
         const fila = document.getElementById(idFila);
         if (!fila) return;

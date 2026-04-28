@@ -13,26 +13,69 @@
     <link th:href="@{/css/menu1.css}" rel="stylesheet">
     <link th:href="@{/css/modal.css}" rel="stylesheet">
     <style>
-
+        /* --- TUS ESTILOS DE TABLA --- */
         #tablaUsuarios th:nth-child(3),
         #tablaUsuarios td:nth-child(3) {
             width: 35%;
             min-width: 180px;
-            font-weight: 600;
         }
 
         @media (max-width: 768px) {
+            #tablaUsuarios th:nth-child(1), #tablaUsuarios td:nth-child(1) { display: none; }
+            #tablaUsuarios th:nth-child(3), #tablaUsuarios td:nth-child(3) { width: auto; min-width: 130px; }
+        }
 
-            #tablaUsuarios th:nth-child(1),
-            #tablaUsuarios td:nth-child(1) {
-                display: none;
-            }
+        /* --- LO ESTRICTAMENTE NECESARIO PARA EL DISEÑO --- */
 
-            #tablaUsuarios th:nth-child(3),
-            #tablaUsuarios td:nth-child(3) {
-                width: auto;
-                min-width: 130px;
-            }
+        .custom-search-group, .custom-group, #inputBusqueda:focus, .form-control:focus {
+            transition: all 0.2s;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .custom-search-group:focus-within, .custom-group:focus-within {
+            border-color: #4b6cb7 !important;
+            box-shadow: 0 0 0 1px #4b6cb7 !important;
+        }
+
+        .btn-outline-custom-role {
+            border: 1px solid var(--search-border);
+            border-radius: 10px;
+            color: var(--vacio-secundario);
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-check:checked + .btn-outline-custom-role {
+            background: #4b6cb7 !important;
+            border-color: #4b6cb7 !important;
+            color: #fff !important;
+        }
+
+        .check-icon { display: none; }
+        .btn-check:checked + .btn-outline-custom-role .check-icon { display: inline; }
+
+        /* --- 3. AJUSTES MODO OSCURO (ACTUALIZADO) --- */
+        html.dark-mode .modal-content { background: #1e263a; }
+        html.dark-mode .nombre-user { color: #fff !important; }
+
+        /* Roles en modo oscuro: Texto blanco y sin hover */
+        html.dark-mode .btn-outline-custom-role {
+            border-color: #2a3651;
+            color: #ffffff !important; /* Texto blanco siempre */
+        }
+
+        html.dark-mode .btn-outline-custom-role:hover {
+            background: transparent !important; /* Quita el fondo al pasar el mouse */
+            border-color: #2a3651 !important;   /* Mantiene el color del borde original */
+        }
+
+        /* Mantener el color cuando se selecciona */
+        html.dark-mode .btn-check:checked + .btn-outline-custom-role {
+            background: #4b6cb7 !important;
+            border-color: #4b6cb7 !important;
         }
     </style>
 </head>
@@ -53,16 +96,19 @@
 
             <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
                 <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Buscar usuario o username..." onkeyup="filtrarUsuarios()">
+                    <input type="text" id="inputBusqueda" class="form-control"
+                           th:value="${buscar}"
+                           placeholder="Buscar por nombre o usuario..."
+                           onkeypress="if(event.key === 'Enter') ejecutarBusqueda()">
                     <i class="fas fa-search"></i>
                 </div>
 
                 <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-                    <a th:if="${param.verInactivos == null}" th:href="@{/usuarios(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
-                        <i class="fas fa-user-slash"></i> <span>Ver Inactivos</span>
-                    </a>
-                    <a th:if="${param.verInactivos != null}" th:href="@{/usuarios}" class="btn btn-ver-activos shadow-sm">
-                        <i class="fas fa-user-check"></i> <span>Ver Activos</span>
+                    <a th:href="@{/usuarios(verInactivos=${!verInactivos}, buscar=${buscar})}"
+                       class="btn shadow-sm"
+                       th:classappend="${verInactivos} ? 'btn-ver-activos' : 'btn-ver-inactivos'">
+                        <i class="fas" th:classappend="${verInactivos} ? 'fa-user-check' : 'fa-user-slash'"></i>
+                        <span th:text="${verInactivos} ? ' Ver Activos' : ' Ver Inactivos'"></span>
                     </a>
                     <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalUsuario" onclick="nuevoFormulario()">
                         <i class="fas fa-user-plus"></i> <span>Agregar</span>
@@ -84,22 +130,28 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="user : ${usuarios}">
-                        <td class="ps-4 fw-bold" th:text="${user.idUsuario}"></td>
-                        <td class="nombre-user" th:text="${user.nombre}"></td>
-                        <td th:text="${user.username}"></td>
+                    <tr th:each="user : ${usuarios}" class="fade-in">
+                        <td class="ps-4 fw-bold text-neon" th:text="${user.idUsuario}"></td>
+                        <td class="nombre-user text-dynamic" th:text="${user.nombre}"></td>
+                        <td class="text-dynamic" th:text="${user.username}"></td>
                         <td>
                             <span th:each="rol : ${user.roles}" class="badge bg-info me-1" th:text="${rol.nombreRol}"></span>
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
                                 <th:block th:if="${user.estado}">
+                                    <button class="btn-circle btn-reset" title="Cambiar Contraseña"
+                                            th:onclick="'abrirModalPassword(' + ${user.idUsuario} + ')'"
+                                            style="background: #4b6cb7; color: white; border: none;">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+
                                     <button class="btn-circle btn-edit" th:onclick="'editarUsuario(' + ${user.idUsuario} + ')'" data-bs-toggle="modal" data-bs-target="#modalUsuario">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a href="javascript:void(0)" class="btn-circle btn-delete" th:onclick="'confirmarEliminar(' + ${user.idUsuario} + ')'">
+                                    <button class="btn-circle btn-delete" th:onclick="'confirmarEliminar(' + ${user.idUsuario} + ')'">
                                         <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                    </button>
                                 </th:block>
                                 <th:block th:if="${!user.estado}">
                                     <a th:href="@{/usuarios/restaurar/{id}(id=${user.idUsuario})}" class="btn-circle btn-restore" title="Restaurar">
@@ -109,8 +161,42 @@
                             </div>
                         </td>
                     </tr>
+                    <tr th:if="${#lists.isEmpty(usuarios)}">
+                        <td colspan="5" class="text-center py-4 text-muted-dynamic">No se encontraron usuarios.</td>
+                    </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3" th:if="${totalPages > 1}">
+
+                <small class="text-muted-dynamic"
+                       th:text="'Página ' + (${currentPage} + 1) + ' de ' + ${totalPages}">
+                </small>
+
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/usuarios(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link"
+                               th:href="@{/usuarios(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}"
+                               th:text="${i + 1}">
+                            </a>
+                        </li>
+
+                        <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                            <a class="page-link" th:href="@{/usuarios(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -118,50 +204,61 @@
 
 <div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalTitulo">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header border-0 p-4" style="background: var(--primary-gradient); border-radius: 15px 15px 0 0;">
+        <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 15px;">
+            <div class="modal-header border-0 p-4" style="background: var(--primary-gradient);">
                 <h5 class="modal-title fw-bold text-white" id="modalTitulo">Nuevo Usuario</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="post">
+            <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="post" id="formUsuario">
                 <div class="modal-body p-4">
                     <input type="hidden" th:field="*{idUsuario}" id="idUsuario">
 
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dynamic">Nombre Completo</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-user"></i></span>
-                            <input type="text" th:field="*{nombre}" id="nombre" class="form-control" placeholder="Ej: Juan Perez" required>
+                        <div class="input-group custom-group">
+                            <span class="input-group-text bg-transparent"><i class="fas fa-user text-muted-dynamic"></i></span>
+                            <input type="text" th:field="*{nombre}" id="nombre" class="form-control border-start-0 ps-0" placeholder="Ej: Juan Perez" required>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dynamic">Username</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-at"></i></span>
-                            <input type="text" th:field="*{username}" id="username" class="form-control" placeholder="jperez" required>
+                        <div class="input-group custom-group">
+                            <span class="input-group-text bg-transparent"><i class="fas fa-at text-muted-dynamic"></i></span>
+                            <input type="text" th:field="*{username}" id="username" class="form-control border-start-0 ps-0" placeholder="jperez" required>
                         </div>
                     </div>
 
                     <div class="mb-3" id="groupPassword">
                         <label class="form-label fw-bold text-dynamic">Contraseña</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                            <input type="password" th:field="*{password}" id="password" class="form-control" required>
+                        <div class="input-group custom-group">
+                            <span class="input-group-text bg-transparent"><i class="fas fa-lock text-muted-dynamic"></i></span>
+                            <input type="password" th:field="*{password}" id="password" class="form-control border-start-0 ps-0" required>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Roles</label>
-                        <select th:field="*{roles}" class="form-select" multiple required>
-                            <option th:each="rol : ${rolesDisponibles}" th:value="${rol.idRol}" th:text="${rol.nombreRol}"></option>
-                        </select>
-                        <small class="text-muted">Mantén Ctrl para seleccionar varios</small>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-dynamic mb-3">Asignar Roles</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <div th:each="rol : ${rolesDisponibles}" class="role-chip">
+                                <input type="checkbox" class="btn-check"
+                                       th:id="${'rol_' + rol.idRol}"
+                                       th:name="roles"
+                                       th:value="${rol.idRol}">
+                                <label class="btn btn-outline-custom-role d-flex align-items-center gap-2" th:for="${'rol_' + rol.idRol}">
+
+                                    <span th:text="${rol.nombreRol}"></span>
+                                    <i class="fas fa-check-circle check-icon ms-1"></i>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Cerrar</button>
-                    <button type="submit" class="btn btn-new-cat px-4">Guardar Usuario</button>
+                    <button type="submit" class="btn btn-new-cat px-4 shadow-sm">
+                        <i class="fas fa-save me-2"></i>Guardar Usuario
+                    </button>
                 </div>
             </form>
         </div>
@@ -170,7 +267,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
-    // --- BLOQUE PARA MENSAJES SWEETALERT (IGUAL QUE CATEGORÍAS) ---
+    // Variables de estado para persistencia
+    const CURRENT_VER_INACTIVOS = /*[[${verInactivos}]]*/ false;
+    const CURRENT_BUSQUEDA = /*[[${buscar}]]*/ '';
+
     document.addEventListener("DOMContentLoaded", function() {
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
@@ -178,39 +278,24 @@
 
         if (successMsg) {
             Swal.fire({
-                icon: 'success',
-                title: '¡Hecho!',
-                text: successMsg,
-                timer: 2000,
-                showConfirmButton: false,
-                background: isDark ? '#1c222d' : '#fff',
-                color: isDark ? '#fff' : '#000'
+                icon: 'success', title: '¡Hecho!', text: successMsg, timer: 2000, showConfirmButton: false,
+                background: isDark ? '#1c222d' : '#fff', color: isDark ? '#fff' : '#000'
             });
         }
-
         if (errorMsg) {
             Swal.fire({
-                icon: 'error',
-                title: 'Atención',
-                text: errorMsg,
-                background: isDark ? '#1c222d' : '#fff',
-                color: isDark ? '#fff' : '#000',
-                confirmButtonColor: '#4b6cb7'
+                icon: 'error', title: 'Atención', text: errorMsg,
+                background: isDark ? '#1c222d' : '#fff', color: isDark ? '#fff' : '#000'
             });
         }
     });
 
-    // --- LÓGICA DE FILTRADO ---
-    function filtrarUsuarios() {
-        const input = document.getElementById("inputBusqueda").value.toLowerCase();
-        const filas = document.querySelectorAll("#tablaUsuarios tbody tr");
-        filas.forEach(fila => {
-            const texto = fila.innerText.toLowerCase();
-            fila.style.display = texto.includes(input) ? "" : "none";
-        });
+    // Búsqueda real en el servidor al presionar Enter
+    function ejecutarBusqueda() {
+        const valor = document.getElementById("inputBusqueda").value;
+        window.location.href = `/usuarios?buscar=${encodeURIComponent(valor)}&verInactivos=${CURRENT_VER_INACTIVOS}`;
     }
 
-    // --- FORMULARIO NUEVO ---
     function nuevoFormulario() {
         document.getElementById('modalTitulo').innerText = 'Nuevo Usuario';
         document.getElementById('idUsuario').value = '';
@@ -219,13 +304,10 @@
         document.getElementById('password').value = '';
         document.getElementById('password').required = true;
         document.getElementById('groupPassword').style.display = 'block';
-
-        // Limpiar roles
         const select = document.getElementById('rolesSelect');
         if(select) Array.from(select.options).forEach(opt => opt.selected = false);
     }
 
-    // --- EDITAR ---
     function editarUsuario(id) {
         document.getElementById('modalTitulo').innerText = 'Editar Usuario';
         document.getElementById('password').required = false;
@@ -237,7 +319,6 @@
                 document.getElementById('idUsuario').value = data.idUsuario;
                 document.getElementById('nombre').value = data.nombre;
                 document.getElementById('username').value = data.username;
-
                 const selectRoles = document.getElementById('rolesSelect');
                 if(selectRoles && data.roles) {
                     Array.from(selectRoles.options).forEach(option => {
@@ -247,7 +328,6 @@
             });
     }
 
-    // --- ELIMINAR (DESACTIVAR) ---
     function confirmarEliminar(id) {
         const isDark = document.body.classList.contains('dark-mode');
         Swal.fire({
@@ -257,12 +337,44 @@
             showCancelButton: true,
             confirmButtonColor: '#ff4d4d',
             confirmButtonText: 'Sí, desactivar',
-            cancelButtonText: 'Cancelar',
-            background: isDark ? '#1c222d' : '#fff',
-            color: isDark ? '#fff' : '#000'
+            background: isDark ? '#1c222d' : '#fff', color: isDark ? '#fff' : '#000'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = "/usuarios/eliminar/" + id;
+                // Redirige manteniendo el estado de la vista
+                window.location.href = `/usuarios/eliminar/${id}?verInactivos=${CURRENT_VER_INACTIVOS}`;
+            }
+        });
+    }
+
+
+    function abrirModalPassword(id) {
+        const isDark = document.body.classList.contains('dark-mode');
+
+        Swal.fire({
+            title: 'Restablecer Contraseña',
+            input: 'password',
+            inputLabel: 'Ingrese la nueva contraseña para este usuario',
+            inputPlaceholder: 'Escriba aquí...',
+            inputAttributes: {
+                autocapitalize: 'off',
+                autocorrect: 'off'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Actualizar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#4b6cb7',
+            background: isDark ? '#1c222d' : '#fff',
+            color: isDark ? '#fff' : '#000',
+            preConfirm: (pass) => {
+                if (!pass || pass.length < 4) {
+                    Swal.showValidationMessage('La contraseña debe tener al menos 4 caracteres');
+                }
+                return pass;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Enviamos la nueva contraseña al servidor
+                window.location.href = `/usuarios/reset-password/${id}?password=${encodeURIComponent(result.value)}&verInactivos=${CURRENT_VER_INACTIVOS}`;
             }
         });
     }

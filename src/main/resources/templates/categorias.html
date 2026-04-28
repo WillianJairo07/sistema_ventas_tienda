@@ -31,15 +31,20 @@
 
             <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
                 <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Buscar categoría..." onkeyup="filtrarCategorias()">
+                    <input type="text"
+                           id="inputBusqueda"
+                           class="form-control"
+                           th:value="${buscar}"
+                           placeholder="Buscar categoría"
+                           onkeyup="manejarBusqueda(event)">
                     <i class="fas fa-search"></i>
                 </div>
 
                 <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-                    <a th:if="${param.verInactivos == null}" th:href="@{/categorias(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
+                    <a th:if="${!verInactivos}" th:href="@{/categorias(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
                         <i class="fas fa-eye-slash"></i> <span>Ver Inactivos</span>
                     </a>
-                    <a th:if="${param.verInactivos != null}" th:href="@{/categorias}" class="btn btn-ver-activos shadow-sm">
+                    <a th:if="${verInactivos}" th:href="@{/categorias(verInactivos=false)}" class="btn btn-ver-activos shadow-sm">
                         <i class="fas fa-eye"></i> <span>Ver Activos</span>
                     </a>
                     <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCategoria" onclick="nuevoFormulario()">
@@ -48,7 +53,6 @@
                 </div>
             </div>
         </div>
-
 
         <div class="crud-card p-4 shadow">
             <div class="table-responsive">
@@ -74,21 +78,48 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </a>
                                 </th:block>
-
                                 <th:block th:if="${!cat.estado}">
-                                    <a th:href="@{/categorias/restaurar/{id}(id=${cat.idCategoria})}" class="btn-circle btn-restore"  title="Restaurar">
+                                    <a th:href="@{/categorias/restaurar/{id}(id=${cat.idCategoria})}" class="btn-circle btn-restore" title="Restaurar">
                                         <i class="fas fa-trash-restore"></i>
                                     </a>
                                 </th:block>
                             </div>
                         </td>
                     </tr>
+                    <tr th:if="${#lists.isEmpty(categorias)}">
+                        <td colspan="3" class="text-center py-4 text-muted">No se encontraron categorías.</td>
+                    </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted small">
+                    Página <span th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/categorias(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/categorias(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                            <a class="page-link" th:href="@{/categorias(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
 </main>
+
 <div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalTitulo">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
@@ -120,11 +151,9 @@
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", function() {
-
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
         const isDark = document.body.classList.contains('dark-mode');
-
 
         if (successMsg) {
             Swal.fire({
@@ -138,7 +167,6 @@
             });
         }
 
-
         if (errorMsg) {
             Swal.fire({
                 icon: 'error',
@@ -149,18 +177,37 @@
                 confirmButtonColor: '#4b6cb7'
             });
         }
+
+        // MANTENER EL CURSOR AL FINAL SI HAY BÚSQUEDA
+        const inputBusqueda = document.getElementById("inputBusqueda");
+        if (inputBusqueda && inputBusqueda.value !== "") {
+            inputBusqueda.focus();
+            const val = inputBusqueda.value;
+            inputBusqueda.value = '';
+            inputBusqueda.value = val;
+        }
     });
 
+    // BUSQUEDA HÍBRIDA: Visual al escribir, Servidor al presionar Enter
+    function manejarBusqueda(event) {
+        const texto = document.getElementById("inputBusqueda").value.toLowerCase();
 
-    function filtrarCategorias() {
-        const input = document.getElementById("inputBusqueda").value.toLowerCase();
+        // 1. SI PRESIONA ENTER: Búsqueda profunda (Va al Backend)
+        if (event.key === 'Enter') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const verInactivos = urlParams.get('verInactivos') || 'false';
+            window.location.href = `/categorias?page=0&verInactivos=${verInactivos}&buscar=${encodeURIComponent(texto)}`;
+            return;
+        }
+
+        // 2. MIENTRAS ESCRIBE: Filtro visual (Solo lo que hay en la página actual)
         const filas = document.querySelectorAll("#tablaCategorias tbody tr");
 
         filas.forEach(fila => {
             const nombre = fila.querySelector(".nombre-cat")?.innerText.toLowerCase() || "";
             const id = fila.querySelector("td:first-child")?.innerText.toLowerCase() || "";
 
-            if (nombre.includes(input) || id.includes(input)) {
+            if (nombre.includes(texto) || id.includes(texto)) {
                 fila.style.display = "";
             } else {
                 fila.style.display = "none";
@@ -168,13 +215,10 @@
         });
     }
 
-
     function nuevoFormulario() {
         document.getElementById('modalTitulo').innerText = 'Nueva Categoría';
         document.getElementById('idCategoria').value = '';
         document.getElementById('nombreCategoria').value = '';
-
-        // Focus automático al abrir el modal
         setTimeout(() => {
             document.getElementById('nombreCategoria').focus();
         }, 450);
@@ -198,7 +242,7 @@
             text: "La categoría ya no aparecerá, pero podrás recuperarla en 'Ver Inactivos'.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ff4d4d', // Rojo neón para borrar
+            confirmButtonColor: '#ff4d4d',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, ocultar',
             cancelButtonText: 'Cancelar',

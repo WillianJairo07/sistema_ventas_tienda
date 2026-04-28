@@ -31,17 +31,19 @@
 
             <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
                 <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Buscar por nombre, apellido o ID..." onkeyup="filtrarClientes()">
+                    <input type="text" id="inputBusqueda" class="form-control"
+                           th:value="${buscar}"
+                           placeholder="Escribe para filtrar o presiona Enter para buscar todo..."
+                           onkeyup="manejarBusqueda(event)">
                     <i class="fas fa-search"></i>
                 </div>
 
                 <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-                    <a th:if="${verInactivos}" th:href="@{/clientes}" class="btn btn-ver-activos shadow-sm">
-                        <i class="fas fa-eye"></i> <span>Ver Activos</span>
-                    </a>
-
-                    <a th:unless="${verInactivos}" th:href="@{/clientes(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
-                        <i class="fas fa-eye-slash"></i> <span>Ver Inactivos</span>
+                    <a th:href="@{/clientes(verInactivos=${!verInactivos}, buscar=${buscar})}"
+                       class="btn shadow-sm"
+                       th:classappend="${verInactivos} ? 'btn-ver-activos' : 'btn-ver-inactivos'">
+                        <i class="fas" th:classappend="${verInactivos} ? 'fa-eye' : 'fa-eye-slash'"></i>
+                        <span th:text="${verInactivos} ? ' Ver Activos' : ' Ver Inactivos'"></span>
                     </a>
 
                     <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="nuevoFormulario()">
@@ -53,7 +55,7 @@
 
         <div class="crud-card p-4 shadow">
             <div class="table-responsive">
-                <table class="table custom-table align-middle" id="tablaClientes">
+                <table class="table custom-table align-middle">
                     <thead>
                     <tr class="text-dynamic">
                         <th class="ps-4">ID</th>
@@ -73,31 +75,40 @@
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
                                 <th:block th:if="${c.estado}">
-                                    <button class="btn-circle btn-edit" title="Editar"
-                                            th:onclick="'editarCliente(' + ${c.idCliente} + ')'"
-                                            data-bs-toggle="modal" data-bs-target="#modalCliente">
+                                    <button class="btn-circle btn-edit" th:onclick="'editarCliente(' + ${c.idCliente} + ')'" data-bs-toggle="modal" data-bs-target="#modalCliente">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-circle btn-delete" title="Deshabilitar"
-                                            th:onclick="'confirmarEliminar(' + ${c.idCliente} + ')'">
+                                    <button class="btn-circle btn-delete" th:onclick="'confirmarEliminar(' + ${c.idCliente} + ')'">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </th:block>
-
                                 <th:block th:if="${!c.estado}">
-                                    <button class="btn-circle btn-restore" title="Restaurar Cliente"
-                                            th:onclick="'confirmarRestaurar(' + ${c.idCliente} + ')'">
+                                    <button class="btn-circle btn-restore" th:onclick="'confirmarRestaurar(' + ${c.idCliente} + ')'">
                                         <i class="fas fa-trash-restore"></i>
                                     </button>
                                 </th:block>
                             </div>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(clientes)}">
-                        <td colspan="4" class="text-center py-4 text-muted-dynamic">No se encontraron clientes.</td>
-                    </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3" th:if="${totalPages > 0}">
+                <small class="text-muted-dynamic" th:text="'Página ' + (${currentPage} + 1) + ' de ' + ${totalPages}"></small>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/clientes(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}"><i class="fas fa-chevron-left"></i></a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/clientes(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                            <a class="page-link" th:href="@{/clientes(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}"><i class="fas fa-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -149,47 +160,39 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
+    // Variables globales de estado para usar en redirecciones
+    const CURRENT_VER_INACTIVOS = /*[[${verInactivos}]]*/ false;
+    const CURRENT_BUSQUEDA = /*[[${buscar}]]*/ '';
+
     document.addEventListener("DOMContentLoaded", function() {
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
         const isDark = document.body.classList.contains('dark-mode');
 
-
-        if (successMsg) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Operación Exitosa!',
-                text: successMsg,
-                background: isDark ? '#1a1d21' : '#fff',
-                color: isDark ? '#fff' : '#000',
-                showConfirmButton: false
-            });
-        }
-
-
-        if (errorMsg) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error en la solicitud',
-                text: errorMsg,
-                background: isDark ? '#1a1d21' : '#fff',
-                color: isDark ? '#fff' : '#000',
-                showConfirmButton: false
-            });
-        }
+        if (successMsg) Swal.fire({ icon: 'success', title: '¡Éxito!', text: successMsg, background: isDark ? '#1a1d21' : '#fff', color: isDark ? '#fff' : '#000', showConfirmButton: false, timer: 2000 });
+        if (errorMsg) Swal.fire({ icon: 'error', title: 'Error', text: errorMsg, background: isDark ? '#1a1d21' : '#fff', color: isDark ? '#fff' : '#000' });
     });
 
+    // BUSQUEDA HÍBRIDA: Visual al escribir, Servidor al presionar Enter
+    function manejarBusqueda(event) {
+        const texto = document.getElementById("inputBusqueda").value.toLowerCase();
 
-    function filtrarClientes() {
-        const input = document.getElementById("inputBusqueda").value.toLowerCase();
-        const filas = document.querySelectorAll("#tablaClientes tbody tr");
+        // 1. SI PRESIONA ENTER: Búsqueda profunda (Va a la Base de Datos)
+        if (event.key === 'Enter') {
+            window.location.href = `/clientes?buscar=${encodeURIComponent(texto)}&verInactivos=${CURRENT_VER_INACTIVOS}`;
+            return;
+        }
+
+        // 2. MIENTRAS ESCRIBE: Filtro visual rápido (Solo lo que hay en la página actual)
+        const filas = document.querySelectorAll(".table tbody tr");
 
         filas.forEach(fila => {
-            // Buscamos en el nombre completo (clase nombre-cli) y en el ID (primera celda)
+            // Buscamos dentro de la celda de nombre (nombre-cli) y la de ID (text-neon)
             const nombreCompleto = fila.querySelector(".nombre-cli")?.innerText.toLowerCase() || "";
-            const idCliente = fila.querySelector("td:first-child")?.innerText.toLowerCase() || "";
+            const idCliente = fila.querySelector(".text-neon")?.innerText.toLowerCase() || "";
 
-            if (nombreCompleto.includes(input) || idCliente.includes(input)) {
+            // Si el texto coincide con el nombre o el ID, mostramos la fila
+            if (nombreCompleto.includes(texto) || idCliente.includes(texto)) {
                 fila.style.display = "";
             } else {
                 fila.style.display = "none";
@@ -197,77 +200,45 @@
         });
     }
 
-
-    function nuevoFormulario() {
-        document.getElementById('modalTitulo').innerText = 'Nuevo Cliente';
-        document.getElementById('idCliente').value = '';
-
-        // Limpiamos los campos del formulario
-        document.getElementById('nombre').value = '';
-        document.getElementById('apellidoPat').value = '';
-        document.getElementById('apellidoMat').value = '';
-
-
-        setTimeout(() => {
-            document.getElementById('nombre').focus();
-        }, 450);
-    }
-
     function editarCliente(id) {
         document.getElementById('modalTitulo').innerText = 'Editar Cliente';
-
-
         fetch(`/clientes/editar/${id}`)
-            .then(res => {
-                if (!res.ok) throw new Error("Error al obtener datos");
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
                 document.getElementById('idCliente').value = data.idCliente;
                 document.getElementById('nombre').value = data.nombre || '';
                 document.getElementById('apellidoPat').value = data.apellidoPat || '';
                 document.getElementById('apellidoMat').value = data.apellidoMat || '';
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'No se pudieron cargar los datos del cliente', 'error');
             });
     }
 
-
     function confirmarEliminar(id) {
         const isDark = document.body.classList.contains('dark-mode');
-
         Swal.fire({
-            title: '¿Deshabilitar cliente?',
-            text: "Se moverá a la lista de inactivos (Papelera).",
+            title: '¿Deshabilitar?',
+            text: "Se moverá a inactivos.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ff4d4d',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, deshabilitar',
-            cancelButtonText: 'Cancelar',
             background: isDark ? '#1a1d21' : '#fff',
             color: isDark ? '#fff' : '#000'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = `/clientes/eliminar/${id}`;
+                // Redirigimos manteniendo el estado de inactivos
+                window.location.href = `/clientes/eliminar/${id}?verInactivos=${CURRENT_VER_INACTIVOS}`;
             }
         });
     }
 
     function confirmarRestaurar(id) {
         const isDark = document.body.classList.contains('dark-mode');
-
         Swal.fire({
-            title: '¿Restaurar cliente?',
-            text: "El cliente volverá a aparecer en el catálogo activo.",
+            title: '¿Restaurar?',
             icon: 'info',
             showCancelButton: true,
             confirmButtonColor: '#198754',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, restaurar',
-            cancelButtonText: 'Cancelar',
             background: isDark ? '#1a1d21' : '#fff',
             color: isDark ? '#fff' : '#000'
         }).then((result) => {
@@ -275,6 +246,15 @@
                 window.location.href = `/clientes/restaurar/${id}`;
             }
         });
+    }
+
+    function nuevoFormulario() {
+        document.getElementById('modalTitulo').innerText = 'Nuevo Cliente';
+        document.getElementById('idCliente').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('apellidoPat').value = '';
+        document.getElementById('apellidoMat').value = '';
+        setTimeout(() => document.getElementById('nombre').focus(), 450);
     }
 </script>
 </body>

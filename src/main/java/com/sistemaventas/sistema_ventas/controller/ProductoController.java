@@ -39,7 +39,7 @@ public class ProductoController {
         model.addAttribute("verInactivos", verInactivos);
         model.addAttribute("buscar", buscar); // Lo enviamos a la vista para mantener el texto en el input
 
-        model.addAttribute("categorias", categoriaService.listarTodasOrdenadas());
+        model.addAttribute("categorias", categoriaService.listarParaCombos());
         model.addAttribute("producto", new Producto());
 
         return "productos";

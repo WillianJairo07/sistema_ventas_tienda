@@ -224,134 +224,161 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
-<script>
+<script th:inline="javascript">
+    // --- Configuración Global de SweetAlert2 ---
+    const swalConfig = {
+        confirmButtonColor: '#4b6cb7',
+        background: '#ffffff',
+        color: '#333333'
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // 1. Inicializar Validaciones de Filtros
+        initFechaValidation();
+
+        // 2. Mostrar Notificaciones del Servidor
+        mostrarAlertasServidor();
+    });
+
+    /**
+     * Valida que la fecha 'Hasta' no sea menor que 'Desde'
+     */
+    function initFechaValidation() {
+        const inputDesde = document.querySelector('input[name="fechaDesde"]');
+        const inputHasta = document.querySelector('input[name="fechaHasta"]');
+        const filterForm = document.querySelector('form[action*="/compras/historial"]');
+
+        if (inputDesde && inputHasta) {
+            // Restringe el calendario de 'Hasta' basándose en 'Desde'
+            inputDesde.addEventListener("change", () => {
+                inputHasta.min = inputDesde.value;
+            });
+
+            // Validación al enviar el formulario
+            if (filterForm) {
+                filterForm.addEventListener("submit", (e) => {
+                    if (inputDesde.value && inputHasta.value && inputDesde.value > inputHasta.value) {
+                        e.preventDefault();
+                        Swal.fire({
+                            ...swalConfig,
+                            icon: 'warning',
+                            title: 'Rango inválido',
+                            text: 'La "Fecha hasta" no puede ser anterior a la "Fecha desde".'
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * Muestra SweetAlerts si el controlador envía mensajes de éxito o error
+     */
+    function mostrarAlertasServidor() {
+        const successMsg = /*[[${success}]]*/ null;
+        const errorMsg = /*[[${error}]]*/ null;
+
+        if (successMsg) {
+            Swal.fire({ ...swalConfig, icon: 'success', title: '¡Logrado!', text: successMsg });
+        }
+        if (errorMsg) {
+            Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: errorMsg, confirmButtonColor: '#ff4d4d' });
+        }
+    }
+
+    /**
+     * Procesa la confirmación de recepción de productos
+     */
     function confirmarRecepcion(id) {
         Swal.fire({
+            ...swalConfig,
             title: 'Confirmar Ingreso de Stock',
             text: "¿Con qué tipo de comprobante llegó el pedido?",
             icon: 'question',
             input: 'select',
-            inputOptions: {
-                'BOLETA': 'Boleta de Venta',
-                'FACTURA': 'Factura'
-            },
+            inputOptions: { 'BOLETA': 'Boleta de Venta', 'FACTURA': 'Factura' },
             inputPlaceholder: '-- Seleccione --',
             showCancelButton: true,
-            confirmButtonColor: '#198754',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Confirmar Ingreso',
             cancelButtonText: 'Cancelar',
-            inputValidator: (value) => {
-                if (!value) {
-                    return '¡Debes seleccionar el tipo de comprobante para continuar!'
-                }
-            }
+            inputValidator: (value) => !value && '¡Debes seleccionar el tipo de comprobante!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Enviamos el ID y el tipo elegido al controlador
                 window.location.href = `/compras/confirmar/${id}?tipo=${result.value}`;
             }
         });
     }
 
-
-    function verDetalle(id) {
-        document.getElementById('detTablaCuerpo').innerHTML = '<tr><td colspan="4" class="text-center py-3">Cargando...</td></tr>';
+    /**
+     * Obtiene y muestra el detalle de la compra mediante AJAX
+     */
+    async function verDetalle(id) {
+        const tablaCuerpo = document.getElementById('detTablaCuerpo');
         const badgeComp = document.getElementById('detComprobante');
         const txtSinComp = document.getElementById('detSinComprobante');
 
+        tablaCuerpo.innerHTML = '<tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Cargando...</td></tr>';
         badgeComp.style.display = 'none';
         txtSinComp.style.display = 'none';
 
-        fetch('/compras/api/' + id)
-            .then(response => response.json())
-            .then(compra => {
+        try {
+            const response = await fetch(`/compras/api/${id}`);
+            if (!response.ok) throw new Error("No se pudo obtener el detalle");
 
-                document.getElementById('detProveedor').innerText = compra.proveedor.nombre;
-                document.getElementById('detTotal').innerText = parseFloat(compra.total).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            const compra = await response.json();
 
+            // Renderizar datos básicos
+            document.getElementById('detProveedor').innerText = compra.proveedor.nombre;
+            document.getElementById('detTotal').innerText = parseFloat(compra.total).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
-                if (compra.tipoComprobante) {
-                    badgeComp.innerText = compra.tipoComprobante;
+            // Comprobante
+            if (compra.tipoComprobante) {
+                badgeComp.innerText = compra.tipoComprobante;
+                badgeComp.className = "fw-bold text-dynamic fs-5";
+                badgeComp.style.display = 'inline-block';
+            } else {
+                txtSinComp.style.display = 'inline-block';
+            }
 
-                    badgeComp.className = "fw-bold text-dynamic fs-5";
-                    badgeComp.style.display = 'inline-block';
-                } else {
-                    txtSinComp.style.display = 'inline-block';
-                }
+            // Fecha formateada
+            const fechaISO = compra.fechaRecepcion || compra.fecha || compra.fechaInicio;
+            document.getElementById('detFecha').innerText = formatearFecha(fechaISO);
 
+            // Detalles de productos
+            tablaCuerpo.innerHTML = compra.detalles.map(d => {
+                const cant = parseFloat(d.cantidad);
+                const precio = parseFloat(d.precioCompra);
+                const cantFormateada = (d.producto.unidadMedida === 'KG') ? cant.toFixed(3) : Math.floor(cant);
 
-                let fechaISO = compra.fechaRecepcion || compra.fecha || compra.fechaInicio;
-                if (fechaISO.includes('T')) {
-                    const f = new Date(fechaISO);
-                    document.getElementById('detFecha').innerText = f.toLocaleDateString('es-PE') + ' ' + f.toLocaleTimeString('es-PE', {hour: '2-digit', minute:'2-digit'});
-                } else {
-                    const [y, m, d] = fechaISO.split('-');
-                    document.getElementById('detFecha').innerText = `${d}/${m}/${y}`;
-                }
+                return `
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dynamic">${d.producto.nombreProducto}</div>
+                            <small class="text-muted">Cód: ${d.producto.codigoBarras}</small>
+                        </td>
+                        <td class="text-center">${cantFormateada}</td>
+                        <td class="text-end">S/ ${precio.toFixed(2)}</td>
+                        <td class="text-end fw-bold">S/ ${(cant * precio).toFixed(2)}</td>
+                    </tr>`;
+            }).join('');
 
+            new bootstrap.Modal(document.getElementById('modalVerDetalle')).show();
 
-                let html = '';
-                compra.detalles.forEach(d => {
-                    const cant = parseFloat(d.cantidad);
-                    const precio = parseFloat(d.precioCompra);
-                    const cantFormateada = (d.producto.unidadMedida === 'KG') ? cant.toFixed(3) : Math.floor(cant);
-
-                    html += `
-                <tr>
-                    <td>
-                        <div class="fw-bold text-dynamic">${d.producto.nombreProducto}</div>
-                        <small class="text-muted">Cód: ${d.producto.codigoBarras}</small>
-                    </td>
-                    <td class="text-center">${cantFormateada}</td>
-                    <td class="text-end">S/ ${precio.toFixed(2)}</td>
-                    <td class="text-end fw-bold">S/ ${(cant * precio).toFixed(2)}</td>
-                </tr>`;
-                });
-                document.getElementById('detTablaCuerpo').innerHTML = html;
-
-
-                const modalElement = document.getElementById('modalVerDetalle');
-                let modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-                modalInstance.show();
-            })
-            .catch(error => console.error("Error:", error));
+        } catch (error) {
+            console.error(error);
+            tablaCuerpo.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar los datos.</td></tr>';
+        }
     }
 
-</script>
-<script th:inline="javascript">
-    document.addEventListener("DOMContentLoaded", () => {
-
-
-        const successMsg = /*[[${success}]]*/ null;
-        const errorMsg = /*[[${error}]]*/ null;
-
-        const configComun = {
-            confirmButtonColor: '#4b6cb7',
-
-            background: '#ffffff',
-            color: '#333333'
-        };
-
-        if (successMsg && successMsg !== "") {
-            Swal.fire({
-                ...configComun,
-                icon: 'success',
-                title: '¡Logrado!',
-                text: successMsg
-            });
+    function formatearFecha(isoStr) {
+        if (!isoStr) return "-";
+        if (isoStr.includes('T')) {
+            const f = new Date(isoStr);
+            return f.toLocaleDateString('es-PE') + ' ' + f.toLocaleTimeString('es-PE', {hour: '2-digit', minute:'2-digit'});
         }
-
-        if (errorMsg && errorMsg !== "") {
-            Swal.fire({
-                ...configComun,
-                icon: 'error',
-                title: 'Error',
-                text: errorMsg,
-                confirmButtonColor: '#ff4d4d'
-            });
-        }
-    });
+        const [y, m, d] = isoStr.split('-');
+        return `${d}/${m}/${y}`;
+    }
 </script>
 </body>
 </html>

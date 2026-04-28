@@ -14,18 +14,129 @@
   <link th:href="@{/css/modal.css}" rel="stylesheet">
   <link th:href="@{/css/vencom.css}" rel="stylesheet">
   <style>
+    /* --- 1. VARIABLES DE TEMA (ESTILO COMPRAS APLICADO A VENTAS) --- */
+    html.light-mode {
+      --search-bg: #ffffff;
+      --search-border: rgba(0,0,0,0.1);
+      --search-hover: rgba(75, 108, 183, 0.1); /* Azul sutil al pasar el mouse */
+      --text-main: #333333;
+      --text-sub: rgba(108, 117, 125, 0.8);
+      --price-bg: rgba(75, 108, 183, 0.15);
+      --price-color: #4b6cb7;
+      --focus-color: #4b6cb7;
+      --search-shadow: rgba(0, 0, 0, 0.15);
+    }
 
-    #buscadorPOS:focus {
+    html.dark-mode {
+      --search-bg: #1e263a;
+      --search-border: #2a3651;
+      --search-hover: #2a3651;
+      --text-main: #ffffff;      /* Nombre del producto en blanco */
+      --text-sub: #cbd5e0;       /* Cód/Stock en blanco azulado nítido */
+      --price-bg: #2b458d;       /* Azul sólido profesional */
+      --price-color: #ffffff;    /* Texto del precio en blanco */
+      --focus-color: #4b6cb7;
+      --search-shadow: rgba(0, 0, 0, 0.5);
+    }
+
+    /* --- 2. BUSCADOR PROFESIONAL (CONTENEDOR) --- */
+    /* El borde azul rodeará tanto a la lupa como al input */
+    .input-group.shadow-sm {
+      transition: all 0.2s ease-in-out;
+      border: 1px solid var(--search-border);
+      border-radius: 8px; /* Redondeado elegante */
+      background-color: var(--search-bg);
+    }
+
+    /* EFECTO DE ENFOQUE UNIFICADO */
+    .input-group.shadow-sm:focus-within {
+      border-color: var(--focus-color) !important;
+      box-shadow: 0 0 0 1px var(--focus-color) !important;
+    }
+
+    /* Limpieza total de estilos por defecto de Bootstrap en el input */
+    #buscadorVenta, /* Asegúrate que este sea el ID de tu input de ventas */
+    .input-group .form-control:focus {
       outline: none !important;
       box-shadow: none !important;
-      border-color: rgba(0, 0, 0, 0.1) !important;
+      border: none !important;
+      background-color: transparent !important;
+      color: var(--text-main);
     }
 
-
-    .input-group #buscadorPOS:focus {
-      z-index: 1;
+    /* Estilo de la lupa (icono) */
+    .input-group:focus-within .input-group-text {
+      border-color: transparent !important;
+      color: var(--focus-color) !important;
+      background-color: transparent !important;
     }
 
+    .input-group-text {
+      background-color: transparent !important;
+      border: none !important;
+      color: var(--text-sub);
+      transition: color 0.2s ease;
+    }
+
+    /* --- 3. RESULTADOS DESPLEGABLES (DROPDOWN) --- */
+    .search-results-container {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1050;
+      background-color: var(--search-bg);
+      border: 1px solid var(--search-border);
+      border-radius: 0 0 12px 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none; /* Se activa por JS */
+      margin-top: 5px;
+      box-shadow: 0 10px 25px var(--search-shadow);
+    }
+
+    .search-item {
+      padding: 12px 15px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--search-border);
+      transition: all 0.2s ease;
+    }
+
+    .search-item:hover {
+      background-color: var(--search-hover);
+      padding-left: 20px; /* Efecto de desplazamiento igual a Compras */
+    }
+
+    .search-item .info-main {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .search-item .prod-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-main) !important;
+    }
+
+    .search-item .prod-sub {
+      font-size: 0.78rem;
+      color: var(--text-sub) !important;
+      opacity: 1;
+    }
+
+    .search-item .prod-price {
+      font-weight: bold;
+      color: var(--price-color) !important;
+      background: var(--price-bg);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    /* --- 4. TABLAS Y COMPONENTES --- */
     html.dark-mode .custom-table thead th {
       background-color: #2A3651FF !important;
       color: #ffffff !important;
@@ -39,47 +150,34 @@
       display: block !important;
     }
 
-
-    @media (max-width: 768px) {
-
-      .table-responsive table {
-        min-width: 700px !important;
-        margin-bottom: 20px !important;
-      }
-
-
-      .table-responsive thead.sticky-top {
-        position: relative !important;
-        top: auto !important;
-      }
-
-
-      .crud-card {
-        overflow: visible !important;
-      }
-    }
-
-
     .btn-nuevo-cliente-fijo {
-      background-color: #4b6cb7;
+      background-color: var(--focus-color);
       color: #fff;
       border: none;
       padding: 8px 18px;
       font-size: 0.85rem;
       border-radius: 12px;
-
+      transition: background 0.2s;
     }
 
     .btn-nuevo-cliente-fijo:hover {
-      background-color: #3b5998 !important; ;
+      background-color: #3b5998 !important;
       color: #fff !important;
     }
 
-    .swal2-confirm:focus {
-      box-shadow: none !important;
-      outline: none !important;
+    /* --- 5. RESPONSIVE Y SCROLLBAR --- */
+    @media (max-width: 768px) {
+      .table-responsive table { min-width: 700px !important; }
+      .crud-card { overflow: visible !important; }
     }
 
+    .search-results-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .search-results-container::-webkit-scrollbar-thumb {
+      background: var(--focus-color);
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
@@ -104,21 +202,28 @@
             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
               <h5 class="fw-bold mb-0 text-dynamic fs-5">Agregar Productos</h5>
             </div>
-            <div class="input-group shadow-sm border rounded-3 overflow-hidden bg-transparent">
-              <span class="input-group-text bg-transparent border-0 py-3 ps-3"><i class="fas fa-barcode text-muted-dynamic"></i></span>
-              <input type="text" id="buscadorVenta" class="form-control border-0 py-3 bg-transparent text-dynamic"
-                     placeholder="Escanea o busca el producto..." list="listaProductos" autocomplete="off">
-              <datalist id="listaProductos">
-                <option th:each="p : ${productos}"
-                        th:value="${p.nombreProducto}"
-                        th:data-id="${p.idProducto}"
-                        th:data-precio="${p.precio}"
-                        th:data-stock="${p.stock}"
-                        th:data-unidad="${p.unidadMedida}"
-                        th:data-barcode="${p.codigoBarras}"
-                        th:text="${p.unidadMedida == 'KG' ? 'Stock: ' + p.stock + 'kg' : 'Stock: ' + p.stock} + ' - S/ ' + p.precio">
-                </option>
-              </datalist>
+
+            <div class="position-relative">
+              <div class="input-group shadow-sm border rounded-3 overflow-hidden bg-transparent">
+                <span class="input-group-text bg-transparent border-0 py-3 ps-3">
+                    <i class="fas fa-search text-muted-dynamic"></i>
+                </span>
+                <input type="text" id="buscadorVenta" class="form-control border-0 py-3 bg-transparent text-dynamic"
+                       placeholder="Escanea o busca el producto..." autocomplete="off">
+              </div>
+
+              <div id="res-busqueda" class="search-results-container shadow"></div>
+            </div>
+
+            <div id="data-productos" style="display: none;">
+              <div th:each="p : ${productos}"
+                   th:data-id="${p.idProducto}"
+                   th:data-nombre="${p.nombreProducto}"
+                   th:data-precio="${p.precio}"
+                   th:data-stock="${p.stock}"
+                   th:data-unidad="${p.unidadMedida}"
+                   th:data-barcode="${p.codigoBarras}">
+              </div>
             </div>
           </div>
 
@@ -280,9 +385,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script>
-
+  // Elementos del DOM
   const buscador = document.getElementById('buscadorVenta');
-  const datalistProd = document.getElementById('listaProductos');
   const inputCliente = document.getElementById('inputCliente');
   const datalistCli = document.getElementById('listaClientes');
   const selectTipoVenta = document.getElementById('tipoVenta');
@@ -290,160 +394,84 @@
   const selectMetodo = document.getElementById('selectMetodo');
   const labelVuelto = document.getElementById("labelVuelto");
   const wrapperVuelto = document.getElementById('wrapperVuelto');
+  const contenedorResultados = document.getElementById('res-busqueda');
 
+  // --- OPTIMIZACIÓN: CARGA DE DATOS EN MEMORIA ---
+  // Extraemos los datos del div oculto una sola vez para mejorar el rendimiento
+  const obtenerProductosMemoria = () => {
+    const nodos = document.querySelectorAll('#data-productos div');
+    return Array.from(nodos).map(n => ({
+      id: n.getAttribute('data-id'),
+      nombre: n.getAttribute('data-nombre'),
+      precio: parseFloat(n.getAttribute('data-precio')),
+      stock: parseFloat(n.getAttribute('data-stock')),
+      unidad: n.getAttribute('data-unidad'),
+      barcode: n.getAttribute('data-barcode')
+    }));
+  };
 
-  function guardarCarritoLocal() {
-    const productos = [];
-    document.querySelectorAll('#tbodyDetalles tr[data-id]').forEach(tr => {
-      productos.push({
-        id: tr.getAttribute('data-id'),
-        nombre: tr.querySelector('.fw-bold').innerText,
-        precio: parseFloat(tr.querySelector('.input-precio').value),
-        stockMax: parseFloat(tr.getAttribute('data-stock-max')),
-        unidad: tr.getAttribute('data-unidad'),
-        cantidad: tr.querySelector('.input-cantidad').value
-      });
-    });
-    localStorage.setItem('carrito_bodega', JSON.stringify(productos));
-  }
+  const listaProductosMemoria = obtenerProductosMemoria();
 
-  function cargarCarritoLocal() {
-    const guardado = localStorage.getItem('carrito_bodega');
-    if (guardado) {
-      const productos = JSON.parse(guardado);
-      productos.forEach(p => {
-        ejecutarAgregar(p.id, p.nombre, p.precio, p.stockMax, p.unidad, p.cantidad);
-      });
-      actualizarTotales();
-    }
-  }
+  // --- LÓGICA DEL BUSCADOR PROFESIONAL ---
+  buscador.addEventListener('input', function() {
+    const busqueda = this.value.toLowerCase().trim();
+    contenedorResultados.innerHTML = '';
 
-  function guardarClienteRapido() {
-    const nombre = document.getElementById('reg_nombre').value.trim();
-    const apePat = document.getElementById('reg_apellidoPat').value.trim();
-    const apeMat = document.getElementById('reg_apellidoMat').value.trim();
-
-    if (!nombre || !apePat) {
-      Swal.fire({
-        title: 'Atención',
-        text: 'Nombre y Apellido Paterno son obligatorios.',
-        icon: 'warning',
-        confirmButtonColor: '#4b6cb7',
-        focusConfirm: false
-      });
+    if (busqueda.length === 0) {
+      contenedorResultados.style.display = 'none';
       return;
     }
 
-    const clienteData = {
-      nombre: nombre,
-      apellidoPat: apePat,
-      apellidoMat: apeMat
-    };
-
-    fetch('/clientes/guardar-rapido', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(clienteData)
-    })
-            .then(async response => {
-              const text = await response.text();
-              if (!response.ok) throw new Error(text);
-              return JSON.parse(text);
-            })
-            .then(data => {
-              const nombreCompleto = `${data.nombre} ${data.apellidoPat} ${data.apellidoMat || ''}`.trim();
-
-
-              const lista = document.getElementById('listaClientes');
-
-              if (lista) {
-                const option = document.createElement('option');
-                option.value = nombreCompleto;
-                option.setAttribute('data-id', data.idCliente);
-                lista.appendChild(option);
-              } else {
-                console.warn("No se encontró el datalist 'listaClientes', pero el cliente se guardó.");
-              }
-
-
-              if (inputCliente) inputCliente.value = nombreCompleto;
-
-              const inputId = document.getElementById('clienteId');
-              if (inputId) inputId.value = data.idCliente;
-
-
-              const modalElement = document.getElementById('modalNuevoCliente');
-              if (modalElement) {
-                const instance = bootstrap.Modal.getInstance(modalElement);
-                if (instance) instance.hide();
-              }
-
-              document.getElementById('reg_nombre').value = "";
-              document.getElementById('reg_apellidoPat').value = "";
-              document.getElementById('reg_apellidoMat').value = "";
-
-              Swal.fire({
-                title: '¡Éxito!',
-                text: 'Cliente registrado y seleccionado.',
-                icon: 'success',
-                confirmButtonColor: '#4b6cb7',
-                focusConfirm: false
-              });
-            })
-            .catch(error => {
-              Swal.fire({
-                title: 'Error',
-                text: error.message,
-                icon: 'error',
-                confirmButtonColor: '#4b6cb7',
-                focusConfirm: false
-              });
-            });
-  }
-
-
-  inputCliente.addEventListener('input', function() {
-    const opcion = Array.from(datalistCli.options).find(opt => opt.value === this.value);
-    if (opcion) {
-      document.getElementById('clienteId').value = opcion.getAttribute('data-id');
-    } else {
-      document.getElementById('clienteId').value = "";
-    }
-  });
-
-
-  buscador.addEventListener('input', function(e) {
-    const valorBusqueda = e.target.value.trim();
-    const opcion = Array.from(datalistProd.options).find(opt =>
-            opt.value === valorBusqueda || opt.getAttribute('data-barcode') === valorBusqueda
+    // Filtrar por nombre o código de barras exacto (para escáner)
+    const filtrados = listaProductosMemoria.filter(p =>
+            p.nombre.toLowerCase().includes(busqueda) || (p.barcode && p.barcode === busqueda)
     );
 
-    if (opcion) {
-      const id = opcion.getAttribute('data-id');
-      const nombre = opcion.value;
-      const precio = parseFloat(opcion.getAttribute('data-precio'));
-      const stock = parseFloat(opcion.getAttribute('data-stock'));
-      const unidad = opcion.getAttribute('data-unidad');
+    // Si el escáner detecta un código exacto, agregarlo directamente
+    if (filtrados.length === 1 && filtrados[0].barcode === busqueda) {
+      seleccionarProducto(filtrados[0]);
+      return;
+    }
 
-      if(stock <= 0) {
-        Swal.fire({
-          title: 'Sin Stock',
-          text: 'Este producto no tiene existencias.',
-          icon: 'warning',
-          confirmButtonColor: '#4b6cb7',
-          focusConfirm: false
-        });
-        this.value = "";
-        return;
-      }
-
-      ejecutarAgregar(id, nombre, precio, stock, unidad);
-      this.value = "";
-      this.focus();
+    if (filtrados.length > 0) {
+      filtrados.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'search-item';
+        item.innerHTML = `
+          <div class="info-main">
+            <span class="prod-name">${p.nombre}</span>
+            <span class="prod-sub">Stock: ${p.stock} ${p.unidad} | Cód: ${p.barcode || '---'}</span>
+          </div>
+          <div class="prod-price">S/ ${p.precio.toFixed(2)}</div>
+        `;
+        item.onclick = () => seleccionarProducto(p);
+        contenedorResultados.appendChild(item);
+      });
+      contenedorResultados.style.display = 'block';
+    } else {
+      contenedorResultados.style.display = 'none';
     }
   });
 
+  function seleccionarProducto(p) {
+    if (p.stock <= 0) {
+      Swal.fire({ title: 'Sin Stock', text: 'Producto agotado.', icon: 'warning', confirmButtonColor: '#4b6cb7' });
+    } else {
+      ejecutarAgregar(p.id, p.nombre, p.precio, p.stock, p.unidad);
+    }
+    buscador.value = '';
+    contenedorResultados.style.display = 'none';
+    buscador.focus();
+  }
 
+  // Cerrar buscador al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    if (!buscador.contains(e.target) && !contenedorResultados.contains(e.target)) {
+      contenedorResultados.style.display = 'none';
+    }
+  });
+
+  // --- LÓGICA DE CARRITO Y TABLA ---
   function ejecutarAgregar(id, nombre, precio, stockMax, unidad, cantidadInicial = 1) {
     const filaExistente = document.getElementById(`f_${id}`);
 
@@ -462,22 +490,23 @@
     const step = (unidad === 'KG') ? "0.001" : "1";
     const fila = `
     <tr id="f_${id}" data-id="${id}" data-stock-max="${stockMax}" data-unidad="${unidad}" class="align-middle border-bottom">
-        <td class="ps-4 py-3 text-center"> <input type="hidden" class="prod-id" value="${id}">
+        <td class="ps-4 py-3 text-center">
+            <input type="hidden" class="prod-id" value="${id}">
             <span class="fw-bold text-dynamic d-block">${nombre}</span>
             <small class="text-muted-dynamic">Stock: ${stockMax} ${unidad}</small>
         </td>
         <td class="text-center fw-bold"> S/ ${precio.toFixed(2)}
             <input type="hidden" class="input-precio" value="${precio}">
         </td>
-        <td class="text-center" style="width: 110px;"> <input type="number" step="${step}"
+        <td class="text-center" style="width: 110px;">
+            <input type="number" step="${step}"
                    class="form-control form-control-sm input-cantidad text-center fw-bold shadow-sm mx-auto"
                    value="${cantidadInicial}"
                    oninput="validarManual(this, ${stockMax})"
                    onclick="this.select()"
                    style="max-width: 90px;">
         </td>
-        <td class="text-center fw-bold text-dynamic"> S/ <span class="subtotal-fila">0.00</span>
-        </td>
+        <td class="text-center fw-bold text-dynamic"> S/ <span class="subtotal-fila">0.00</span></td>
         <td class="text-center">
             <button type="button" onclick="quitar('${id}')" class="btn btn-danger btn-sm rounded-circle shadow-sm">
                 <i class="fa-solid fa-trash-can"></i>
@@ -490,129 +519,15 @@
     actualizarTotales();
   }
 
-
   function validarManual(input, stockMax) {
     let valor = parseFloat(input.value);
     if (isNaN(valor)) return;
     if (valor > stockMax) {
       input.value = stockMax;
-      Swal.fire({
-        title: 'Stock Insuficiente',
-        text: 'Máximo disponible: ' + stockMax,
-        icon: 'warning',
-        confirmButtonColor: '#4b6cb7'
-      });
+      Swal.fire({ title: 'Stock Insuficiente', text: 'Máximo: ' + stockMax, icon: 'warning', confirmButtonColor: '#4b6cb7' });
     }
     if (valor < 0) input.value = 0;
     actualizarTotales();
-  }
-
-
-  selectTipoVenta.addEventListener('change', actualizarInterfazCredito);
-  inputMontoPagado.addEventListener('input', calcularVuelto);
-  selectMetodo.addEventListener('change', calcularVuelto);
-
-  function actualizarInterfazCredito() {
-    const tipoVenta = selectTipoVenta.value;
-    const labelPagaCon = document.getElementById('labelPagaCon');
-    const tituloEstado = document.getElementById('tituloEstadoFinanciero');
-
-    if (tipoVenta === "CREDITO") {
-      if(labelPagaCon) labelPagaCon.innerText = "Inicial / Adelanto:";
-      if(tituloEstado) tituloEstado.innerText = "Debe:";
-      // Se eliminó la línea del borderLeft verde
-    } else {
-      if(labelPagaCon) labelPagaCon.innerText = "Paga con:";
-      if(tituloEstado) tituloEstado.innerText = "Vuelto:";
-      // Se eliminó la línea del borderLeft celeste
-    }
-
-
-    if(wrapperVuelto) wrapperVuelto.style.borderLeft = "none";
-
-    calcularVuelto();
-  }
-
-  function actualizarTotales() {
-    let acumulado = 0;
-    const filasProductos = document.querySelectorAll('#tbodyDetalles tr[data-id]');
-    const msgVacio = document.getElementById("msgVacio");
-
-    filasProductos.forEach((tr, i) => {
-      const cant = parseFloat(tr.querySelector('.input-cantidad').value) || 0;
-      const precio = parseFloat(tr.querySelector('.input-precio').value) || 0;
-      const sub = cant * precio;
-
-      // Mostramos el subtotal en la tabla
-      const spanSubtotal = tr.querySelector('.subtotal-fila');
-      if(spanSubtotal) spanSubtotal.innerText = sub.toFixed(2);
-
-      acumulado += sub;
-
-
-      tr.querySelector('.prod-id').name = `detalles[${i}].producto.idProducto`;
-      tr.querySelector('.input-precio').name = `detalles[${i}].precioVenta`;
-      tr.querySelector('.input-cantidad').name = `detalles[${i}].cantidad`;
-    });
-
-
-    const labelTotal = document.getElementById("labelTotal");
-    const inputTotalVenta = document.getElementById("inputTotalVenta");
-
-    if(labelTotal) labelTotal.innerText = acumulado.toFixed(2);
-    if(inputTotalVenta) inputTotalVenta.value = acumulado.toFixed(2);
-
-
-    const btnGuardar = document.getElementById("btnGuardar");
-    if(btnGuardar) btnGuardar.disabled = (filasProductos.length === 0);
-
-
-    if(msgVacio) {
-      msgVacio.style.display = (filasProductos.length === 0) ? "table-row" : "none";
-    }
-
-
-    calcularVuelto();
-    guardarCarritoLocal();
-  }
-
-
-  function calcularVuelto() {
-    const totalInput = document.getElementById("inputTotalVenta");
-    const total = totalInput ? parseFloat(totalInput.value) || 0 : 0;
-    const tipoVenta = selectTipoVenta.value;
-    const pagado = parseFloat(inputMontoPagado.value) || 0;
-
-    if (!labelVuelto) return;
-
-    const contenedorMonto = labelVuelto.parentElement;
-
-
-    const claseTamano = "fw-bold fs-3";
-
-    if (tipoVenta === "CREDITO") {
-      let deuda = total - pagado;
-      if (deuda < 0) {
-        inputMontoPagado.value = total.toFixed(2);
-        deuda = 0;
-      }
-      labelVuelto.innerText = deuda.toFixed(2);
-
-
-      if(contenedorMonto) {
-        contenedorMonto.className = claseTamano;
-        contenedorMonto.style.color = "#208b58";
-      }
-    } else {
-      const vuelto = pagado - total;
-      labelVuelto.innerText = (vuelto > 0) ? vuelto.toFixed(2) : "0.00";
-
-      if(contenedorMonto) {
-        contenedorMonto.className = claseTamano;
-
-        contenedorMonto.style.color = (vuelto < 0 && pagado > 0) ? "#dc3545" : "#0d6efd";
-      }
-    }
   }
 
   function quitar(id) {
@@ -623,36 +538,131 @@
     }
   }
 
+  // --- CÁLCULOS Y TOTALES ---
+  function actualizarTotales() {
+    let acumulado = 0;
+    const filasProductos = document.querySelectorAll('#tbodyDetalles tr[data-id]');
+    const msgVacio = document.getElementById("msgVacio");
+
+    filasProductos.forEach((tr, i) => {
+      const cant = parseFloat(tr.querySelector('.input-cantidad').value) || 0;
+      const precio = parseFloat(tr.querySelector('.input-precio').value) || 0;
+      const sub = cant * precio;
+
+      const spanSubtotal = tr.querySelector('.subtotal-fila');
+      if(spanSubtotal) spanSubtotal.innerText = sub.toFixed(2);
+
+      acumulado += sub;
+
+      // Nombres para el envío al controlador de Spring
+      tr.querySelector('.prod-id').name = `detalles[${i}].producto.idProducto`;
+      tr.querySelector('.input-precio').name = `detalles[${i}].precioVenta`;
+      tr.querySelector('.input-cantidad').name = `detalles[${i}].cantidad`;
+    });
+
+    document.getElementById("labelTotal").innerText = acumulado.toFixed(2);
+    document.getElementById("inputTotalVenta").value = acumulado.toFixed(2);
+    document.getElementById("btnGuardar").disabled = (filasProductos.length === 0);
+
+    if(msgVacio) msgVacio.style.display = (filasProductos.length === 0) ? "table-row" : "none";
+
+    calcularVuelto();
+    guardarCarritoLocal();
+  }
+
+  function calcularVuelto() {
+    const total = parseFloat(document.getElementById("inputTotalVenta").value) || 0;
+    const tipoVenta = selectTipoVenta.value;
+    const pagado = parseFloat(inputMontoPagado.value) || 0;
+
+    if (!labelVuelto) return;
+    const contenedorMonto = labelVuelto.parentElement;
+
+    if (tipoVenta === "CREDITO") {
+      let deuda = total - pagado;
+      if (deuda < 0) { inputMontoPagado.value = total.toFixed(2); deuda = 0; }
+      labelVuelto.innerText = deuda.toFixed(2);
+      contenedorMonto.style.color = "#208b58";
+    } else {
+      const vuelto = pagado - total;
+      labelVuelto.innerText = (vuelto > 0) ? vuelto.toFixed(2) : "0.00";
+      contenedorMonto.style.color = (vuelto < 0 && pagado > 0) ? "#dc3545" : "#0d6efd";
+    }
+  }
+
+  function actualizarInterfazCredito() {
+    const tipoVenta = selectTipoVenta.value;
+    const labelPagaCon = document.getElementById('labelPagaCon');
+    const tituloEstado = document.getElementById('tituloEstadoFinanciero');
+
+    if (tipoVenta === "CREDITO") {
+      if(labelPagaCon) labelPagaCon.innerText = "Inicial / Adelanto:";
+      if(tituloEstado) tituloEstado.innerText = "Debe:";
+    } else {
+      if(labelPagaCon) labelPagaCon.innerText = "Paga con:";
+      if(tituloEstado) tituloEstado.innerText = "Vuelto:";
+    }
+    calcularVuelto();
+  }
+
+  // --- PERSISTENCIA LOCAL ---
+  function guardarCarritoLocal() {
+    const productos = [];
+    document.querySelectorAll('#tbodyDetalles tr[data-id]').forEach(tr => {
+      productos.push({
+        id: tr.getAttribute('data-id'),
+        nombre: tr.querySelector('.fw-bold').innerText,
+        precio: parseFloat(tr.querySelector('.input-precio').value),
+        stockMax: parseFloat(tr.getAttribute('data-stock-max')),
+        unidad: tr.getAttribute('data-unidad'),
+        cantidad: tr.querySelector('.input-cantidad').value
+      });
+    });
+    localStorage.setItem('carrito_bodega', JSON.stringify(productos));
+  }
+
+  function cargarCarritoLocal() {
+    const guardado = localStorage.getItem('carrito_bodega');
+    if (guardado) {
+      JSON.parse(guardado).forEach(p => {
+        ejecutarAgregar(p.id, p.nombre, p.precio, p.stockMax, p.unidad, p.cantidad);
+      });
+      actualizarTotales();
+    }
+  }
+
+  // --- EVENTOS INICIALES ---
+  selectTipoVenta.addEventListener('change', actualizarInterfazCredito);
+  inputMontoPagado.addEventListener('input', calcularVuelto);
+
+  inputCliente.addEventListener('input', function() {
+    const opcion = Array.from(datalistCli.options).find(opt => opt.value === this.value);
+    document.getElementById('clienteId').value = opcion ? opcion.getAttribute('data-id') : "";
+  });
 
   document.addEventListener("DOMContentLoaded", () => {
-    if (buscador) buscador.focus();
+    buscador.focus();
     cargarCarritoLocal();
     actualizarInterfazCredito();
   });
 
-
+  // Envío del formulario
   document.getElementById('formVenta').addEventListener('submit', function(e) {
     e.preventDefault();
-    const tipo = selectTipoVenta.value;
-    const total = parseFloat(document.getElementById("inputTotalVenta").value) || 0;
+    const total = parseFloat(document.getElementById("inputTotalVenta").value);
     const pagado = parseFloat(inputMontoPagado.value) || 0;
 
-    if (tipo === 'CONTADO' && pagado < total) {
-      Swal.fire({ title: 'Monto Insuficiente', text: 'El pago debe ser mayor o igual al total.', icon: 'error', confirmButtonColor: '#4b6cb7' });
+    if (selectTipoVenta.value === 'CONTADO' && pagado < total) {
+      Swal.fire({ title: 'Error', text: 'Pago insuficiente.', icon: 'error' });
       return;
     }
 
     Swal.fire({
       title: '¿Finalizar Venta?',
-      text: (tipo === 'CREDITO') ? "Registra abono inicial y saldo." : "Registra pago total y descuenta stock.",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#4b6cb7',
-      cancelButtonColor: '#dc3545',
-      confirmButtonText: 'Sí, vender',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusConfirm: false
+      confirmButtonText: 'Sí, vender'
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem('carrito_bodega');

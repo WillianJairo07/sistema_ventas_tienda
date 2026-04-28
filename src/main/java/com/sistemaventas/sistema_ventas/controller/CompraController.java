@@ -2,7 +2,10 @@ package com.sistemaventas.sistema_ventas.controller;
 
 import com.sistemaventas.sistema_ventas.model.Compra;
 import com.sistemaventas.sistema_ventas.repository.*;
+import com.sistemaventas.sistema_ventas.service.CategoriaService;
 import com.sistemaventas.sistema_ventas.service.CompraService;
+import com.sistemaventas.sistema_ventas.service.ProductoService;
+import com.sistemaventas.sistema_ventas.service.ProveedorService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,10 +26,11 @@ import java.util.stream.Collectors;
 public class CompraController {
 
     @Autowired private CompraService compraService;
-    @Autowired private ProductoRepository productoRepository;
-    @Autowired private ProveedorRepository proveedorRepository;
+    @Autowired private ProveedorService service;
+    @Autowired private ProductoService productoService;
+    @Autowired private CategoriaService categoriaService;
     @Autowired private UsuarioRepository usuarioRepository;
-    @Autowired private CategoriaRepository categoriaRepository;
+
 
 
 
@@ -175,9 +179,8 @@ public class CompraController {
     }
 
     private void cargarCombos(Model model) {
-        // Solo enviamos lo ACTIVO al formulario de 'Nueva Compra'
-        model.addAttribute("productos", productoRepository.findByEstadoTrue());
-        model.addAttribute("proveedores", proveedorRepository.findByEstadoTrueOrderByNombreAsc());
-        model.addAttribute("categorias", categoriaRepository.findByEstadoTrueOrderByNombreCategoriaAsc());
+        model.addAttribute("productos", productoService.listarParaCombos());
+        model.addAttribute("proveedores", service.listarParaCombos());
+        model.addAttribute("categorias", categoriaService.listarParaCombos());
     }
 }

@@ -21,9 +21,8 @@ public interface CompraRepository extends JpaRepository<Compra, Integer> {
 
     @Query("SELECT c FROM Compra c " +
             "WHERE (:proveedor IS NULL OR LOWER(c.proveedor.nombre) LIKE LOWER(CONCAT('%', CAST(:proveedor AS string), '%'))) " +
-            "AND (:fechaDesde IS NULL OR c.fechaInicio >= :fechaDesde) " +
-            "AND (:fechaHasta IS NULL OR c.fechaInicio <= :fechaHasta) " +
-            "ORDER BY c.fechaInicio DESC")
+            "AND (CAST(:fechaDesde AS date) IS NULL OR c.fechaInicio >= :fechaDesde) " +
+            "AND (CAST(:fechaHasta AS date) IS NULL OR c.fechaInicio <= :fechaHasta)")
     Page<Compra> filtrar(@Param("proveedor") String proveedor,
                          @Param("fechaDesde") LocalDate fechaDesde,
                          @Param("fechaHasta") LocalDate fechaHasta,

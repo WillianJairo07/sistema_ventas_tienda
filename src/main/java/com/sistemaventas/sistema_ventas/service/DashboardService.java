@@ -31,7 +31,9 @@ public class DashboardService {
 
     // STOCK CRÍTICO
     public long obtenerProductosCriticos() {
-        return productoRepository.countByStockLessThanEqualAndEstadoTrue(5);
+        // Definimos el límite como BigDecimal (5 unidades)
+        BigDecimal limiteCritico = new BigDecimal("5.0");
+        return productoRepository.countByStockLessThanEqualAndEstadoTrue(limiteCritico);
     }
 
     // COMPRAS MES

@@ -17,49 +17,123 @@
     <link th:href="@{/css/modal.css}" rel="stylesheet">
     <link th:href="@{/css/vencom.css}" rel="stylesheet">
     <style>
-
+        /* --- 1. VARIABLES DE TEMA (MODO CLARO Y OSCURO) --- */
         html.light-mode {
             --vacio-principal: #151515;
             --vacio-secundario: rgba(108, 117, 125, 0.7);
             --vacio-icono: rgb(69 69 69 / 0.63);
-            --vacio-glow: none;
+            --search-bg: #ffffff;
+            --search-border: rgba(0,0,0,0.1);
+            --search-hover: rgba(75, 108, 183, 0.1);
+            --search-text: #333333;
+            --search-shadow: rgba(0, 0, 0, 0.15);
+            --price-bg: rgba(75, 108, 183, 0.15);
+            --price-color: #4b6cb7;
+            --focus-color: #4b6cb7;
         }
 
         html.dark-mode {
-            --vacio-principal: rgb(255 255 255 / 0.72);
-            --vacio-secundario: rgba(255, 255, 255, 0.3);
-            --vacio-icono: rgb(255 255 255 / 0.34);
-            --vacio-glow: none;
+            --vacio-principal: #ffffff;
+            --vacio-secundario: #cbd5e0; /* Blanco azulado nítido para subtítulos */
+            --vacio-icono: rgba(255, 255, 255, 0.4);
+            --search-bg: #1e263a;
+            --search-border: #2a3651;
+            --search-hover: #2a3651;
+            --search-text: #ffffff;      /* Nombre producto en blanco puro */
+            --search-shadow: rgba(0, 0, 0, 0.5);
+            --price-bg: #2b458d;        /* Azul sólido profesional */
+            --price-color: #ffffff;     /* Texto del precio en blanco */
+            --focus-color: #4b6cb7;
         }
 
-
-        #tbodyDetalles tr,
-        #tbodyDetalles td,
-        #tbodyDetalles span,
-        #tbodyDetalles p,
-        #tbodyDetalles small {
-            user-select: none !important;
-            -webkit-user-select: none !important;
-            cursor: default !important;
+        /* --- 2. BUSCADOR PROFESIONAL (ESTILO CONTENEDOR) --- */
+        .input-group.shadow-sm {
+            transition: all 0.2s ease-in-out;
+            border: 1px solid var(--search-border);
         }
 
-        #tbodyDetalles tr:hover {
+        /* ELIMINAR AZUL DE BOOTSTRAP */
+        #buscadorCompra:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
             background-color: transparent !important;
-            --bs-table-accent-bg: transparent !important;
         }
 
+        /* EFECTO DE ENFOQUE UNIFICADO (LUPA + TEXTO) */
+        .input-group.shadow-sm:focus-within {
+            border-color: var(--focus-color) !important;
+            box-shadow: 0 0 0 1px var(--focus-color) !important;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: transparent !important;
+            color: var(--focus-color) !important;
+        }
+
+        /* --- 3. RESULTADOS DESPLEGABLES (DROPDOWN) --- */
+        .custom-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--search-bg);
+            border: 1px solid var(--search-border);
+            border-radius: 0 0 12px 12px;
+            z-index: 1050;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 5px;
+            box-shadow: 0 10px 25px var(--search-shadow);
+        }
+
+        .search-item {
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid var(--search-border);
+            transition: all 0.2s ease;
+        }
+
+        .search-item:hover {
+            background-color: var(--search-hover);
+            padding-left: 20px;
+        }
+
+        .search-item .nombre {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--search-text) !important;
+            display: block;
+        }
+
+        .search-item .detalles {
+            font-size: 0.75rem;
+            color: var(--vacio-secundario) !important;
+            opacity: 1 !important;
+        }
+
+        .search-item .badge-precio {
+            background: var(--price-bg);
+            color: var(--price-color) !important;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        /* --- 4. TABLA Y CARRITO VACÍO --- */
+        #tbodyDetalles tr, td, span, p, small {
+            user-select: none;
+            cursor: default;
+        }
 
         #tbodyDetalles input {
-            user-select: text !important;
-            -webkit-user-select: text !important;
-            cursor: text !important;
-            pointer-events: auto !important;
+            user-select: text;
+            cursor: text;
         }
-
-        #tbodyDetalles .btn, #tbodyDetalles i {
-            cursor: pointer !important;
-        }
-
 
         .fila-vacia-dinamica td {
             padding: 60px 0 !important;
@@ -72,19 +146,15 @@
             margin-bottom: 0.8rem;
             display: block;
             color: var(--vacio-icono) !important;
-            filter: none !important;
-            transition: all 0.3s ease;
-            opacity: 0.6;
         }
 
         .texto-principal {
             font-weight: 400 !important;
             font-size: 1rem !important;
-            margin-bottom: 0;
             color: var(--vacio-principal) !important;
         }
 
-
+        /* --- 5. CABECERA TABLA MODO OSCURO --- */
         html.dark-mode .custom-table thead tr {
             background-color: #2A3651FF !important;
             border-bottom: 2px solid #171f39 !important;
@@ -94,32 +164,15 @@
             color: #ffffff !important;
             text-transform: uppercase;
             font-size: 0.75rem;
-            padding: 15px 10px !important;
         }
 
-        .badge-unidad {
-            background-color: #f1f3f5 !important;
-            color: #212529 !important;
-            border: 1px solid #dee2e6 !important;
+        /* --- 6. SCROLLBAR PERSONALIZADO --- */
+        .custom-search-results::-webkit-scrollbar {
+            width: 6px;
         }
-
-        html.dark-mode .badge-unidad {
-            background-color: rgb(42, 54, 81) !important;
-            color: #ffffff !important;
-            border-color: #254187 !important;
-        }
-
-
-        [data-bs-target="#modalProducto"] {
-            display: inline-flex !important;
-            align-items: center !important;
-            white-space: nowrap !important;
-            flex-direction: row !important;
-        }
-
-        [data-bs-target="#modalProducto"] i {
-            margin-right: 6px !important;
-            margin-bottom: 0 !important;
+        .custom-search-results::-webkit-scrollbar-thumb {
+            background: var(--focus-color);
+            border-radius: 10px;
         }
     </style>
 
@@ -146,25 +199,36 @@
 
             <div class="row g-4">
                 <div class="col-lg-8">
-                    <div class="crud-card p-4 shadow mb-4" >
+                    <div class="crud-card p-4 shadow mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                             <h5 class="fw-bold mb-0 text-dynamic fs-5" th:text="${modoEdicion != null ? 'Agregar Producto Adicional' : 'Buscar Producto'}">Buscar Producto</h5>
                             <button type="button" class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalProducto">
                                 <i class="fas fa-plus-circle me-2"></i>Nuevo
                             </button>
                         </div>
-                        <div class="input-group shadow-sm border rounded-3 overflow-hidden bg-transparent">
-                            <span class="input-group-text bg-transparent border-0 py-3 ps-3"><i class="fas fa-search text-muted-dynamic"></i></span>
-                            <input type="text" id="buscadorCompra" class="form-control border-0 py-3 bg-transparent text-dynamic" placeholder="Escanea o busca el producto..." list="listaProductos" autocomplete="off">
-                            <datalist id="listaProductos">
-                                <option th:each="p : ${productos}"
-                                        th:value="${p.nombreProducto}"
-                                        th:data-id="${p.idProducto}"
-                                        th:data-precio="${p.precio}"
-                                        th:data-unidad="${p.unidadMedida}"
-                                        th:data-barcode="${p.codigoBarras}"></option>
-                            </datalist>
+
+                        <div class="position-relative">
+                            <div class="input-group shadow-sm border rounded-3 overflow-hidden bg-transparent">
+                                <span class="input-group-text bg-transparent border-0 py-3 ps-3">
+                                    <i class="fas fa-search text-muted-dynamic"></i>
+                                </span>
+                                <input type="text" id="buscadorCompra"
+                                       class="form-control border-0 py-3 bg-transparent text-dynamic"
+                                       placeholder="Escanea o busca el producto..."
+                                       autocomplete="off">
+                            </div>
+
+                            <div id="contenedorResultados" class="custom-search-results shadow-lg d-none"></div>
                         </div>
+
+                        <datalist id="listaProductos" style="display:none;">
+                            <option th:each="p : ${productos}"
+                                    th:value="${p.nombreProducto}"
+                                    th:data-id="${p.idProducto}"
+                                    th:data-precio="${p.precio}"
+                                    th:data-unidad="${p.unidadMedida}"
+                                    th:data-barcode="${p.codigoBarras}"></option>
+                        </datalist>
                     </div>
 
                     <div class="alert alert-info border-0 shadow-sm" th:if="${modoEdicion != null}" style="border-radius: 12px;">
@@ -355,50 +419,84 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 
-<script>
-    function normalizarTextoExtremo(texto) {
-        return texto
-            .trim()
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/\s+/g, "");
-    }
-
-    function embellecerNombre(texto) {
-        if (!texto) return "";
-        let resultado = texto.replace(/([A-Z])/g, ' $1').trim();
-        resultado = resultado.charAt(0).toUpperCase() + resultado.slice(1).toLowerCase();
-        return resultado;
-    }
-
+<script th:inline="javascript">
+    // --- INICIALIZACIÓN DE DATOS ---
     const buscador = document.getElementById('buscadorCompra');
+    const contenedorResultados = document.getElementById('contenedorResultados');
     const datalist = document.getElementById('listaProductos');
 
-    buscador.addEventListener('input', function(e) {
-        const valorBusqueda = e.target.value.trim();
-        if (valorBusqueda === "") return;
+    // Mapeamos los productos una sola vez para búsquedas instantáneas
+    const productosMap = Array.from(datalist.options).map(opt => ({
+        id: opt.getAttribute('data-id'),
+        nombre: opt.value,
+        precio: parseFloat(opt.getAttribute('data-precio')) || 0,
+        unidad: opt.getAttribute('data-unidad'),
+        barcode: opt.getAttribute('data-barcode') || ''
+    }));
 
-        const opcion = Array.from(datalist.options).find(opt =>
-            opt.value === valorBusqueda || opt.getAttribute('data-barcode') === valorBusqueda
+    document.addEventListener("DOMContentLoaded", () => {
+        recuperarBackupTemporal();
+
+        // Configuración de fechas
+        const inputFechaLlegada = document.querySelector('.fecha-llegada');
+        const inputFechaInicio = document.querySelector('.fecha-inicio');
+        if (inputFechaLlegada && inputFechaInicio) {
+            inputFechaLlegada.setAttribute('min', inputFechaInicio.value);
+        }
+
+        setTimeout(() => { actualizarTotales(); }, 100);
+        if (buscador) buscador.focus();
+    });
+
+    // --- LÓGICA DEL BUSCADOR PROFESIONAL (DROPDOWN) ---
+    buscador.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        if (query.length === 0) {
+            contenedorResultados.classList.add('d-none');
+            return;
+        }
+
+        const filtrados = productosMap.filter(p =>
+            p.nombre.toLowerCase().includes(query) || p.barcode.toLowerCase().includes(query)
         );
 
-        if (opcion) {
-            const id = opcion.getAttribute('data-id');
-            const nombre = opcion.value;
-            const precio = parseFloat(opcion.getAttribute('data-precio'));
-            const barcode = opcion.getAttribute('data-barcode');
-            const unidad = opcion.getAttribute('data-unidad');
+        renderizarResultados(filtrados);
+    });
 
-            ejecutarAgregar(id, nombre, precio, barcode, unidad);
-            this.value = "";
-            this.focus();
+    function renderizarResultados(lista) {
+        if (lista.length === 0) {
+            contenedorResultados.innerHTML = '<div class="p-3 text-center text-muted small">Producto no encontrado</div>';
+        } else {
+            contenedorResultados.innerHTML = lista.map(p => `
+                <div class="search-item" onclick="seleccionarProducto('${p.id}', '${p.nombre.replace(/'/g, "\\'")}', ${p.precio}, '${p.barcode}', '${p.unidad}')">
+                    <div class="info-principal">
+                        <span class="nombre">${p.nombre}</span>
+                        <span class="detalles">Cód: ${p.barcode} | ${p.unidad}</span>
+                    </div>
+                    <span class="badge-precio">S/ ${p.precio.toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+        contenedorResultados.classList.remove('d-none');
+    }
+
+    window.seleccionarProducto = function(id, nombre, precio, barcode, unidad) {
+        ejecutarAgregar(id, nombre, precio, barcode, unidad);
+        buscador.value = "";
+        contenedorResultados.classList.add('d-none');
+        buscador.focus();
+    };
+
+    // Cerrar buscador al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!buscador.contains(e.target) && !contenedorResultados.contains(e.target)) {
+            contenedorResultados.classList.add('d-none');
         }
     });
 
+    // --- LÓGICA DE LA TABLA DE COMPRA ---
     function ejecutarAgregar(id, nombre, precio, barcode, unidad = 'UNIDAD') {
         const filaExistente = document.getElementById(`f_${id}`);
-
         if (filaExistente && id > 0) {
             const inputCant = filaExistente.querySelector('.input-cantidad');
             inputCant.focus();
@@ -407,42 +505,35 @@
         }
 
         const esPesable = (unidad === 'KG');
-
         const fila = `
-    <tr id="f_${id}" data-id="${id}" class="align-middle border-bottom">
-        <td class="ps-4 py-3">
-            <input type="hidden" class="prod-id" value="${id > 0 ? id : ''}">
-            <span class="fw-bold text-dynamic d-block">${nombre}</span>
-            <small class="text-muted-dynamic">Cód: ${barcode}</small>
-        </td>
-        <td class="text-center">
-            <input type="number" step="0.01"
-                   class="form-control form-control-sm text-center fw-bold input-precio"
-                   value="${precio.toFixed(2)}" oninput="actualizarTotales()" onclick="this.select()"
-                   style="width: 110px !important; height: 38px !important; margin: auto; border: 1px solid #ced4da;">
-        </td>
-        <td class="text-center">
-            <input type="number"
-                  step="${esPesable ? '0.001' : '1'}"
-                  class="form-control form-control-sm text-center fw-bold input-cantidad"
-                  value="1"
-                  oninput="validarSegunUnidad(this, '${unidad}'); actualizarTotales();"
-                  onclick="this.select()"
-                  style="width: 100px !important; height: 38px !important; border: 1px solid #ced4da !important; margin: auto;">
-        </td>
-        <td class="text-center">
-            <span class="badge badge-unidad">${unidad}</span>
-            <input type="hidden" class="prod-unidad" value="${unidad}">
-        </td>
-        <td class="fw-bold text-dynamic">S/ <span class="subtotal-fila">0.00</span></td>
-        <td class="text-center">
-            <button type="button" onclick="quitar('${id}')"
-                    class="btn btn-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                    style="width: 32px; height: 32px; border: none; background-color: #dc3545 !important;">
-                <i class="fas fa-trash-alt text-white"></i>
-            </button>
-        </td>
-    </tr>`;
+            <tr id="f_${id}" data-id="${id}" class="align-middle border-bottom">
+                <td class="ps-4 py-3">
+                    <input type="hidden" class="prod-id" value="${id > 0 ? id : ''}">
+                    <span class="fw-bold text-dynamic d-block">${nombre}</span>
+                    <small class="text-muted-dynamic">Cód: ${barcode}</small>
+                </td>
+                <td class="text-center">
+                    <input type="number" step="0.01" class="form-control form-control-sm text-center fw-bold input-precio"
+                           value="${precio.toFixed(2)}" oninput="actualizarTotales()" onclick="this.select()"
+                           style="width: 110px !important; height: 38px !important; margin: auto; border: 1px solid #ced4da;">
+                </td>
+                <td class="text-center">
+                    <input type="number" step="${esPesable ? '0.001' : '1'}" class="form-control form-control-sm text-center fw-bold input-cantidad"
+                           value="1" oninput="validarSegunUnidad(this, '${unidad}')" onclick="this.select()"
+                           style="width: 100px !important; height: 38px !important; border: 1px solid #ced4da !important; margin: auto;">
+                </td>
+                <td class="text-center">
+                    <span class="badge badge-unidad">${unidad}</span>
+                    <input type="hidden" class="prod-unidad" value="${unidad}">
+                </td>
+                <td class="fw-bold text-dynamic">S/ <span class="subtotal-fila">0.00</span></td>
+                <td class="text-center">
+                    <button type="button" onclick="quitar('${id}')" class="btn btn-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                            style="width: 32px; height: 32px; border: none; background-color: #dc3545 !important;">
+                        <i class="fas fa-trash-alt text-white"></i>
+                    </button>
+                </td>
+            </tr>`;
 
         const tbody = document.getElementById("tbodyDetalles");
         const filaVacia = document.getElementById("filaVacia");
@@ -450,69 +541,6 @@
 
         tbody.insertAdjacentHTML('afterbegin', fila);
         actualizarTotales();
-
-        if (buscador) {
-            buscador.value = '';
-            buscador.focus();
-        }
-    }
-
-
-    function validarCantidadMinima(input) {
-        if (input.value === "") return;
-        const unidad = document.getElementById('rapidoUnidad').value;
-
-        if (unidad === 'UNIDAD') {
-            let valor = Math.floor(input.value);
-            input.value = (valor < 1) ? 1 : valor;
-        } else {
-            // Si es KG, permitimos decimales, solo evitamos negativos
-            if (parseFloat(input.value) <= 0) input.value = 0.001;
-        }
-    }
-
-    function guardarProductoRapido() {
-        const nombreRaw = document.getElementById('rapidoNombre').value.trim();
-        const precio = parseFloat(document.getElementById('rapidoPrecio').value);
-        const idCat = document.getElementById('rapidoCategoria').value;
-        const cantidadInput = document.getElementById('rapidoCantidad');
-        const unidad = document.getElementById('rapidoUnidad').value;
-
-        if (!nombreRaw || isNaN(precio) || !idCat || !unidad) {
-            alertaPersonalizada('error', 'Campos Incompletos', 'Rellena todos los campos.');
-            return;
-        }
-
-        const nombreNormalizadoNuevo = normalizarTextoExtremo(nombreRaw);
-        const existeEnDB = Array.from(datalist.options).some(opt =>
-            normalizarTextoExtremo(opt.value) === nombreNormalizadoNuevo
-        );
-
-        if (existeEnDB) {
-            alertaPersonalizada('warning', 'Producto Duplicado', 'El producto ya existe en la base de datos.');
-            return;
-        }
-
-        const nombreFormateado = embellecerNombre(nombreRaw);
-        const idTemp = Date.now() * -1;
-        const cantidad = cantidadInput.value === "" ? 1 : parseFloat(cantidadInput.value);
-
-        ejecutarAgregar(idTemp, nombreFormateado, precio, "NUEVO", unidad);
-
-        setTimeout(() => {
-            const fila = document.querySelector(`tr[data-id="${idTemp}"]`);
-            if (fila) {
-                fila.querySelector('td').insertAdjacentHTML('beforeend', `
-                    <input type="hidden" class="prod-nombre" value="${nombreFormateado}">
-                    <input type="hidden" class="prod-cat" value="${idCat}">
-                `);
-                fila.querySelector('.input-cantidad').value = (unidad === 'KG') ? cantidad.toFixed(3) : Math.floor(cantidad);
-                actualizarTotales();
-            }
-        }, 50);
-
-        bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
-        document.getElementById('formProdRapido').reset();
     }
 
     function actualizarTotales() {
@@ -523,110 +551,92 @@
             const cantInput = tr.querySelector('.input-cantidad');
             const precInput = tr.querySelector('.input-precio');
             const idInput = tr.querySelector('.prod-id');
+            const spanSubtotal = tr.querySelector('.subtotal-fila');
 
             const cant = parseFloat(cantInput.value) || 0;
             const prec = parseFloat(precInput.value) || 0;
             const sub = cant * prec;
 
-            const spanSubtotal = tr.querySelector('.subtotal-fila');
-            if (spanSubtotal) {
-                spanSubtotal.innerText = sub.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
+            if (spanSubtotal) spanSubtotal.innerText = sub.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             acumulado += sub;
 
+            // Asignación de Nombres para Spring Boot (List detalles)
             if (idInput) idInput.name = `detalles[${i}].producto.idProducto`;
             if (precInput) precInput.name = `detalles[${i}].precioCompra`;
             if (cantInput) cantInput.name = `detalles[${i}].cantidad`;
 
+            // Campos para productos nuevos (Guardado rápido)
             const pNom = tr.querySelector('.prod-nombre');
             const pUni = tr.querySelector('.prod-unidad');
             const pCat = tr.querySelector('.prod-cat');
-
             if (pNom) pNom.name = `detalles[${i}].producto.nombreProducto`;
             if (pCat) pCat.name = `detalles[${i}].producto.categoria.idCategoria`;
-            if (pUni) {
-                pUni.name = `detalles[${i}].producto.unidadMedida`;
-                pUni.value = pUni.value.trim().toUpperCase().substring(0, 10);
-            }
-
-            const detId = tr.querySelector('.det-id');
-            if (detId) detId.name = `detalles[${i}].idDetalleCompra`;
+            if (pUni) pUni.name = `detalles[${i}].producto.unidadMedida`;
         });
 
-        const labelTotal = document.getElementById("labelTotal");
-        if (labelTotal) {
-            labelTotal.innerText = acumulado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        const btnGuardar = document.getElementById("btnGuardar");
-        if (btnGuardar) {
-            btnGuardar.disabled = (filas.length === 0 || acumulado <= 0);
-        }
+        document.getElementById("labelTotal").innerText = acumulado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById("btnGuardar").disabled = (filas.length === 0 || acumulado <= 0);
         guardarBackupTemporal();
+    }
+
+    function validarSegunUnidad(input, unidad) {
+        let val = parseFloat(input.value);
+        if (isNaN(val) || val < 0) val = 0;
+
+        if (unidad === 'UNIDAD') {
+            input.value = Math.floor(val) || 1;
+        } else {
+            if (input.value.includes('.') && input.value.split('.')[1].length > 3) {
+                input.value = val.toFixed(3);
+            }
+        }
+        actualizarTotales();
     }
 
     function quitar(id) {
         const fila = document.getElementById("f_" + id);
         if (fila) {
             fila.remove();
+            if (document.querySelectorAll('#tbodyDetalles tr[data-id]').length === 0) {
+                document.getElementById("tbodyDetalles").innerHTML = `
+                    <tr id="filaVacia" class="fila-vacia-dinamica">
+                        <td colspan="6" class="text-center">
+                            <div class="contenedor-mensaje">
+                                <i class="fas fa-shopping-basket icono-carrito"></i>
+                                <p class="texto-principal">No hay productos en el carrito</p>
+                            </div>
+                        </td>
+                    </tr>`;
+            }
             actualizarTotales();
         }
     }
 
-    function alertaPersonalizada(icon, title, text) {
-        Swal.fire({
-            icon, title, text,
-            background: document.body.classList.contains('dark-theme') ? '#2b2b2b' : '#fff',
-            color: document.body.classList.contains('dark-theme') ? '#fff' : '#000',
-            confirmButtonColor: '#4b6cb7'
-        });
-    }
-
+    // --- FORMULARIO Y BACKUP ---
     document.getElementById('formCompra').addEventListener('submit', function(e) {
         e.preventDefault();
-        const btnGuardar = document.getElementById("btnGuardar");
-
         Swal.fire({
             title: '¿Guardar Orden?',
-            text: "Se registrará el pedido en el sistema.",
+            text: "Se registrará el pedido en el inventario.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#198754',
-            confirmButtonText: 'Sí, registrar',
-            cancelButtonText: 'Cancelar'
+            confirmButtonText: 'Sí, registrar'
         }).then((r) => {
             if (r.isConfirmed) {
                 sessionStorage.removeItem("tabla_compra_backup");
-                btnGuardar.disabled = true;
-                btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
                 this.submit();
             }
         });
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-        recuperarBackupTemporal();
-        const inputFechaLlegada = document.querySelector('.fecha-llegada');
-        const inputFechaInicio = document.querySelector('.fecha-inicio');
-
-        if (inputFechaLlegada && inputFechaInicio) {
-            const fechaMinima = inputFechaInicio.value;
-            inputFechaLlegada.setAttribute('min', fechaMinima);
-        }
-
-        setTimeout(() => { actualizarTotales(); }, 100);
-        if (buscador) buscador.focus();
     });
 
     function guardarBackupTemporal() {
         const cuerpo = document.getElementById("tbodyDetalles");
         const filas = cuerpo.querySelectorAll('tr[data-id]');
         if (filas.length > 0) {
-            filas.forEach(fila => {
-                const inputCant = fila.querySelector('.input-cantidad');
-                const inputPrec = fila.querySelector('.input-precio');
-                if(inputCant) inputCant.setAttribute('value', inputCant.value);
-                if(inputPrec) inputPrec.setAttribute('value', inputPrec.value);
+            filas.forEach(f => {
+                f.querySelector('.input-cantidad').setAttribute('value', f.querySelector('.input-cantidad').value);
+                f.querySelector('.input-precio').setAttribute('value', f.querySelector('.input-precio').value);
             });
             sessionStorage.setItem("tabla_compra_backup", cuerpo.innerHTML);
         } else {
@@ -636,25 +646,11 @@
 
     function recuperarBackupTemporal() {
         const backup = sessionStorage.getItem("tabla_compra_backup");
-        const cuerpo = document.getElementById("tbodyDetalles");
-        if (backup && cuerpo.querySelectorAll('tr[data-id]').length === 0) {
-            cuerpo.innerHTML = backup;
+        if (backup && document.querySelectorAll('#tbodyDetalles tr[data-id]').length === 0) {
+            document.getElementById("tbodyDetalles").innerHTML = backup;
             const filaVacia = document.getElementById("filaVacia");
             if (filaVacia) filaVacia.remove();
-            actualizarTotales();
         }
-    }
-
-    function validarSegunUnidad(input, unidad) {
-        if (input.value === "" || input.value < 0) return;
-        if (unidad === 'UNIDAD') {
-            input.value = Math.floor(input.value) || 1;
-        } else {
-            if (input.value.includes('.') && input.value.split('.')[1].length > 3) {
-                input.value = parseFloat(input.value).toFixed(3);
-            }
-        }
-        actualizarTotales();
     }
 </script>
 </body>

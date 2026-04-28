@@ -10,13 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
@@ -29,7 +29,14 @@ public class CompraService {
     public Page<Compra> filtrarCompras(String proveedor, String fechaDesde, String fechaHasta,
                                        int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        // ORDENAMIENTO MIXTO:
+        // 1. Por Estado (Pendientes arriba)
+        // 2. Por Fecha (Más recientes primero)
+        // 3. por ID
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by("estado").descending()
+                        .and(Sort.by("fechaInicio").descending())
+                        .and(Sort.by("idCompra").descending()));
 
         LocalDate desde = null;
         LocalDate hasta = null;
@@ -41,8 +48,6 @@ public class CompraService {
             throw new RuntimeException("Error: El formato de fecha debe ser YYYY-MM-DD");
         }
 
-        // Si el proveedor viene vacío o con espacios, lo mandamos como null
-        // Dentro de filtrarCompras en CompraService
         String proveedorLimpio = (proveedor != null && !proveedor.trim().isEmpty()) ? proveedor.trim() : null;
 
         return compraRepository.filtrar(proveedorLimpio, desde, hasta, pageable);

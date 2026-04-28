@@ -6,6 +6,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;         // La interfaz que contiene los resultados
+import org.springframework.data.domain.PageRequest;  // Para crear la solicitud (page, size)
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 @Service
@@ -15,15 +19,19 @@ public class ProveedorServiceImpl implements ProveedorService {
     private ProveedorRepository repository;
 
     @Override
-    public List<Proveedor> listarTodos() {
-        // Ahora usamos el método que filtra solo los activos (estado = true)
-        return repository.findByEstadoTrueOrderByIdProveedorAsc();
+    public Page<Proveedor> listarPaginado(boolean estado, String buscar, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        if (buscar != null && !buscar.trim().isEmpty()) {
+            return repository.findByNombreContainingIgnoreCaseAndEstadoOrderByIdProveedorDesc(buscar.trim(), estado, pageable);
+        }
+
+        return repository.findByEstadoOrderByIdProveedorDesc(estado, pageable);
     }
 
     @Override
-    public List<Proveedor> listarSoloInactivos() {
-        // Ya no necesitamos Query Nativa, usamos el método de Spring Data JPA
-        return repository.findByEstadoFalseOrderByIdProveedorAsc();
+    public List<Proveedor> listarParaCombos() {
+        return repository.findByEstadoTrueOrderByIdProveedorDesc();
     }
 
     @Override
@@ -95,4 +103,5 @@ public class ProveedorServiceImpl implements ProveedorService {
             repository.save(p);
         }
     }
+
 }

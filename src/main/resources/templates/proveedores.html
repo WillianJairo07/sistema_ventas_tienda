@@ -30,17 +30,21 @@
 
       <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
         <div class="search-container custom-search-adaptive flex-grow-1">
-          <input type="text" id="inputBusqueda" class="form-control" placeholder="Buscar proveedor..." onkeyup="filtrarProveedores()">
+          <input type="text" id="inputBusqueda" class="form-control"
+                 th:value="${buscar}"
+                 placeholder="Buscar proveedor"
+                 onkeyup="filtrarProveedores(event)">
           <i class="fas fa-search"></i>
         </div>
 
         <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-          <a th:if="${param.verInactivos == null}" th:href="@{/proveedores(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
-            <i class="fas fa-eye-slash"></i> <span>Ver Inactivos</span>
+          <a th:href="@{/proveedores(verInactivos=${!verInactivos})}"
+             class="btn shadow-sm"
+             th:classappend="${verInactivos} ? 'btn-ver-activos' : 'btn-ver-inactivos'">
+            <i class="fas" th:classappend="${verInactivos} ? 'fa-eye' : 'fa-eye-slash'"></i>
+            <span th:text="${verInactivos} ? ' Ver Activos' : ' Ver Inactivos'"></span>
           </a>
-          <a th:if="${param.verInactivos != null}" th:href="@{/proveedores}" class="btn btn-ver-activos shadow-sm">
-            <i class="fas fa-eye"></i> <span>Ver Activos</span>
-          </a>
+
           <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProveedor" onclick="nuevoFormulario()">
             <i class="fas fa-plus-circle"></i> <span>Agregar</span>
           </button>
@@ -89,6 +93,30 @@
           </tbody>
         </table>
       </div>
+
+      <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3">
+        <div class="text-muted small">
+          Página <span th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
+        </div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+              <a class="page-link" th:href="@{/proveedores(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+              <a class="page-link" th:href="@{/proveedores(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+              <a class="page-link" th:href="@{/proveedores(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </div>
   </div>
 </main>
@@ -136,89 +164,72 @@
     const errorMsg = /*[[${error}]]*/ null;
     const isDark = document.body.classList.contains('dark-mode');
 
-
     const swalBase = {
       background: isDark ? '#1a1d21' : '#fff',
       color: isDark ? '#fff' : '#000'
     };
 
     if (successMsg) {
-      Swal.fire({
-        ...swalBase,
-        icon: 'success',
-        title: '¡Hecho!',
-        text: successMsg,
-        timer: 2000,
-        showConfirmButton: false,
-        confirmButtonColor: '#07e80b'
-      });
+      Swal.fire({ ...swalBase, icon: 'success', title: '¡Hecho!', text: successMsg, timer: 2000, showConfirmButton: false });
     }
 
     if (errorMsg) {
-      Swal.fire({
-        ...swalBase,
-        icon: 'error',
-        title: 'Atención',
-        text: errorMsg,
-        confirmButtonColor: '#ff4d4d'
-      });
+      Swal.fire({ ...swalBase, icon: 'error', title: 'Atención', text: errorMsg, confirmButtonColor: '#ff4d4d' });
+    }
+
+    // FOCO INTELIGENTE TRAS RECARGA
+    const inputBusqueda = document.getElementById("inputBusqueda");
+    if (inputBusqueda && inputBusqueda.value !== "") {
+      inputBusqueda.focus();
+      const val = inputBusqueda.value;
+      inputBusqueda.value = '';
+      inputBusqueda.value = val;
     }
   });
 
-
-  function filtrarProveedores() {
+  // BUSQUEDA HÍBRIDA
+  function filtrarProveedores(event) {
     const input = document.getElementById("inputBusqueda").value.toLowerCase();
+
+    // 1. SI ES ENTER: Búsqueda profunda en servidor
+    if (event && event.key === 'Enter') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const verInactivos = urlParams.get('verInactivos') || 'false';
+      window.location.href = `/proveedores?page=0&verInactivos=${verInactivos}&buscar=${encodeURIComponent(input)}`;
+      return;
+    }
+
+    // 2. MIENTRAS ESCRIBE: Filtro visual instantáneo
     const filas = document.querySelectorAll("#tablaProveedores tbody tr");
-
     filas.forEach(fila => {
-
       const nombre = fila.querySelector(".nombre-prov")?.innerText.toLowerCase() || "";
       const id = fila.querySelector("td:first-child")?.innerText.toLowerCase() || "";
-
-      if (nombre.includes(input) || id.includes(input)) {
-        fila.style.display = "";
-      } else {
-        fila.style.display = "none";
-      }
+      fila.style.display = (nombre.includes(input) || id.includes(input)) ? "" : "none";
     });
   }
-
 
   function nuevoFormulario() {
     document.getElementById('modalTitulo').innerText = 'Nuevo Proveedor';
     document.getElementById('idProveedor').value = '';
     document.getElementById('nombre').value = '';
     document.getElementById('telefono').value = '';
-
-
-    setTimeout(() => {
-      document.getElementById('nombre').focus();
-    }, 450);
+    setTimeout(() => { document.getElementById('nombre').focus(); }, 450);
   }
 
   function editarProveedor(id) {
     document.getElementById('modalTitulo').innerText = 'Editar Proveedor';
-
     fetch(`/proveedores/editar/${id}`)
-            .then(res => {
-              if (!res.ok) throw new Error("Error al obtener datos");
-              return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
               document.getElementById('idProveedor').value = data.idProveedor;
               document.getElementById('nombre').value = data.nombre || '';
               document.getElementById('telefono').value = data.telefono || '';
             })
-            .catch(err => {
-              console.error(err);
-              Swal.fire('Error', 'No se pudieron cargar los datos del proveedor', 'error');
-            });
+            .catch(err => console.error(err));
   }
-
 
   function confirmarEliminar(id) {
     const isDark = document.body.classList.contains('dark-mode');
-
     Swal.fire({
       title: '¿Deshabilitar proveedor?',
       text: "El proveedor se moverá a la lista de inactivos.",
@@ -227,7 +238,6 @@
       confirmButtonColor: '#ff4d4d',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Sí, deshabilitar',
-      cancelButtonText: 'Cancelar',
       background: isDark ? '#1a1d21' : '#fff',
       color: isDark ? '#fff' : '#000'
     }).then((result) => {

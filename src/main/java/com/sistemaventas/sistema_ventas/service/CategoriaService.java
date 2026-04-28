@@ -7,6 +7,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 @Service
@@ -18,13 +22,16 @@ public class CategoriaService {
     @Autowired
     private ProductoRepository productoRepository;
 
-    // 1. Usamos los métodos automáticos de JPA (Mucho más rápidos)
-    public List<Categoria> listarTodasOrdenadas() {
-        return categoriaRepository.findByEstadoTrueOrderByIdCategoriaAsc();
-    }
+    public Page<Categoria> listarPaginado(boolean activos, int page, int size, String buscar) {
+        Pageable pageable = PageRequest.of(page, size);
 
-    public List<Categoria> listarSoloInactivos() {
-        return categoriaRepository.findByEstadoFalseOrderByIdCategoriaAsc();
+        if (buscar != null && !buscar.trim().isEmpty()) {
+            return categoriaRepository.findByNombreCategoriaContainingIgnoreCaseAndEstado(buscar.trim(), activos, pageable);
+        }
+
+        return activos ?
+                categoriaRepository.findByEstadoTrueOrderByIdCategoriaAsc(pageable) :
+                categoriaRepository.findByEstadoFalseOrderByIdCategoriaAsc(pageable);
     }
 
     @Transactional
@@ -83,5 +90,11 @@ public class CategoriaService {
             cat.setEstado(false);
             categoriaRepository.save(cat);
         }
+    }
+
+
+    public List<Categoria> listarParaCombos() {
+        // Usamos el repositorio para traer solo las activas, ordenadas por nombre, en una LISTA
+        return categoriaRepository.findByEstadoTrueOrderByNombreCategoriaAsc();
     }
 }

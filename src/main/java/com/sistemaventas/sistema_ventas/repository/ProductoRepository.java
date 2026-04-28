@@ -8,19 +8,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
-    List<Producto> findByEstadoTrue();
+    // Cambiado: Este es el que usará el Service para los combos
+    List<Producto> findByEstadoTrueOrderByIdProductoDesc();
 
     @Query(value = "SELECT p FROM Producto p JOIN FETCH p.categoria " +
             "WHERE p.estado = :estado " +
             "AND (:termino IS NULL OR LOWER(p.nombreProducto) LIKE LOWER(CONCAT('%', CAST(:termino AS string), '%')) " +
             "OR LOWER(p.codigoBarras) LIKE LOWER(CONCAT('%', CAST(:termino AS string), '%'))) " +
-            "ORDER BY p.idProducto ASC",
+            "ORDER BY p.idProducto DESC",
             countQuery = "SELECT count(p) FROM Producto p " +
                     "WHERE p.estado = :estado " +
                     "AND (:termino IS NULL OR LOWER(p.nombreProducto) LIKE LOWER(CONCAT('%', CAST(:termino AS string), '%')) " +
@@ -29,14 +31,9 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
                                         @Param("termino") String termino,
                                         Pageable pageable);
 
-    // Validaciones para evitar duplicados
     boolean existsByNombreProductoIgnoreCase(String nombre);
     boolean existsByCodigoBarras(String codigo);
     boolean existsByCodigoBarrasAndIdProductoNot(String codigo, Integer id);
-
-    // Para la lógica de "Auto-revivir"
     Producto findByNombreProductoIgnoreCaseAndEstadoFalse(String nombre);
-
-    // Para alertas de stock bajo (Dashboard o reportes)
-    long countByStockLessThanEqualAndEstadoTrue(Integer limite);
+    long countByStockLessThanEqualAndEstadoTrue(BigDecimal limite);
 }

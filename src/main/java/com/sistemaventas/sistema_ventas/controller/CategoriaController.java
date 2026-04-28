@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.data.domain.Page;
 
 @Controller
 @RequestMapping("/categorias")
@@ -17,15 +18,25 @@ public class CategoriaController {
     private CategoriaService categoriaService;
 
     @GetMapping
-    public String listarCategorias(@RequestParam(name = "verInactivos", required = false) Boolean verInactivos, Model model) {
-        // Simplificamos la lógica: el Service ya decide qué lista enviar
-        boolean mostrarInactivos = (verInactivos != null && verInactivos);
+    public String listarCategorias(
+            @RequestParam(name = "verInactivos", required = false, defaultValue = "false") boolean verInactivos,
+            @RequestParam(name = "buscar", required = false) String buscar,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            Model model) {
 
-        model.addAttribute("categorias", mostrarInactivos ?
-                categoriaService.listarSoloInactivos() :
-                categoriaService.listarTodasOrdenadas());
+        // Tamaño de página (ejemplo: 10 categorías por página)
+        int size = 10;
+        boolean estadoABuscar = !verInactivos;
 
+        Page<Categoria> pagina = categoriaService.listarPaginado(estadoABuscar, page, size, buscar);
+
+        model.addAttribute("categorias", pagina.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", pagina.getTotalPages());
+        model.addAttribute("buscar", buscar);
+        model.addAttribute("verInactivos", verInactivos);
         model.addAttribute("categoria", new Categoria());
+
         return "categorias";
     }
 

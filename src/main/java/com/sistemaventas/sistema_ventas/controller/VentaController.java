@@ -6,6 +6,8 @@ import com.sistemaventas.sistema_ventas.repository.ClienteRepository;
 import com.sistemaventas.sistema_ventas.repository.PagoRepository;
 import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import com.sistemaventas.sistema_ventas.repository.UsuarioRepository;
+import com.sistemaventas.sistema_ventas.service.ClienteService;
+import com.sistemaventas.sistema_ventas.service.ProductoService;
 import com.sistemaventas.sistema_ventas.service.TicketService;
 import com.sistemaventas.sistema_ventas.service.VentaService;
 import jakarta.transaction.Transactional;
@@ -30,8 +32,8 @@ import java.util.stream.Collectors;
 public class VentaController {
 
     @Autowired private VentaService ventaService;
-    @Autowired private ProductoRepository productoRepository;
-    @Autowired private ClienteRepository clienteRepository;
+    @Autowired private ProductoService productoService;
+    @Autowired private ClienteService clienteService;
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private TicketService ticketService;
     @Autowired private PagoRepository pagoRepository;
@@ -170,7 +172,7 @@ public class VentaController {
     }
 
     private void cargarCombos(Model model) {
-        model.addAttribute("productos", productoRepository.findByEstadoTrue());
-        model.addAttribute("clientes", clienteRepository.findByEstadoTrueOrderByIdClienteAsc());
+        model.addAttribute("productos", productoService.listarParaCombos());
+        model.addAttribute("clientes", clienteService.listarParaCombos());
     }
 }
