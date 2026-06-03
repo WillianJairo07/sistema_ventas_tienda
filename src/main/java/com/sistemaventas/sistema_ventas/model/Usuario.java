@@ -3,7 +3,6 @@ package com.sistemaventas.sistema_ventas.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.List;
 
 @Data
 @Entity
@@ -12,25 +11,30 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_usuario")
     private Integer idUsuario;
 
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(name="usuario", unique = true, nullable = false, length = 50)
+    // Mapeo simple sin @NotBlank
+    @Column(name = "apellido_paterno", nullable = false, length = 100)
+    private String apellidoPaterno;
+
+    // Mapeo simple sin @NotBlank
+    @Column(name = "apellido_materno", nullable = false, length = 100)
+    private String apellidoMaterno;
+
+    @Column(name = "usuario", unique = true, nullable = false, length = 50)
     private String username;
 
-    @Column(name="contrasena", nullable = false, length = 100)
+    @Column(name = "contrasena", nullable = false, length = 100)
     private String password;
 
     @Column(nullable = false)
     private Boolean estado = true;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "usuario_rol",
-            joinColumns = @JoinColumn(name = "id_usuario"),
-            inverseJoinColumns = @JoinColumn(name = "id_rol")
-    )
-    private List<Rol> roles;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_rol", nullable = false)
+    private Rol rol;
 }

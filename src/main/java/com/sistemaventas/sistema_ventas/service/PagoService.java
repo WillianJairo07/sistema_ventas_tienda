@@ -44,6 +44,20 @@ public class PagoService {
         // GUARDAR CON HORA Y MINUTOS
         nuevoPago.setFecha(LocalDateTime.now());
 
-        return pagoRepo.save(nuevoPago);
+        // 1. Guardamos el registro del nuevo abono de forma normal
+        Pago pagoGuardado = pagoRepo.save(nuevoPago);
+
+        // ====================================================================
+        // SOLUCIÓN AL DESFASE DE DATOS: Actualizar la cabecera de la Venta
+        // ====================================================================
+        // Sumamos el monto actual de la cabecera + el nuevo abono
+        BigDecimal montoInicialEnVenta = venta.getMontoPagado() != null ? venta.getMontoPagado() : BigDecimal.ZERO;
+        venta.setMontoPagado(montoInicialEnVenta.add(montoAbono));
+
+        // Guardamos la venta con su columna 'monto_pagado' sincronizada
+        ventaRepo.save(venta);
+        // ====================================================================
+
+        return pagoGuardado;
     }
 }

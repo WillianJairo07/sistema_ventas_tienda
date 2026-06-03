@@ -7,7 +7,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import org.springframework.data.domain.Page;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Ya está aquí el import
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.core.Authentication;
 
 @Controller
 @RequestMapping("/usuarios")
@@ -16,9 +17,8 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-
     @GetMapping("/perfil")
-    public String verPerfil(Model model, org.springframework.security.core.Authentication auth) {
+    public String verPerfil(Model model, Authentication auth) {
         if (auth == null || !auth.isAuthenticated()) return "redirect:/login";
 
         // Obtenemos el usuario completo usando el username de la sesión
@@ -27,7 +27,30 @@ public class UsuarioController {
         return "perfil";
     }
 
+    // ====================================================================
+    // NUEVO: Procesa el cambio de contraseña desde el perfil personal
+    // ====================================================================
+    @PostMapping("/perfil/cambiar-password")
+    public String cambiarPasswordMiPerfil(@RequestParam("passwordActual") String passwordActual,
+                                          @RequestParam("nuevaPassword") String nuevaPassword,
+                                          org.springframework.security.core.Authentication auth,
+                                          RedirectAttributes flash) {
+        if (auth == null || !auth.isAuthenticated()) return "redirect:/login";
 
+        try {
+            String usernameLogueado = auth.getName();
+            // Llama a la nueva validación del servicio
+            usuarioService.cambiarPasswordPersonal(usernameLogueado, passwordActual, nuevaPassword);
+            flash.addFlashAttribute("success", "Contraseña cambiada con éxito.");
+        } catch (IllegalArgumentException e) {
+            // Captura si la contraseña actual no coincide o es inválida
+            flash.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Error interno al cambiar la contraseña.");
+        }
+
+        return "redirect:/usuarios/perfil";
+    }
 
     @GetMapping
     public String listar(Model model,
@@ -52,7 +75,7 @@ public class UsuarioController {
     @PostMapping("/guardar")
     public String guardar(@ModelAttribute Usuario usuario,
                           @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
-                          RedirectAttributes flash) { // <--- Uso limpio del import
+                          RedirectAttributes flash) {
         try {
             usuarioService.guardar(usuario);
             flash.addFlashAttribute("success", "Usuario procesado con éxito.");
@@ -61,16 +84,14 @@ public class UsuarioController {
         } catch (Exception e) {
             flash.addFlashAttribute("error", "Error interno al guardar.");
         }
-        // Mantiene el estado de la vista tras guardar
         return "redirect:/usuarios?verInactivos=" + verInactivos;
     }
 
     @GetMapping("/eliminar/{id}")
     public String eliminar(@PathVariable Integer id,
                            @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
-                           RedirectAttributes flash) { // <--- Uso limpio del import
+                           RedirectAttributes flash) {
         try {
-            // Es mejor delegar esto al Service: usuarioService.desactivar(id);
             Usuario u = usuarioService.buscarPorId(id);
             if (u != null) {
                 u.setEstado(false);
@@ -99,7 +120,6 @@ public class UsuarioController {
     public Usuario editar(@PathVariable Integer id) {
         return usuarioService.buscarPorId(id);
     }
-
 
     @GetMapping("/reset-password/{id}")
     public String resetPassword(@PathVariable Integer id,

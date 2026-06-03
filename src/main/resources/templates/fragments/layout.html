@@ -8,58 +8,79 @@
 </head>
 <body>
 
-<nav id="sidebar" th:fragment="sidebar">
-    <div class="brand-sidebar">
-        <img th:src="@{/img/logo1.png}" alt="Logo">
-        <span>SISTEMA VENTAS</span>
-    </div>
-    <div class="sidebar-menu">
-        <a th:href="@{/home}"><i class="fas fa-th-large"></i> Inicio</a>
-        <a th:href="@{/categorias}"><i class="fas fa-tags"></i> Categorías</a>
-        <a th:href="@{/productos}"><i class="fas fa-box"></i> Productos</a>
-        <a th:href="@{/proveedores}"><i class="fas fa-truck"></i> Proveedores</a>
-        <a th:href="@{/compras/nueva}"><i class="fas fa-file-import"></i> Compras</a>
-        <a th:href="@{/compras}"><i class="fas fa-list-alt"></i> Historial de Compras</a>
-        <a th:href="@{/clientes}"><i class="fas fa-user-friends"></i> Clientes</a>
-        <a th:href="@{/ventas/nueva}"><i class="fas fa-shopping-cart"></i> Realizar Venta</a>
-        <a th:href="@{/ventas}"><i class="fas fa-history"></i> Historial de Ventas</a>
-        <a th:href="@{/pagos}"><i class="fas fa-hand-holding-usd"></i> Cuentas por Cobrar</a>
+<nav id="sidebar" th:fragment="sidebar" class="sidebar">
 
-        <a th:href="@{/usuarios}" sec:authorize="hasRole('ADMIN')">
-            <i class="fas fa-users-cog"></i> Usuarios
+    <script>
+        (function() {
+            const savedStatus = localStorage.getItem('sidebarStatus') || 'sidebar-open';
+            document.body.classList.add(savedStatus);
+            // Evita que el menú "viaje" visualmente al cargar la página
+            document.body.style.setProperty('transition', 'none', 'important');
+        })();
+    </script>
+    <button class="edge-toggle-btn" id="sidebarToggle">
+        <i class="fas fa-chevron-left toggle-icon"></i>
+    </button>
+
+    <div class="sidebar-header">
+        <div class="brand-sidebar">
+            <img th:src="@{/img/logo1.png}" alt="Logo">
+            <span class="brand-text">SISTEMA VENTAS</span>
+        </div>
+    </div>
+
+    <div class="sidebar-menu">
+        <a th:href="@{/home}"><i class="fas fa-th-large"></i> <span>Inicio</span></a>
+        <a th:href="@{/categorias}"><i class="fas fa-tags"></i> <span>Categorías</span></a>
+        <a th:href="@{/productos}"><i class="fas fa-box"></i> <span>Productos</span></a>
+        <a th:href="@{/proveedores}"><i class="fas fa-truck"></i> <span>Proveedores</span></a>
+        <a th:href="@{/compras/nueva}"><i class="fas fa-file-import"></i> <span>Compras</span></a>
+        <a th:href="@{/compras}"><i class="fas fa-list-alt"></i> <span>Historial Compras</span></a>
+        <a th:href="@{/clientes}"><i class="fas fa-user-friends"></i> <span>Clientes</span></a>
+        <a th:href="@{/ventas/nueva}"><i class="fas fa-shopping-cart"></i> <span>Realizar Venta</span></a>
+        <a th:href="@{/ventas}"><i class="fas fa-history"></i> <span>Historial Ventas</span></a>
+        <a th:href="@{/pagos}"><i class="fas fa-hand-holding-usd"></i> <span>Cuentas por Cobrar</span></a>
+
+        <!-- MODIFICACIÓN: Condicional directo usando el nuevo modelo de un solo Rol -->
+        <a th:href="@{/usuarios}" th:if="${usuarioLogueado != null && usuarioLogueado.rol != null && usuarioLogueado.rol.nombreRol == 'ADMIN'}">
+            <i class="fas fa-users-cog"></i> <span>Usuarios</span>
         </a>
 
-        <a th:href="@{/usuarios/perfil}"><i class="fas fa-user-circle"></i> Mi Perfil</a>
-        <form th:action="@{/logout}" method="post" style="margin-top: auto;">
+        <a th:href="@{/usuarios/perfil}"><i class="fas fa-user-circle"></i> <span>Mi Perfil</span></a>
+
+        <form th:action="@{/logout}" method="post">
             <button type="submit" class="btn-logout">
-                <i class="fas fa-power-off"></i> Cerrar sesión
+                <i class="fas fa-power-off"></i> <span>Cerrar sesión</span>
             </button>
         </form>
     </div>
 </nav>
 
 <nav class="top-navbar" th:fragment="topbar">
-    <div class="hamburger-container" id="hamburgerWrapper">
-        <i class="fas fa-bars hamburger" id="hamburger"></i>
+    <div class="topbar-left">
+        <button class="hamburger-btn" id="sidebarOpen">
+            <i class="fas fa-bars"></i>
+        </button>
     </div>
-    <div class="d-flex align-items-center">
-        <div class="theme-switch">
-            <input type="radio" name="theme" id="darkMode">
-            <label for="darkMode"><i class="fas fa-moon"></i></label>
-            <input type="radio" name="theme" id="lightMode">
-            <label for="lightMode"><i class="fas fa-sun"></i></label>
-        </div>
+
+    <div class="topbar-right">
         <div class="dropdown">
-            <a href="#" class="user-link dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" data-bs-display="static">
-                <div class="user-avatar bg-light text-dark text-center">
-                    <i class="fas fa-user"></i>
-                </div>
-                <span th:text="${nombreUsuario}"></span>
+            <a href="#" class="user-profile dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+                <!-- MODIFICACIÓN: Muestra el Nombre Real (Ej: Jairo) si está cargado, de lo contrario un fallback -->
+                <span class="user-name d-none d-md-inline"
+                      th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}">Usuario</span>
+                <div class="avatar-wrapper"><i class="fas fa-user"></i></div>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow">
-                <li class="dropdown-header-mobile" th:text="${nombreUsuario}"></li>
+
+            <ul class="dropdown-menu shadow">
+                <li class="d-md-none">
+                    <!-- MODIFICACIÓN: Nombre Real en el menú desplegable móvil -->
+                    <div class="user-name-submenu"
+                         th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}">Nombre Usuario</div>
+                    <hr class="dropdown-divider">
+                </li>
+
                 <li><a class="dropdown-item" th:href="@{/usuarios/perfil}"><i class="fas fa-user-circle"></i> Mi Perfil</a></li>
-                <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Configuración</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <form th:action="@{/logout}" method="post">

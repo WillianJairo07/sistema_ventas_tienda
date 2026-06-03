@@ -23,56 +23,59 @@
 
 <main class="content" id="mainContent">
     <div class="container-fluid">
-        <div class="header-container d-flex flex-column justify-content-between align-items-start mb-4 gap-3">
-            <div class="header-text text-start">
+        <!-- CABECERA (Estilo Unificado) -->
+        <div class="row align-items-end mb-4 g-3">
+            <div class="col-12 col-xl-4">
                 <h2 class="fw-bold text-dynamic mb-1">Gestión de Clientes</h2>
-                <p class="text-muted-dynamic mb-0 small">Administra aquí tus clientes.</p>
+                <p class="text-muted-dynamic mb-0 small">Administra aquí todos tus clientes</p>
             </div>
 
-            <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
-                <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda" class="form-control"
-                           th:value="${buscar}"
-                           placeholder="Escribe para filtrar o presiona Enter para buscar todo..."
-                           onkeyup="manejarBusqueda(event)">
-                    <i class="fas fa-search"></i>
-                </div>
+            <div class="col-12 col-xl-8">
+                <div class="d-flex flex-wrap flex-md-nowrap justify-content-xl-end align-items-center gap-2">
+                    <!-- Buscador -->
+                    <div class="search-container custom-search-adaptive">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="inputBusqueda" class="form-control shadow-sm"
+                               th:value="${buscar}" placeholder="Buscar cliente..." onkeyup="manejarBusqueda(event)">
+                    </div>
 
-                <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-                    <a th:href="@{/clientes(verInactivos=${!verInactivos}, buscar=${buscar})}"
-                       class="btn shadow-sm"
-                       th:classappend="${verInactivos} ? 'btn-ver-activos' : 'btn-ver-inactivos'">
-                        <i class="fas" th:classappend="${verInactivos} ? 'fa-eye' : 'fa-eye-slash'"></i>
-                        <span th:text="${verInactivos} ? ' Ver Activos' : ' Ver Inactivos'"></span>
-                    </a>
-
-                    <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="nuevoFormulario()">
-                        <i class="fas fa-plus-circle"></i> <span>Nuevo Cliente</span>
-                    </button>
+                    <!-- Botones -->
+                    <div class="btn-group-adaptive d-flex gap-2">
+                        <a th:href="@{/clientes(verInactivos=${!verInactivos})}"
+                           class="btn shadow-sm"
+                           th:classappend="${verInactivos} ? 'btn-ver-activos' : 'btn-ver-inactivos'">
+                            <i class="fas" th:classappend="${verInactivos} ? 'fa-eye' : 'fa-eye-slash'"></i>
+                            <span th:text="${verInactivos} ? ' Activos' : ' Inactivos'"></span>
+                        </a>
+                        <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="nuevoFormulario()">
+                            <i class="fas fa-plus-circle"></i> <span>Agregar</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="crud-card p-4 shadow">
+        <!-- TABLA (Estilo Unificado) -->
+        <div class="crud-card shadow-sm overflow-hidden border-0">
             <div class="table-responsive">
-                <table class="table custom-table align-middle">
-                    <thead>
+                <table class="table custom-table align-middle mb-0" id="tablaClientes">
+                    <thead class="bg-light">
                     <tr class="text-dynamic">
-                        <th class="ps-4">ID</th>
-                        <th>NOMBRE COMPLETO</th>
-                        <th>FECHA REGISTRO</th>
-                        <th class="text-center">ACCIONES</th>
+                        <th class="text-center ps-4 py-3" style="font-size: 0.8rem; font-weight: 700;">ID</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">NOMBRE COMPLETO</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">FECHA REGISTRO</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ACCIONES</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="c : ${clientes}" class="fade-in">
-                        <td class="ps-4 fw-bold text-neon" th:text="${c.idCliente}"></td>
-                        <td class="nombre-cli">
-                            <span class="text-dynamic" th:text="${c.nombre}"></span>
-                            <span class="text-muted-dynamic" th:text="${c.apellidoPat + ' ' + (c.apellidoMat ?: '')}"></span>
+                    <tr th:each="c : ${clientes}" class="border-bottom">
+                        <td class="ps-4 fw-bold text-muted text-center" th:text="${c.idCliente}"></td>
+                        <td class="nombre-cli fw-medium text-muted text-center small">
+                            <span th:text="${c.nombre}"></span>
+                            <span th:text="${c.apellidoPat + ' ' + (c.apellidoMat ?: '')}"></span>
                         </td>
-                        <td class="text-muted-dynamic" th:text="${#temporals.format(c.fechaRegistro, 'dd/MM/yyyy HH:mm')}"></td>
-                        <td class="text-center">
+                        <td class="text-center text-muted small" th:text="${#temporals.format(c.fechaRegistro, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
                             <div class="d-flex justify-content-center gap-2">
                                 <th:block th:if="${c.estado}">
                                     <button class="btn-circle btn-edit" th:onclick="'editarCliente(' + ${c.idCliente} + ')'" data-bs-toggle="modal" data-bs-target="#modalCliente">
@@ -83,9 +86,9 @@
                                     </button>
                                 </th:block>
                                 <th:block th:if="${!c.estado}">
-                                    <button class="btn-circle btn-restore" th:onclick="'confirmarRestaurar(' + ${c.idCliente} + ')'">
+                                    <a th:href="@{/clientes/restaurar/{id}(id=${c.idCliente})}" class="btn-circle btn-restore">
                                         <i class="fas fa-trash-restore"></i>
-                                    </button>
+                                    </a>
                                 </th:block>
                             </div>
                         </td>
@@ -93,75 +96,103 @@
                     </tbody>
                 </table>
             </div>
-        </div> <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 0}">
-        <div class="text-muted-dynamic small">
-            Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
         </div>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link shadow-sm" th:href="@{/clientes(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
-                <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                    th:classappend="${i == currentPage} ? 'active'">
-                    <a class="page-link shadow-sm" th:href="@{/clientes(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
-                </li>
-                <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                    <a class="page-link shadow-sm" th:href="@{/clientes(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+
+        <!-- PAGINACIÓN IGUAL A CATEGORÍAS -->
+        <div th:if="${totalPages > 1}" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
+            <div class="text-dark small fw-medium">
+                Página <span class="fw-bold text-primary" th:text="${currentPage + 1}"></span> de <span class="fw-bold" th:text="${totalPages}"></span>
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link shadow-sm" th:href="@{/clientes(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active'">
+                        <a class="page-link shadow-sm" th:href="@{/clientes(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                        <a class="page-link shadow-sm" th:href="@{/clientes(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
 </main>
 
-<div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalCliente" tabindex="-1" aria-labelledby="modalTitulo" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg custom-modal" style="border-radius: 15px">
-            <div class="modal-header border-0 p-4" style="background: linear-gradient(45deg, #4b6cb7, #182848); border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title fw-bold text-white" id="modalTitulo">Nuevo Cliente</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg">
+
+            <!-- CABECERA: Igual a Categorías -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white" id="modalTitulo">
+                    <i class="fas fa-user-plus me-2"></i>Nuevo Cliente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
+
             <form th:action="@{/clientes/guardar}" th:object="${cliente}" method="post">
                 <div class="modal-body p-4">
                     <input type="hidden" th:field="*{idCliente}" id="idCliente">
 
+                    <!-- CAMPO: NOMBRE -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Nombre</label>
-                        <div class="input-group custom-input-group">
-                            <span class="input-group-text"><i class="fas fa-user"></i></span>
-                            <input type="text" th:field="*{nombre}" id="nombre" class="form-control"
-                                   placeholder="Escribe tu nombre" required autocomplete="off">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Nombre</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border: 1px solid #dee2e6;">
+                                <i class="fas fa-user text-muted"></i>
+                            </span>
+                            <input type="text" th:field="*{nombre}" id="nombre"
+                                   class="form-control shadow-none border-start-0"
+                                   placeholder="Ej: Juan Antonio" required
+                                   style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6;">
                         </div>
                     </div>
 
+                    <!-- CAMPOS: APELLIDOS -->
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-dynamic" >Apellido Paterno</label>
-                            <input type="text" th:field="*{apellidoPat}" id="apellidoPat" class="form-control"
-                                   placeholder="Apellido paterno" required autocomplete="off">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Apellido Paterno</label>
+                            <input type="text" th:field="*{apellidoPat}" id="apellidoPat"
+                                   class="form-control shadow-none"
+                                   placeholder="Ej: Pérez" required
+                                   style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6;">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-dynamic">Apellido Materno</label>
-                            <input type="text" th:field="*{apellidoMat}" id="apellidoMat" class="form-control"
-                                   placeholder="Apellido materno" autocomplete="off">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Apellido Materno</label>
+                            <input type="text" th:field="*{apellidoMat}" id="apellidoMat"
+                                   class="form-control shadow-none"
+                                   placeholder="Ej: García"
+                                   style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6;">
                         </div>
                     </div>
+
+                    <!-- MENSAJE DE AYUDA: Igual a Categorías -->
+                    <small class="text-muted mt-3 d-flex align-items-center" style="font-size: 0.72rem; opacity: 0.8;">
+                        <i class="fas fa-info-circle me-1" style="font-size: 0.65rem;"></i> Verifique los datos antes de guardar para evitar duplicados.
+                    </small>
                 </div>
+
+                <!-- FOOTER: Botones con clases de Categorías -->
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-new-cat px-4 rounded-pill shadow-neon" style="border-radius: 8px !important;">
-                        <i class="fas fa-save me-1"></i> Guardar Cliente
+                    <button type="button" class="btn btn-secondary-custom px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-new-cat px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
@@ -172,10 +203,42 @@
     document.addEventListener("DOMContentLoaded", function() {
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
-        const isDark = document.body.classList.contains('dark-mode');
 
-        if (successMsg) Swal.fire({ icon: 'success', title: '¡Éxito!', text: successMsg, background: isDark ? '#1a1d21' : '#fff', color: isDark ? '#fff' : '#000', showConfirmButton: false, timer: 2000 });
-        if (errorMsg) Swal.fire({ icon: 'error', title: 'Error', text: errorMsg, background: isDark ? '#1a1d21' : '#fff', color: isDark ? '#fff' : '#000' });
+        // --- ALERTAS CON COLORES CORPORATIVOS UNIFICADOS ---
+        if (successMsg) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Hecho!',
+                text: successMsg,
+                timer: 2000,
+                showConfirmButton: false,
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6',
+                customClass: { popup: 'border-radius-15' }
+            });
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención',
+                text: errorMsg,
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d'
+            });
+        }
+
+        // --- BÚSQUEDA: MANTENER FOCO AL RECARGAR ---
+        const inputBusqueda = document.getElementById("inputBusqueda");
+        if (inputBusqueda && inputBusqueda.value !== "") {
+            inputBusqueda.focus();
+            const val = inputBusqueda.value;
+            inputBusqueda.value = '';
+            inputBusqueda.value = val;
+        }
     });
 
     // BUSQUEDA HÍBRIDA: Visual al escribir, Servidor al presionar Enter
@@ -192,11 +255,9 @@
         const filas = document.querySelectorAll(".table tbody tr");
 
         filas.forEach(fila => {
-            // Buscamos dentro de la celda de nombre (nombre-cli) y la de ID (text-neon)
             const nombreCompleto = fila.querySelector(".nombre-cli")?.innerText.toLowerCase() || "";
             const idCliente = fila.querySelector(".text-neon")?.innerText.toLowerCase() || "";
 
-            // Si el texto coincide con el nombre o el ID, mostramos la fila
             if (nombreCompleto.includes(texto) || idCliente.includes(texto)) {
                 fila.style.display = "";
             } else {
@@ -207,59 +268,98 @@
 
     function editarCliente(id) {
         document.getElementById('modalTitulo').innerText = 'Editar Cliente';
+        const modalEl = document.getElementById('modalCliente'); // Asegúrate que tu id de modal coincida
+        const nombreInput = document.getElementById('nombre');
+
         fetch(`/clientes/editar/${id}`)
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Error al obtener datos');
+                return res.json();
+            })
             .then(data => {
                 document.getElementById('idCliente').value = data.idCliente;
-                document.getElementById('nombre').value = data.nombre || '';
+                nombreInput.value = data.nombre || '';
                 document.getElementById('apellidoPat').value = data.apellidoPat || '';
                 document.getElementById('apellidoMat').value = data.apellidoMat || '';
+
+                // Auto foco al abrir para agilizar la edición
+                if (modalEl) {
+                    modalEl.addEventListener('shown.bs.modal', function () {
+                        nombreInput.focus();
+                    }, { once: true });
+                }
+            })
+            .catch(err => {
+                console.error("Error al cargar cliente:", err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de red',
+                    text: 'No se pudo obtener la información del cliente.',
+                    background: '#ffffff',
+                    color: '#1b254b',
+                    confirmButtonColor: '#3b82f6',
+                    iconColor: '#ee5d5d'
+                });
             });
     }
 
     function confirmarEliminar(id) {
-        const isDark = document.body.classList.contains('dark-mode');
         Swal.fire({
-            title: '¿Deshabilitar?',
-            text: "Se moverá a inactivos.",
+            title: '¿Eliminar cliente?',
+            text: "El cliente se moverá a la lista de inactivos.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ff4d4d',
-            confirmButtonText: 'Sí, deshabilitar',
-            background: isDark ? '#1a1d21' : '#fff',
-            color: isDark ? '#fff' : '#000'
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, mover',
+            cancelButtonText: 'Cancelar',
+            background: '#ffffff',
+            color: '#1b254b',
+            iconColor: '#ee5d5d'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Redirigimos manteniendo el estado de inactivos
-                window.location.href = `/clientes/eliminar/${id}?verInactivos=${CURRENT_VER_INACTIVOS}`;
+                window.location.href = "/clientes/eliminar/" + id;
             }
         });
     }
 
     function confirmarRestaurar(id) {
-        const isDark = document.body.classList.contains('dark-mode');
         Swal.fire({
-            title: '¿Restaurar?',
+            title: '¿Restaurar cliente?',
+            text: "El cliente volverá a aparecer en la lista de activos.",
             icon: 'info',
             showCancelButton: true,
-            confirmButtonColor: '#198754',
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#64748b',
             confirmButtonText: 'Sí, restaurar',
-            background: isDark ? '#1a1d21' : '#fff',
-            color: isDark ? '#fff' : '#000'
+            cancelButtonText: 'Cancelar',
+            background: '#ffffff',
+            color: '#1b254b',
+            iconColor: '#3b82f6',
+            customClass: { popup: 'border-radius-15' }
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = `/clientes/restaurar/${id}`;
+                window.location.href = "/clientes/restaurar/" + id;
             }
         });
     }
 
     function nuevoFormulario() {
+        const nombreInput = document.getElementById('nombre');
+        const modalEl = document.getElementById('modalCliente');
+
         document.getElementById('modalTitulo').innerText = 'Nuevo Cliente';
         document.getElementById('idCliente').value = '';
-        document.getElementById('nombre').value = '';
+        nombreInput.value = '';
         document.getElementById('apellidoPat').value = '';
         document.getElementById('apellidoMat').value = '';
-        setTimeout(() => document.getElementById('nombre').focus(), 450);
+
+        // Auto foco al abrir para agilizar el registro
+        if (modalEl) {
+            modalEl.addEventListener('shown.bs.modal', function () {
+                nombreInput.focus();
+            }, { once: true });
+        }
     }
 </script>
 </body>

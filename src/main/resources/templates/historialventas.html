@@ -5,14 +5,12 @@
     <title>Historial de Compras - Sistema de Ventas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <script th:src="@{/js/tema.js}"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link th:href="@{/css/menu.css}" rel="stylesheet">
-    <link th:href="@{/css/menu1.css}" rel="stylesheet">
-    <link th:href="@{/css/modal.css}" rel="stylesheet">
 
 </head>
 <body>
@@ -25,112 +23,108 @@
 
 <main class="content" id="mainContent" style="padding-bottom: 80px;">
     <div class="container-fluid">
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="fw-bold text-dynamic mb-1 fs-3">Historial de Ventas</h2>
-                <p class="text-muted-dynamic mb-0 fs-6">Visualiza tus ingresos y comprobantes emitidos</p>
+        <div class="cabecera-flex mb-4">
+            <div class="seccion-titulo">
+                <h2 class="fw-bold text-dynamic mb-1">Historial de Ventas</h2>
+                <p class="text-muted-dynamic mb-0 small">Visualiza tus ingresos y comprobantes emitidos</p>
             </div>
-            <a href="/ventas/nueva" class="btn btn-primary rounded-pill px-3 py-2 shadow-sm btn-nueva-orden">
-                <i class="fas fa-plus-circle me-1"></i>
-                <span class="texto-btn">Nueva Venta</span>
-            </a>
+
+            <div class="seccion-boton">
+                <a href="/ventas/nueva" class="btn btn-new-cat rounded-pill shadow-sm btn-nueva-orden">
+                    <i class="fas fa-plus-circle"></i> <span>Nueva Venta</span>
+                </a>
+            </div>
         </div>
 
-        <form th:action="@{/ventas}" method="get" class="row g-2 mb-3 align-items-end">
-            <div class="col-sm-4">
-                <label class="form-label small">Cliente / Ticket</label>
+        <form th:action="@{/ventas}" method="get" class="row g-2 mb-4 align-items-end formulario-filtros-contenedor">
+            <div class="col-custom-proveedor"> <label class="form-label text-dynamic fw-bold mb-1" style="font-size: 0.85rem;">Cliente / Ticket</label>
                 <input type="text" id="filtroVentasJS" name="buscar" th:value="${buscar}"
-                       class="form-control" placeholder="Buscar por cliente o ID...">
+                       class="form-control custom-form-input shadow-sm" placeholder="Buscar por cliente o ID...">
             </div>
-            <div class="col-sm-3">
-                <label class="form-label small">Fecha desde</label>
-                <input type="date" name="fechaDesde" th:value="${fechaDesde}" class="form-control">
+            <div class="col-custom-fecha"> <label class="form-label text-dynamic fw-bold mb-1" style="font-size: 0.85rem;">Fecha desde</label>
+                <input type="date" name="fechaDesde" th:value="${fechaDesde}" class="form-control custom-form-input shadow-sm">
             </div>
-            <div class="col-sm-3">
-                <label class="form-label small">Fecha hasta</label>
-                <input type="date" name="fechaHasta" th:value="${fechaHasta}" class="form-control">
+            <div class="col-custom-fecha"> <label class="form-label text-dynamic fw-bold mb-1" style="font-size: 0.85rem;">Fecha hasta</label>
+                <input type="date" name="fechaHasta" th:value="${fechaHasta}" class="form-control custom-form-input shadow-sm">
             </div>
-            <div class="col-sm-2 d-grid">
-                <button type="submit" class="btn btn-buscar-filtro">
-                    <i class="fas fa-search me-2"></i> Buscar
-                </button>
+            <div class="col-custom-boton"> <button type="submit" class="btn btn-ver-activos btn-buscar-nivelado w-100 shadow-sm">
+                <i class="fas fa-search"></i> <span class="ms-1">Buscar</span>
+            </button>
             </div>
         </form>
 
-        <div class="crud-card p-0 shadow overflow-hidden">
-            <div class="table-scroll">
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0" id="tablaVentas">
-                        <thead class="bg-light">
-                        <tr class="text-muted small text-uppercase">
-                            <th class="ps-4">ID</th>
-                            <th class="text-center">Fecha y Hora</th>
-                            <th class="text-center">Cliente</th>
-                            <th class="text-center">Método</th>
-                            <th class="text-center">Tipo</th>
-                            <th class="text-center">Total Venta</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody id="tbodyVentas">
-                        <tr th:if="${#lists.isEmpty(ventas)}">
-                            <td colspan="7" class="text-center py-4 text-muted">No se encontraron ventas con los filtros aplicados.</td>
-                        </tr>
-                        <tr th:each="v : ${ventas}" class="border-bottom">
-                            <td class="ps-4 fw-bold text-dynamic" th:text="'#' + ${v.idVenta}"></td>
-                            <td class="text-center" th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td class="text-center" th:text="${v.cliente.nombre + ' ' + v.cliente.apellidoPat}"></td>
+        <div class="crud-card shadow-sm overflow-hidden border-0">
+            <div class="table-responsive">
+                <table class="table custom-table align-middle mb-0" id="tablaVentas">
+                    <thead class="bg-light">
+                    <tr class="text-dynamic">
+                        <th class="ps-4 py-3" style="font-size: 0.8rem; font-weight: 700;">ID</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">FECHA Y HORA</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">CLIENTE</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">MÉTODO</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">TIPO</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">TOTAL VENTA</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ACCIONES</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbodyVentas">
+                    <tr th:if="${#lists.isEmpty(ventas)}">
+                        <td colspan="7" class="text-center py-4 text-muted small fw-medium">No se encontraron ventas con los filtros aplicados.</td>
+                    </tr>
+                    <tr th:each="v : ${ventas}" class="border-bottom">
+                        <td class="ps-4 fw-bold text-muted" th:text="${v.idVenta}"></td>
+                        <td class="text-center small text-muted" th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td class="text-center fw-medium text-muted small" th:text="${v.cliente.nombre + ' ' + v.cliente.apellidoPat}"></td>
 
-                            <td class="text-center">
-                                    <span th:classappend="${v.metodoPago == 'Efectivo' ? 'bg-success' :
-                                                         (v.metodoPago == 'Yape' ? 'bg-yape' :
-                                                         (v.metodoPago == 'Plin' ? 'bg-plin' : 'bg-secondary'))}"
-                                          class="badge px-3 rounded-pill text-uppercase" th:text="${v.metodoPago}">
-                                    </span>
-                            </td>
+                        <td class="text-center small">
+                            <span th:classappend="${v.metodoPago == 'EFECTIVO' ? 'bg-success' :
+                                                 (v.metodoPago == 'Yape' ? 'bg-yape' :
+                                                 (v.metodoPago == 'Plin' ? 'bg-plin' : 'bg-secondary'))}"
+                                  class="badge px-3 rounded-pill text-uppercase" th:text="${v.metodoPago}">
+                            </span>
+                        </td>
 
-                            <td class="text-center">
-                                    <span th:class="${v.tipoVenta == 'CONTADO' ? 'text-success' : 'text-warning'}" class="fw-bold small">
-                                        <i th:class="${v.tipoVenta == 'CONTADO' ? 'fas fa-check-circle' : 'fas fa-clock'}"></i>
-                                        <span th:text="${v.tipoVenta}"></span>
-                                    </span>
-                            </td>
+                        <td class="text-center small">
+                            <span th:class="${v.tipoVenta == 'CONTADO' ? 'text-success' : 'text-warning'}" class="fw-bold small">
+                                <i th:class="${v.tipoVenta == 'CONTADO' ? 'fas fa-check-circle me-1' : 'fas fa-clock me-1'}"></i>
+                                <span th:text="${v.tipoVenta}"></span>
+                            </span>
+                        </td>
 
-                            <td class="text-center">
-                                    <span class="fw-bold text-dynamic">
-                                        S/ <span th:text="${#numbers.formatDecimal(v.totalVenta, 1, 'COMMA', 2, 'POINT')}">0.00</span>
-                                    </span>
-                            </td>
+                        <td class="text-center small">
+                            <span class="fw-bold text-muted">
+                                S/ <span th:text="${#numbers.formatDecimal(v.totalVenta, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                            </span>
+                        </td>
 
-                            <td class="text-center">
-                                <div class="acciones-boton">
-                                    <button type="button" class="btn btn-ver-detalle"
-                                            th:onclick="'verDetalleVenta(' + ${v.idVenta} + ')'" title="Ver Detalle">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button type="button" class="btn-circle btn-ver"
+                                        th:onclick="'verDetalleVenta(' + ${v.idVenta} + ')'" title="Ver Detalle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
 
-                                    <button type="button" class="btn btn-imprimir-ticket"
-                                            th:onclick="'abrirTicketVenta(' + ${v.idVenta} + ')'"
-                                            title="Imprimir Ticket">
-                                        <i class="fas fa-print"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                <button type="button" class="btn-circle btn-restore"
+                                        th:onclick="'abrirTicketVenta(' + ${v.idVenta} + ')'"
+                                        title="Imprimir Ticket">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
-            <div class="text-muted small text-dynamic">
-                Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
+        <div th:if="${totalPages > 1}" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
+            <div class="text-dark small fw-medium">
+                Página <span class="fw-bold text-primary" th:text="${currentPage + 1}"></span> de <span class="fw-bold" th:text="${totalPages}"></span>
             </div>
             <nav>
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                        <a class="page-link border-0 shadow-sm"
+                        <a class="page-link shadow-sm"
                            th:href="@{/ventas(page=${currentPage - 1}, buscar=${buscar}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
                             <i class="fas fa-chevron-left"></i>
                         </a>
@@ -138,16 +132,16 @@
 
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                         th:if="${(currentPage == 0 and i < 3) or
-                    (currentPage == totalPages - 1 and i > totalPages - 4) or
-                    (i >= currentPage - 1 and i <= currentPage + 1)}"
+                        (currentPage == totalPages - 1 and i > totalPages - 4) or
+                        (i >= currentPage - 1 and i <= currentPage + 1)}"
                         th:classappend="${i == currentPage} ? 'active'">
-                        <a class="page-link rounded shadow-sm border-0"
+                        <a class="page-link shadow-sm"
                            th:href="@{/ventas(page=${i}, buscar=${buscar}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
                            th:text="${i + 1}"></a>
                     </li>
 
                     <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                        <a class="page-link border-0 shadow-sm"
+                        <a class="page-link shadow-sm"
                            th:href="@{/ventas(page=${currentPage + 1}, buscar=${buscar}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
                             <i class="fas fa-chevron-right"></i>
                         </a>
@@ -159,69 +153,146 @@
 </main>
 <div class="modal fade" id="modalVerDetalleVenta" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow" style="border-radius: 15px">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px">
+
+            <!-- HEADER (TÍTULO LIMPIO) -->
             <div class="modal-header border-0 bg-dark text-white p-4">
-                <h5 class="modal-title fw-bold">Comprobante de Venta</h5>
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2 m-0 text-nowrap">
+                    <i class="fas fa-receipt"></i>
+                    Detalle de la venta
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
+            <!-- BODY -->
             <div class="modal-body p-4">
-                <div class="row mb-4">
+
+                <!-- CLIENTE Y FECHA EN UNA SOLA FILA (FIJA) -->
+                <div class="row mb-3 align-items-end">
+
+                    <!-- CLIENTE -->
                     <div class="col-6">
                         <label class="text-muted small d-block">CLIENTE</label>
-                        <span id="detClienteVenta" class="fw-bold text-dynamic fs-5"></span>
+                        <span id="detClienteVenta" class="fw-semibold text-dark small"></span>
                     </div>
+
+                    <!-- FECHA (SE MANTIENE EN SU MISMA FILA) -->
                     <div class="col-6 text-end">
                         <label class="text-muted small d-block">FECHA DE VENTA</label>
-                        <span id="detFechaVenta" class="fw-bold text-dynamic fs-5"></span>
+                        <span id="detFechaVenta" class="fw-semibold text-dark small"></span>
                     </div>
+
                 </div>
+
+                <!-- TABLA -->
                 <div class="table-responsive">
-                    <table class="table table-sm border-top">
-                        <thead class="bg-light">
+
+                    <table class="table table-sm align-middle border-top small">
+
+                        <thead class="bg-light text-nowrap">
                         <tr>
                             <th>Producto</th>
                             <th class="text-center">Cant.</th>
-                            <th class="text-end">Precio Unit.</th>
+                            <th class="text-end text-nowrap">Precio Unit.</th>
                             <th class="text-end">Subtotal</th>
                         </tr>
                         </thead>
+
                         <tbody id="detCuerpoVenta"></tbody>
+
                         <tfoot>
-                            <tr class="fs-5 fw-bold border-top">
-                                <td colspan="3" class="text-end pt-3 text-dynamic">TOTAL DE VENTA:</td>
-                                <td class="text-end pt-3 text-primary">S/ <span id="detTotalVenta">0.00</span></td>
-                            </tr>
 
-                            <tr id="filaDetPagaCon" class="d-none">
-                                <td colspan="3" class="text-end text-muted small">EFECTIVO RECIBIDO:</td>
-                                <td class="text-end text-muted small">S/ <span id="detMontoRecibido">0.00</span></td>
-                            </tr>
-                            <tr id="filaDetVuelto" class="d-none">
-                                <td colspan="3" class="text-end fw-bold text-info">VUELTO ENTREGADO:</td>
-                                <td class="text-end fw-bold text-info">S/ <span id="detVueltoEntregado">0.00</span></td>
-                            </tr>
+                        <tr>
+                            <td colspan="3" class="text-end fw-semibold text-muted pt-3">
+                                TOTAL DE VENTA:
+                            </td>
+                            <td class="text-end fw-bold text-primary pt-3">
+                                S/ <span id="detTotalVenta">0.00</span>
+                            </td>
+                        </tr>
 
-                            <tr id="filaDetPago" class="d-none">
-                                <td colspan="3" class="text-end text-success fw-bold">PAGO / ABONO REALIZADO:</td>
-                                <td class="text-end text-success fw-bold">S/ <span id="detTotalPagado">0.00</span></td>
-                            </tr>
-                            <tr id="filaDetSaldo" class="d-none border-top">
-                                <td colspan="3" class="text-end fw-bold text-danger">SALDO PENDIENTE:</td>
-                                <td class="text-end fw-bold text-danger">S/ <span id="detSaldoPendiente">0.00</span></td>
-                            </tr>
+                        <tr id="filaDetPagaCon" class="d-none">
+                            <td colspan="3" class="text-end text-muted small">EFECTIVO RECIBIDO:</td>
+                            <td class="text-end text-muted small">
+                                S/ <span id="detMontoRecibido">0.00</span>
+                            </td>
+                        </tr>
+
+                        <tr id="filaDetVuelto" class="d-none">
+                            <td colspan="3" class="text-end fw-semibold text-info">VUELTO ENTREGADO:</td>
+                            <td class="text-end fw-semibold text-info">
+                                S/ <span id="detVueltoEntregado">0.00</span>
+                            </td>
+                        </tr>
+
+                        <tr id="filaDetPago" class="d-none">
+                            <td colspan="3" class="text-end fw-semibold text-success">PAGO / ABONO:</td>
+                            <td class="text-end fw-semibold text-success">
+                                S/ <span id="detTotalPagado">0.00</span>
+                            </td>
+                        </tr>
+
+                        <tr id="filaDetSaldo" class="d-none">
+                            <td colspan="3" class="text-end fw-semibold text-danger">SALDO PENDIENTE:</td>
+                            <td class="text-end fw-semibold text-danger">
+                                S/ <span id="detSaldoPendiente">0.00</span>
+                            </td>
+                        </tr>
+
                         </tfoot>
+
                     </table>
+
                 </div>
+
             </div>
+
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
-<script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const successMsg = /*[[${success}]]*/ null;
+        const errorMsg = /*[[${error}]]*/ null;
+        const idVentaTicket = /*[[${idVentaGenerada}]]*/ null;
 
-    document.getElementById('filtroVentasJS').addEventListener('keyup', function() {
+        // --- ALERTAS CON COLORES CORPORATIVOS UNIFICADOS ---
+        if (successMsg) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Operación Exitosa!',
+                text: successMsg,
+                timer: 2000,
+                showConfirmButton: false,
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6',
+                customClass: { popup: 'border-radius-15' }
+            });
+
+            if (idVentaTicket) {
+                abrirTicketVenta(idVentaTicket);
+            }
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención',
+                text: errorMsg,
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d'
+            });
+        }
+    });
+
+    // --- FILTRO VISUAL EN TIEMPO REAL ---
+    document.getElementById('filtroVentasJS')?.addEventListener('keyup', function() {
         let valor = this.value.toLowerCase();
         let filas = document.querySelectorAll('#tablaVentas tbody tr');
         filas.forEach(f => {
@@ -229,16 +300,16 @@
         });
     });
 
-
+    // --- GENERACIÓN E IMPRESIÓN ASÍNCRONA DE TICKET ---
     function abrirTicketVenta(id) {
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = '/ventas/ticket/pdf/' + id;
         document.body.appendChild(iframe);
-        // Limpieza del iframe después de un momento
         setTimeout(() => document.body.removeChild(iframe), 2000);
     }
 
+    // --- CONSULTA DE DETALLES DE VENTA (API) ---
     function verDetalleVenta(id) {
         fetch('/ventas/api/' + id)
             .then(response => {
@@ -246,11 +317,19 @@
                 return response.json();
             })
             .then(data => {
-
                 document.getElementById('detClienteVenta').innerText = data.cliente.nombreCompleto;
                 const fecha = new Date(data.fecha);
-                document.getElementById('detFechaVenta').innerText = fecha.toLocaleString();
 
+                const fechaSolo = fecha.toLocaleDateString('es-PE');
+                const horaSolo = fecha.toLocaleTimeString('es-PE', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                document.getElementById('detFechaVenta').innerHTML = `
+                    <div>${fechaSolo}</div>
+                    <div class="text-muted small">${horaSolo}</div>
+                `;
 
                 const total = parseFloat(data.totalVenta) || 0;
                 const montoRecibido = parseFloat(data.montoPagado) || 0;
@@ -259,16 +338,12 @@
 
                 document.getElementById('detTotalVenta').innerText = total.toFixed(2);
 
-
                 const fPagaCon = document.getElementById('filaDetPagaCon');
                 const fVuelto = document.getElementById('filaDetVuelto');
                 const fPago = document.getElementById('filaDetPago');
                 const fSaldo = document.getElementById('filaDetSaldo');
 
-
-
                 if (data.tipoVenta === 'CONTADO') {
-
                     fPagaCon.classList.remove('d-none');
                     fVuelto.classList.remove('d-none');
                     fPago.classList.add('d-none');
@@ -277,9 +352,7 @@
                     const vuelto = montoRecibido - total;
                     document.getElementById('detMontoRecibido').innerText = montoRecibido.toFixed(2);
                     document.getElementById('detVueltoEntregado').innerText = (vuelto > 0 ? vuelto : 0).toFixed(2);
-
                 } else {
-
                     fPagaCon.classList.add('d-none');
                     fVuelto.classList.add('d-none');
                     fPago.classList.remove('d-none');
@@ -287,7 +360,6 @@
 
                     document.getElementById('detTotalPagado').innerText = totalAbonos.toFixed(2);
                     document.getElementById('detSaldoPendiente').innerText = saldo.toFixed(2);
-
 
                     const contenedorSaldo = document.getElementById('detSaldoPendiente').parentElement;
                     if(saldo <= 0) {
@@ -297,69 +369,41 @@
                     }
                 }
 
-
                 let html = '';
                 data.detalles.forEach(d => {
                     let subtotal = d.cantidad * d.precioVenta;
                     html += `
-                <tr>
-                    <td>${d.producto.nombreProducto}</td>
-                    <td class="text-center">${d.cantidad}</td>
-                    <td class="text-end">S/ ${parseFloat(d.precioVenta).toFixed(2)}</td>
-                    <td class="text-end fw-bold">S/ ${subtotal.toFixed(2)}</td>
-                </tr>`;
+                    <tr>
+                        <td>
+                            <div class="fw-semibold small text-dark">
+                                ${d.producto.nombreProducto}
+                            </div>
+                        </td>
+                        <td class="text-center small">${d.cantidad}</td>
+                        <td class="text-end small">S/ ${parseFloat(d.precioVenta).toFixed(2)}</td>
+                        <td class="text-end fw-semibold small">S/ ${subtotal.toFixed(2)}</td>
+                    </tr>`;
                 });
-                document.getElementById('detCuerpoVenta').innerHTML = html;
 
+                document.getElementById('detCuerpoVenta').innerHTML = html;
 
                 const modal = new bootstrap.Modal(document.getElementById('modalVerDetalleVenta'));
                 modal.show();
             })
             .catch(error => {
                 console.error(error);
-                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el detalle' });
+                // Alerta del catch adaptada correctamente al diseño limpio
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de carga',
+                    text: 'No se pudo obtener el desglose de la venta.',
+                    background: '#ffffff',
+                    color: '#1b254b',
+                    confirmButtonColor: '#3b82f6',
+                    iconColor: '#ee5d5d'
+                });
             });
     }
-</script>
-
-<script th:inline="javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        const successMsg = /*[[${success}]]*/ null;
-        const errorMsg = /*[[${error}]]*/ null;
-        const idVentaTicket = /*[[${idVentaGenerada}]]*/ null;
-
-
-        const configComun = {
-            confirmButtonColor: '#4b6cb7',
-            background: '#ffffff',
-            color: '#333333'
-        };
-
-        if (successMsg) {
-            Swal.fire({
-                ...configComun,
-                icon: 'success',
-                title: '¡Operación Exitosa!',
-                text: successMsg,
-                iconColor: '#4b6cb7'
-            });
-
-
-            if (idVentaTicket) {
-                abrirTicketVenta(idVentaTicket);
-            }
-        }
-
-        if (errorMsg) {
-            Swal.fire({
-                ...configComun,
-                icon: 'error',
-                title: 'Atención',
-                text: errorMsg,
-                confirmButtonColor: '#d33'
-            });
-        }
-    });
 </script>
 </body>
 </html>

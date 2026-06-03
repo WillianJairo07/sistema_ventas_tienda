@@ -10,8 +10,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link th:href="@{/css/menu.css}" rel="stylesheet">
-    <link th:href="@{/css/menu1.css}" rel="stylesheet">
-    <link th:href="@{/css/modal.css}" rel="stylesheet">
 
 </head>
 <body>
@@ -23,117 +21,144 @@
 
 <main class="content" id="mainContent">
     <div class="container-fluid">
-        <div class="header-container d-flex flex-column justify-content-between align-items-start mb-4 gap-3">
-            <div class="header-text text-start">
+        <!-- CABECERA -->
+        <div class="row align-items-end mb-4 g-3">
+            <div class="col-12 col-xl-4">
                 <h2 class="fw-bold text-dynamic mb-1">Gestión de Categorías</h2>
                 <p class="text-muted-dynamic mb-0 small">Administra aquí las categorías de tus productos</p>
             </div>
 
-            <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
-                <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda" class="form-control" th:value="${buscar}" placeholder="Buscar categoría" onkeyup="manejarBusqueda(event)">
-                    <i class="fas fa-search"></i>
-                </div>
+            <div class="col-12 col-xl-8">
+                <!-- Wrapper alineado a la derecha en PC -->
+                <div class="d-flex flex-wrap flex-md-nowrap justify-content-xl-end align-items-center gap-2">
 
-                <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-                    <a th:if="${!verInactivos}" th:href="@{/categorias(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
-                        <i class="fas fa-eye-slash"></i> <span>Ver Inactivos</span>
-                    </a>
-                    <a th:if="${verInactivos}" th:href="@{/categorias(verInactivos=false)}" class="btn btn-ver-activos shadow-sm">
-                        <i class="fas fa-eye"></i> <span>Ver Activos</span>
-                    </a>
-                    <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCategoria" onclick="nuevoFormulario()">
-                        <i class="fas fa-plus-circle"></i> <span>Agregar</span>
-                    </button>
+                    <!-- Buscador -->
+                    <div class="search-container custom-search-adaptive">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="inputBusqueda" class="form-control shadow-sm"
+                               th:value="${buscar}" placeholder="Buscar categoría..." onkeyup="manejarBusqueda(event)">
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="btn-group-adaptive d-flex gap-2">
+                        <a th:if="${!verInactivos}" th:href="@{/categorias(verInactivos=true)}" class="btn btn-ver-inactivos shadow-sm">
+                            <i class="fas fa-eye-slash"></i> <span>Inactivos</span>
+                        </a>
+                        <a th:if="${verInactivos}" th:href="@{/categorias(verInactivos=false)}" class="btn btn-ver-activos shadow-sm">
+                            <i class="fas fa-eye"></i> <span>Activos</span>
+                        </a>
+                        <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCategoria" onclick="nuevoFormulario()">
+                            <i class="fas fa-plus-circle"></i> <span>Agregar</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="crud-card p-4 shadow">
+        <!-- TABLA -->
+        <div class="crud-card shadow-sm overflow-hidden border-0">
             <div class="table-responsive">
-                <table class="table custom-table align-middle" id="tablaCategorias">
-                    <thead>
+                <table class="table custom-table align-middle mb-0" id="tablaCategorias">
+                    <thead class="bg-light">
                     <tr class="text-dynamic">
-                        <th class="ps-4">ID</th>
-                        <th>CATEGORÍA</th>
-                        <th class="text-center">ACCIONES</th>
+                        <th class="text-center ps-4 py-3" style="font-size: 0.8rem; font-weight: 700;">ID</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">CATEGORÍA</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ACCIONES</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="cat : ${categorias}">
-                        <td class="ps-4 fw-bold" th:text="${cat.idCategoria}"></td>
-                        <td class="nombre-cat" th:text="${cat.nombreCategoria}"></td>
-                        <td class="text-center">
+                    <tr th:each="cat : ${categorias}" class="border-bottom">
+                        <td class="ps-4 fw-bold text-muted text-center" th:text="${cat.idCategoria}"></td>
+                        <td class="nombre-cat fw-medium text-muted text-center small" th:text="${cat.nombreCategoria}"></td>
+                        <td>
                             <div class="d-flex justify-content-center gap-2">
                                 <th:block th:if="${cat.estado}">
                                     <button class="btn-circle btn-edit" th:onclick="'editarCategoria(' + ${cat.idCategoria} + ')'" data-bs-toggle="modal" data-bs-target="#modalCategoria">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a href="javascript:void(0)" class="btn-circle btn-delete" th:onclick="'confirmarEliminar(' + ${cat.idCategoria} + ')'">
+                                    <button class="btn-circle btn-delete" th:onclick="'confirmarEliminar(' + ${cat.idCategoria} + ')'">
                                         <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                    </button>
                                 </th:block>
                                 <th:block th:if="${!cat.estado}">
-                                    <a th:href="@{/categorias/restaurar/{id}(id=${cat.idCategoria})}" class="btn-circle btn-restore" title="Restaurar">
+                                    <a th:href="@{/categorias/restaurar/{id}(id=${cat.idCategoria})}" class="btn-circle btn-restore">
                                         <i class="fas fa-trash-restore"></i>
                                     </a>
                                 </th:block>
                             </div>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(categorias)}">
-                        <td colspan="3" class="text-center py-4 text-muted">No se encontraron categorías.</td>
-                    </tr>
                     </tbody>
                 </table>
             </div>
-        </div> <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3 px-2">
-        <div class="text-muted small">
-            Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
         </div>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link shadow-sm" th:href="@{/categorias(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
-                <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                    th:classappend="${i == currentPage} ? 'active'">
-                    <a class="page-link shadow-sm" th:href="@{/categorias(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
-                </li>
-                <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
-                    <a class="page-link shadow-sm" th:href="@{/categorias(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+
+        <!-- PAGINACIÓN -->
+        <div th:if="${totalPages > 1}" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
+            <div class="text-dark small fw-medium">
+                Página <span class="fw-bold text-primary" th:text="${currentPage + 1}"></span> de <span class="fw-bold" th:text="${totalPages}"></span>
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link shadow-sm" th:href="@{/categorias(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active'">
+                        <a class="page-link shadow-sm" th:href="@{/categorias(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                        <a class="page-link shadow-sm" th:href="@{/categorias(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
 </main>
 
-<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalTitulo">
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalTitulo" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header border-0 p-4" style="background: var(--primary-gradient); border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title fw-bold text-white" id="modalTitulo">Nueva Categoría</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg">
+
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white" id="modalTitulo">
+                    <i class="fas fa-folder-plus me-2"></i>Nueva Categoría
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
+
             <form th:action="@{/categorias/guardar}" th:object="${categoria}" method="post">
                 <div class="modal-body p-4">
                     <input type="hidden" th:field="*{idCategoria}" id="idCategoria">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Nombre de la Categoría</label>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Nombre de la Categoría</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                            <input type="text" th:field="*{nombreCategoria}" id="nombreCategoria" class="form-control" placeholder="Ej: Gaseosas" required>
+                            <span class="input-group-text bg-light border-end-0" style="border: 1px solid #dee2e6;">
+                                <i class="fas fa-tag text-muted"></i>
+                            </span>
+                            <input type="text" th:field="*{nombreCategoria}" id="nombreCategoria"
+                                   class="form-control shadow-none border-start-0"
+                                   placeholder="Ej: Gaseosas" required
+                                   style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6;">
                         </div>
+                        <small class="text-muted mt-2 d-flex align-items-center" style="font-size: 0.72rem; opacity: 0.8;">
+                            <i class="fas fa-info-circle me-1" style="font-size: 0.65rem;"></i> Use un nombre descriptivo para organizar sus productos.
+                        </small>
                     </div>
                 </div>
+
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Cerrar</button>
-                    <button type="submit" class="btn btn-new-cat px-4">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary-custom px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-new-cat px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
                 </div>
             </form>
         </div>
@@ -144,10 +169,11 @@
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", function() {
+        // Variables de mensaje desde el controlador (Spring Boot)
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
-        const isDark = document.body.classList.contains('dark-mode');
 
+        // --- ALERTAS: ÉXITO ---
         if (successMsg) {
             Swal.fire({
                 icon: 'success',
@@ -155,23 +181,29 @@
                 text: successMsg,
                 timer: 2000,
                 showConfirmButton: false,
-                background: isDark ? '#1c222d' : '#fff',
-                color: isDark ? '#fff' : '#000'
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6',
+                customClass: {
+                    popup: 'border-radius-15'
+                }
             });
         }
 
+        // --- ALERTAS: ERROR ---
         if (errorMsg) {
             Swal.fire({
                 icon: 'error',
                 title: 'Atención',
                 text: errorMsg,
-                background: isDark ? '#1c222d' : '#fff',
-                color: isDark ? '#fff' : '#000',
-                confirmButtonColor: '#4b6cb7'
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d'
             });
         }
 
-        // MANTENER EL CURSOR AL FINAL SI HAY BÚSQUEDA
+        // --- BÚSQUEDA: MANTENER FOCO ---
         const inputBusqueda = document.getElementById("inputBusqueda");
         if (inputBusqueda && inputBusqueda.value !== "") {
             inputBusqueda.focus();
@@ -181,11 +213,10 @@
         }
     });
 
-    // BUSQUEDA HÍBRIDA: Visual al escribir, Servidor al presionar Enter
     function manejarBusqueda(event) {
-        const texto = document.getElementById("inputBusqueda").value.toLowerCase();
+        const input = document.getElementById("inputBusqueda");
+        const texto = input.value.toLowerCase();
 
-        // 1. SI PRESIONA ENTER: Búsqueda profunda (Va al Backend)
         if (event.key === 'Enter') {
             const urlParams = new URLSearchParams(window.location.search);
             const verInactivos = urlParams.get('verInactivos') || 'false';
@@ -193,54 +224,68 @@
             return;
         }
 
-        // 2. MIENTRAS ESCRIBE: Filtro visual (Solo lo que hay en la página actual)
         const filas = document.querySelectorAll("#tablaCategorias tbody tr");
-
         filas.forEach(fila => {
             const nombre = fila.querySelector(".nombre-cat")?.innerText.toLowerCase() || "";
             const id = fila.querySelector("td:first-child")?.innerText.toLowerCase() || "";
-
-            if (nombre.includes(texto) || id.includes(texto)) {
-                fila.style.display = "";
-            } else {
-                fila.style.display = "none";
-            }
+            fila.style.display = (nombre.includes(texto) || id.includes(texto)) ? "" : "none";
         });
     }
 
     function nuevoFormulario() {
-        document.getElementById('modalTitulo').innerText = 'Nueva Categoría';
-        document.getElementById('idCategoria').value = '';
-        document.getElementById('nombreCategoria').value = '';
-        setTimeout(() => {
-            document.getElementById('nombreCategoria').focus();
-        }, 450);
+        const titulo = document.getElementById('modalTitulo');
+        const idInput = document.getElementById('idCategoria');
+        const nombreInput = document.getElementById('nombreCategoria');
+        const modalEl = document.getElementById('modalCategoria');
+
+        titulo.innerText = 'Nueva Categoría';
+        idInput.value = '';
+        nombreInput.value = '';
+
+        modalEl.addEventListener('shown.bs.modal', function () {
+            nombreInput.focus();
+        }, { once: true });
     }
 
     function editarCategoria(id) {
         document.getElementById('modalTitulo').innerText = 'Editar Categoría';
+        const modalEl = document.getElementById('modalCategoria');
+
         fetch('/categorias/editar/' + id)
             .then(res => res.json())
             .then(data => {
                 document.getElementById('idCategoria').value = data.idCategoria;
-                document.getElementById('nombreCategoria').value = data.nombreCategoria;
+                const nombreInput = document.getElementById('nombreCategoria');
+                nombreInput.value = data.nombreCategoria;
+
+                modalEl.addEventListener('shown.bs.modal', function () {
+                    nombreInput.focus();
+                }, { once: true });
             })
-            .catch(err => console.error("Error al cargar categoría:", err));
+            .catch(err => {
+                console.error("Error al cargar categoría:", err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de red',
+                    text: 'No se pudo obtener la información.',
+                    background: '#ffffff',
+                    color: '#1b254b'
+                });
+            });
     }
 
     function confirmarEliminar(id) {
-        const isDark = document.body.classList.contains('dark-mode');
         Swal.fire({
             title: '¿Eliminar categoría?',
-            text: "La categoría ya no aparecerá, pero podrás recuperarla en 'Ver Inactivos'.",
+            text: "La categoría se moverá a la lista de inactivos.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ff4d4d',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, ocultar',
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, mover',
             cancelButtonText: 'Cancelar',
-            background: isDark ? '#1c222d' : '#fff',
-            color: isDark ? '#fff' : '#000'
+            background: '#ffffff',
+            color: '#1b254b'
         }).then((result) => {
             if (result.isConfirmed) {
                 window.location.href = "/categorias/eliminar/" + id;

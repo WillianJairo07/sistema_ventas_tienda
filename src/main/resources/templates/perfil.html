@@ -5,82 +5,232 @@
     <title>Perfil - Sistema de Ventas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <script th:src="@{/js/tema.js}"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link th:href="@{/css/menu.css}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
-<!-- Sidebar -->
 <div th:replace="~{fragments/layout :: sidebar}"></div>
 
-<!-- Topbar -->
 <div th:replace="~{fragments/layout :: topbar}"></div>
 
 <main class="content" id="mainContent">
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-4 mb-4">
-                <div class="crud-card p-4 text-center shadow-sm">
-                    <div class="position-relative d-inline-block mb-3">
-                        <img th:src="'https://ui-avatars.com/api/?name=' + ${usuario.nombre} + '&background=4b6cb7&color=fff&size=128'"
-                             class="rounded-circle border border-4 border-white shadow-sm" alt="Avatar">
+                <div class="crud-card p-4 text-center shadow-sm border-0" style="background-color: #ffffff; border-radius: 12px;">
+
+                    <div class="position-relative d-inline-flex align-items-center justify-content-center mb-3 shadow-sm"
+                         style="width: 120px; height: 120px; background-color: #3b82f6; border-radius: 50%; border: 4px solid #f8fafc; outline: 4px solid #eef2f6;">
+                        <span class="text-white fw-bold" style="font-size: 2.2rem; letter-spacing: 1px;"
+                              th:text="${usuario.nombre != null and !usuario.nombre.empty ? usuario.nombre.substring(0,1).toUpperCase() : ''} + ${usuario.apellidoPaterno != null and !usuario.apellidoPaterno.empty ? usuario.apellidoPaterno.substring(0,1).toUpperCase() : ''}">
+                            --
+                        </span>
                     </div>
-                    <h4 class="fw-bold text-dynamic mb-1" th:text="${usuario.nombre}">Nombre</h4>
-                    <p class="text-muted-dynamic mb-3" th:text="'@' + ${usuario.username}">@username</p>
+
+                    <h4 class="fw-bold text-dynamic mb-1" th:text="${usuario.nombre} + ' ' + ${usuario.apellidoPaterno}">Nombre</h4>
+                    <p class="text-muted-dynamic mb-3 small" th:text="'@' + ${usuario.username}">@username</p>
+
+                    <div class="mb-4">
+                        <span class="badge px-3 py-2"
+                              th:text="${usuario.rol != null ? usuario.rol.nombreRol : 'Sin Rol'}"
+                              style="background-color: #1E293B; color: #ffffff; font-size: 0.8rem; border-radius: 50rem;">
+                        </span>
+                    </div>
+
+                    <div class="d-grid gap-2 px-2">
+                        <button type="button" class="btn btn-new-cat shadow-sm fw-bold d-flex align-items-center justify-content-center py-2"
+                                data-bs-toggle="modal" data-bs-target="#changePasswordModal"
+                                style="border-radius: 8px; min-height: 42px; font-size: 0.9rem;">
+                            <i class="fas fa-key me-2"></i> Cambiar Contraseña
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div class="col-lg-8">
-                <div class="crud-card p-4 shadow-sm">
-                    <h5 class="fw-bold text-dynamic mb-4">Información Personal</h5>
+                <div class="crud-card p-4 shadow-sm border-0" style="background-color: #ffffff; border-radius: 12px;">
+                    <h5 class="fw-bold text-dynamic mb-4">Información de la Cuenta</h5>
 
-                    <form th:action="@{/usuarios/perfil/actualizar}" method="post">
-                        <input type="hidden" name="idUsuario" th:value="${usuario.idUsuario}">
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-dynamic small">Nombre Completo</label>
-                                <div class="input-group custom-group">
-                                    <span class="input-group-text bg-transparent border-0"><i class="fas fa-user text-muted-dynamic"></i></span>
-                                    <input type="text" name="nombre" th:value="${usuario.nombre}" class="form-control bg-transparent border-0 text-dynamic" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-dynamic small">Nombre de Usuario</label>
-                                <div class="input-group custom-group opacity-75">
-                                    <span class="input-group-text bg-transparent border-0"><i class="fas fa-at text-muted-dynamic"></i></span>
-                                    <input type="text" th:value="${usuario.username}" class="form-control bg-transparent border-0 text-dynamic" readonly>
-                                </div>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted-dynamic mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Nombres</label>
+                            <div class="d-flex align-items-center" style="height: 46px; border: 1px solid #eef2f6; border-radius: 10px; background-color: #f8fafc; padding: 0 15px;">
+                                <i class="fas fa-user text-muted me-3"></i>
+                                <span class="text-dynamic fw-medium" th:text="${usuario.nombre}" style="font-size: 0.95rem;"></span>
                             </div>
                         </div>
 
-                        <hr class="my-4 border-dynamic">
-
-                        <h5 class="fw-bold text-dynamic mb-4">Seguridad</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-dynamic small">Nueva Contraseña</label>
-                                <div class="input-group custom-group">
-                                    <span class="input-group-text bg-transparent border-0"><i class="fas fa-lock text-muted-dynamic"></i></span>
-                                    <input type="password" name="password" class="form-control bg-transparent border-0 text-dynamic" placeholder="Dejar en blanco para no cambiar">
-                                </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted-dynamic mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Apellido Paterno</label>
+                            <div class="d-flex align-items-center" style="height: 46px; border: 1px solid #eef2f6; border-radius: 10px; background-color: #f8fafc; padding: 0 15px;">
+                                <i class="fas fa-font text-muted me-3"></i>
+                                <span class="text-dynamic fw-medium" th:text="${usuario.apellidoPaterno}" style="font-size: 0.95rem;"></span>
                             </div>
                         </div>
 
-                        <div class="text-end mt-4">
-                            <button type="submit" class="btn btn-new-cat px-5 shadow-sm">
-                                <i class="fas fa-save me-2"></i>Guardar Cambios
-                            </button>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted-dynamic mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Apellido Materno</label>
+                            <div class="d-flex align-items-center" style="height: 46px; border: 1px solid #eef2f6; border-radius: 10px; background-color: #f8fafc; padding: 0 15px;">
+                                <i class="fas fa-font text-muted me-3"></i>
+                                <span class="text-dynamic fw-medium" th:text="${usuario.apellidoMaterno}" style="font-size: 0.95rem;"></span>
+                            </div>
                         </div>
-                    </form>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted-dynamic mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Nombre de Usuario</label>
+                            <div class="d-flex align-items-center" style="height: 46px; border: 1px solid #eef2f6; border-radius: 10px; background-color: #f8fafc; padding: 0 15px;">
+                                <i class="fas fa-at text-muted me-3"></i>
+                                <span class="text-dynamic fw-medium" th:text="${usuario.username}" style="font-size: 0.95rem;"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted-dynamic mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Estado del Sistema</label>
+                            <div class="d-flex align-items-center" style="height: 46px; border: 1px solid #eef2f6; border-radius: 10px; background-color: #f8fafc; padding: 0 15px;">
+                                <i class="fas fa-circle-check text-success me-3" th:if="${usuario.estado}"></i>
+                                <i class="fas fa-circle-xmark text-danger me-3" th:if="${!usuario.estado}"></i>
+                                <span class="text-dynamic fw-medium" th:text="${usuario.estado ? 'Cuenta Activa' : 'Cuenta Inactiva'}" style="font-size: 0.95rem;"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" style="border-top: 1px solid #eef2f6; opacity: 1;">
+
+                    <p class="text-muted mb-0 small text-center text-md-start">
+                        <i class="fas fa-info-circle me-1"></i> Para realizar modificaciones sobre estas credenciales, contacte al administrador del sistema.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </main>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+
+            <div class="modal-header border-0" style="background-color: #1E293B; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title fw-bold text-white" id="changePasswordModalLabel">
+                    <i class="fas fa-lock me-2"></i>Cambiar Contraseña
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form th:action="@{/usuarios/perfil/cambiar-password}" method="post">
+                <div class="modal-body p-4">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Contraseña Actual</label>
+                        <div class="input-group" style="border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; background-color: #f8fafc;">
+                            <span class="input-group-text bg-transparent border-0 pe-0" style="height: 42px;">
+                                <i class="fas fa-shield-alt text-muted"></i>
+                            </span>
+                            <input type="password" name="passwordActual" id="passwordActual" required
+                                   class="form-control bg-transparent border-0 shadow-none"
+                                   placeholder="Ingrese clave actual"
+                                   style="height: 42px; font-size: 0.9rem; border-radius: 0 !important; padding-left: 10px;">
+                            <button class="input-group-text bg-transparent border-0 text-muted ps-3 pe-3 toggle-password-btn"
+                                    type="button" data-target="passwordActual"
+                                    style="cursor: pointer; height: 42px; border-radius: 0 !important;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Nueva Contraseña</label>
+                        <div class="input-group" style="border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; background-color: #f8fafc;">
+                            <span class="input-group-text bg-transparent border-0 pe-0" style="height: 42px;">
+                                <i class="fas fa-key text-muted"></i>
+                            </span>
+                            <input type="password" name="nuevaPassword" id="nuevaPassword" required
+                                   class="form-control bg-transparent border-0 shadow-none"
+                                   placeholder="Ingrese la clave nueva"
+                                   style="height: 42px; font-size: 0.9rem; border-radius: 0 !important; padding-left: 10px;">
+                            <button class="input-group-text bg-transparent border-0 text-muted ps-3 pe-3 toggle-password-btn"
+                                    type="button" data-target="nuevaPassword"
+                                    style="cursor: pointer; height: 42px; border-radius: 0 !important;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-secondary-custom px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-new-cat px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. GESTIÓN DE SWEETALERT2 DESDE BACKEND
+        const successMsg = /*[[${success}]]*/ null;
+        const errorMsg = /*[[${error}]]*/ null;
+
+        if (successMsg) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Hecho!',
+                text: successMsg,
+                timer: 2000,
+                showConfirmButton: false,
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6',
+                customClass: {
+                    popup: 'border-radius-15'
+                }
+            });
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención',
+                text: errorMsg,
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d'
+            });
+        }
+
+        // 2. LOGICA VISUAL DEL OJO PARA CONTRASEÑAS
+        const toggleButtons = document.querySelectorAll('.toggle-password-btn');
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>

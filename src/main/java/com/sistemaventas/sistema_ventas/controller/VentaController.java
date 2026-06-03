@@ -175,4 +175,5 @@ public class VentaController {
         model.addAttribute("productos", productoService.listarParaCombos());
         model.addAttribute("clientes", clienteService.listarParaCombos());
     }
+
 }

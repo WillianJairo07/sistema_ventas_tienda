@@ -18,6 +18,15 @@ public class ProveedorServiceImpl implements ProveedorService {
     @Autowired
     private ProveedorRepository repository;
 
+    private String normalizar(String texto) {
+        if (texto == null) return "";
+        // Elimina tildes y caracteres especiales
+        String normalizado = java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD);
+        normalizado = normalizado.replaceAll("\\p{M}", "");
+        // Elimina todos los espacios y pasa a minúsculas
+        return normalizado.replace(" ", "").toLowerCase();
+    }
+
     @Override
     public Page<Proveedor> listarPaginado(boolean estado, String buscar, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -50,38 +59,45 @@ public class ProveedorServiceImpl implements ProveedorService {
     @Override
     @Transactional
     public Proveedor guardar(Proveedor proveedor) {
+        // 1. Validación de nulidad
         if (proveedor.getNombre() == null || proveedor.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre del proveedor no puede estar vacío.");
         }
 
-        // 1. Limpieza estándar (Bonito: "LECHE GLORIA")
-        String nombreParaMostrar = proveedor.getNombre().trim().replaceAll("\\s+", " ").toUpperCase();
+        // 2. Limpieza de espacios (Mantenemos formato original del usuario)
+        String nombreNuevo = proveedor.getNombre().trim().replaceAll("\\s+", " ");
 
-        // --- BLOQUE AUTO-REVIVIR (Optimizado) ---
-        // Buscamos si existe por nombre exacto (ignorando Mayús/Minús)
-        Proveedor existente = repository.findByNombreIgnoreCase(nombreParaMostrar);
+        // 3. VALIDACIÓN QUIRÚRGICA (Sin cargar toda la lista en memoria)
 
-        if (existente != null) {
-            // Caso A: Existe pero está oculto (Lo revivimos)
-            if (!existente.isEstado() && proveedor.getIdProveedor() == null) {
-                existente.setEstado(true);
-                existente.setNombre(nombreParaMostrar);
-                existente.setTelefono(proveedor.getTelefono()); // Actualizamos datos si es necesario
-                return repository.save(existente);
-            }
+        // Escenario A: Estamos CREANDO un proveedor nuevo (id es null)
+        if (proveedor.getIdProveedor() == null) {
+            // Buscamos si ya existe alguien con ese nombre (ignora mayúsculas/minúsculas)
+            Proveedor existente = repository.findByNombreIgnoreCase(nombreNuevo);
 
-            // Caso B: Existe, está activo y no es el que estamos editando (Duplicado)
-            if (existente.isEstado()) {
-                if (proveedor.getIdProveedor() == null || !existente.getIdProveedor().equals(proveedor.getIdProveedor())) {
-                    throw new IllegalArgumentException("¡ERROR! El proveedor '" + nombreParaMostrar + "' ya existe.");
+            if (existente != null) {
+                // Si existe pero está oculto (estado=false), lo RE-ACTIVAMOS (Auto-revivir)
+                if (!existente.isEstado()) {
+                    existente.setEstado(true);
+                    existente.setNombre(nombreNuevo); // Actualizamos al nombre exacto
+                    existente.setTelefono(proveedor.getTelefono());
+                    return repository.save(existente);
                 }
+                // Si existe y ya está activo, lanzamos el error corto
+                throw new IllegalArgumentException("Ya existe un proveedor similar");
+            }
+        }
+        // Escenario B: Estamos EDITANDO uno existente
+        else {
+            // Verificamos si el nombre choca con OTRO ID que no sea el nuestro
+            if (repository.existsByNombreIgnoreCaseAndIdProveedorNot(nombreNuevo, proveedor.getIdProveedor())) {
+                throw new IllegalArgumentException("Ya existe un proveedor similar");
             }
         }
 
-        // 2. Si pasó todas las pruebas, configuramos y guardamos
-        proveedor.setNombre(nombreParaMostrar);
+        // 4. GUARDADO FINAL
+        proveedor.setNombre(nombreNuevo);
 
-        // Solo forzamos true si es una creación nueva
+        // Solo forzamos true si es una creación desde cero
         if (proveedor.getIdProveedor() == null) {
             proveedor.setEstado(true);
         }

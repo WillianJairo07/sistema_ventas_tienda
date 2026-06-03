@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <title>Historial de Compras - Sistema de Ventas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
-    <script th:src="@{/js/tema.js}"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link th:href="@{/css/menu.css}" rel="stylesheet">
-    <link th:href="@{/css/menu1.css}" rel="stylesheet">
-    <link th:href="@{/css/modal.css}" rel="stylesheet">
+
 
 </head>
 <body>
@@ -25,60 +22,61 @@
 
 <main class="content" id="mainContent" style="padding-bottom: 80px;">
     <div class="container-fluid">
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="fw-bold text-dynamic mb-1 fs-3">Historial de Compras</h2>
-                <p class="text-muted-dynamic mb-0 fs-6">Gestiona tus pedidos y entradas de inventario</p>
+        <div class="cabecera-flex mb-4">
+            <div class="seccion-titulo">
+                <h2 class="fw-bold text-dynamic mb-1">Historial de Compras</h2>
+                <p class="text-muted-dynamic mb-0 small">Gestiona tus pedidos y entradas de inventario</p>
             </div>
-            <a href="/compras/nueva"
-               class="btn btn-primary rounded-pill px-3 py-2 shadow-sm btn-nueva-orden">
-                <i class="fas fa-plus-circle me-1"></i>
-                <span class="texto-btn">Nueva Orden</span>
-            </a>
+
+            <div class="seccion-boton">
+                <a href="/compras/nueva" class="btn btn-new-cat shadow-sm btn-nueva-orden">
+                    <i class="fas fa-plus-circle"></i> <span>Nueva Orden</span>
+                </a>
+            </div>
         </div>
 
-        <form th:action="@{/compras/historial}" method="get" class="row g-2 mb-3 align-items-end">
-            <div class="col-sm-4">
-                <label class="form-label small">Proveedor</label>
-                <input type="text" name="proveedor" class="form-control" th:value="${proveedorElegido}" placeholder="Nombre proveedor">
+        <form th:action="@{/compras/historial}" method="get" class="row g-2 mb-4 align-items-end formulario-filtros-contenedor">
+            <div class="col-custom-proveedor">
+                <label class="form-label text-dynamic fw-bold mb-1" style="font-size: 0.85rem;">Proveedor</label>
+                <input type="text" name="proveedor" class="form-control custom-form-input shadow-sm" th:value="${proveedorElegido}" placeholder="Nombre proveedor">
             </div>
-            <div class="col-sm-3">
-                <label class="form-label small">Fecha desde</label>
-                <input type="date" name="fechaDesde" class="form-control" th:value="${fechaDesde}">
+            <div class="col-custom-fecha">
+                <label class="form-label text-dynamic fw-bold mb-1" style="font-size: 0.85rem;">Fecha desde</label>
+                <input type="date" name="fechaDesde" class="form-control custom-form-input shadow-sm" th:value="${fechaDesde}">
             </div>
-            <div class="col-sm-3">
-                <label class="form-label small">Fecha hasta</label>
-                <input type="date" name="fechaHasta" class="form-control" th:value="${fechaHasta}">
+            <div class="col-custom-fecha">
+                <label class="form-label text-dynamic fw-bold mb-1" style="font-size: 0.85rem;">Fecha hasta</label>
+                <input type="date" name="fechaHasta" class="form-control custom-form-input shadow-sm" th:value="${fechaHasta}">
             </div>
-            <div class="col-sm-2 d-grid">
-                <button type="submit" class="btn btn-buscar-filtro">
-                    <i class="fas fa-search me-2"></i> Buscar
+            <div class="col-custom-boton">
+                <button type="submit" class="btn btn-ver-activos shadow-sm btn-buscar-filtro btn-buscar-nivelado w-100">
+                    <i class="fas fa-search"></i> <span class="ms-1">Buscar</span>
                 </button>
             </div>
         </form>
 
-        <div class="crud-card p-0 shadow overflow-hidden">
+        <div class="crud-card shadow-sm overflow-hidden border-0">
             <div class="table-responsive">
-                <table class="table align-middle mb-0">
+                <table class="table custom-table align-middle mb-0">
                     <thead class="bg-light">
-                    <tr class="text-muted small text-uppercase">
-                        <th class="ps-4">ID</th>
-                        <th class="text-center">Fecha Emisión</th>
-                        <th class="text-center">Proveedor</th>
-                        <th class="text-center">Total Compra</th>
-                        <th class="text-center">Comprobante</th>
-                        <th class="text-center">Estado</th>
-                        <th class="text-center">Acciones</th>
+                    <tr class="text-dynamic">
+                        <th class="text-center ps-4 py-3" style="font-size: 0.8rem; font-weight: 700;">ID</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">FECHA EMISIÓN</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">PROVEEDOR</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">TOTAL COMPRA</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">COMPROBANTE</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ESTADO</th>
+                        <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ACCIONES</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(compras)}">
-                        <td colspan="6" class="text-center py-4 text-muted">No hay registros de compras disponibles.</td>
+                        <td colspan="7" class="text-center py-4 text-muted small fw-medium">No hay registros de compras disponibles.</td>
                     </tr>
                     <tr th:each="c : ${compras}" class="border-bottom">
-                        <td class="ps-4 fw-bold text-dynamic" th:text="'#' + ${c.idCompra}"></td>
-                        <td class="text-center">
-                            <div class="fw-bold text-dynamic" th:text="${#temporals.format(c.fechaInicio, 'dd/MM/yyyy')}"></div>
+                        <td class="ps-4 fw-bold text-muted text-center" th:text="${c.idCompra}"></td>
+                        <td class="text-center small">
+                            <div class="fw-medium text-muted" th:text="${#temporals.format(c.fechaInicio, 'dd/MM/yyyy')}"></div>
                             <small th:if="${c.fechaRecepcion != null}" class="text-muted d-block" style="font-size: 0.75rem;">
                                 <i class="fas fa-truck-loading me-1"></i>
                                 Recibido: <span th:text="${#temporals.format(c.fechaRecepcion, 'HH:mm')}"></span>
@@ -87,41 +85,45 @@
                                 Esperando...
                             </small>
                         </td>
-                        <td class="text-center" th:text="${c.proveedor.nombre}"></td>
-                        <td class="text-center">
-                                <span class="fw-bold text-dynamic">
-                                    S/ <span th:text="${#numbers.formatDecimal(c.total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
-                                </span>
+                        <td class="fw-medium text-muted text-center small" th:text="${c.proveedor.nombre}"></td>
+                        <td class="text-center small">
+                            <span class="fw-bold text-muted">
+                                S/ <span th:text="${#numbers.formatDecimal(c.total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                            </span>
                         </td>
-                        <td class="text-center">
-                            <span th:if="${c.tipoComprobante != null}"
-                                  class="text-dynamic fs-6"
+                        <td class="text-center small">
+                            <span th:if="${c.tipoComprobante == 'FACTURA'}"
+                                  class="badge-comprobante badge-factura"
                                   th:text="${c.tipoComprobante}">
                             </span>
-                            <span th:if="${c.tipoComprobante == null}" class="text-muted small">-</span>
-                        </td>
+                            <span th:if="${c.tipoComprobante == 'BOLETA'}"
+                                  class="badge-comprobante badge-boleta"
+                                  th:text="${c.tipoComprobante}">
+                            </span>
 
-                        <td class="text-center">
-                                <span th:if="${c.estado == 'PENDIENTE'}" class="badge bg-warning text-dark px-3 rounded-pill">
-                                    <i class="fas fa-clock me-1"></i> PENDIENTE
-                                </span>
-                            <span th:if="${c.estado == 'COMPLETADA'}" class="badge bg-success px-3 rounded-pill">
-                                    <i class="fas fa-check-circle me-1"></i> COMPLETADA
-                                </span>
+                            <span th:if="${c.tipoComprobante == null}"
+                                  class="badge-comprobante badge-pendiente">
+                                SIN COMPROBANTE
+                            </span>
                         </td>
-                        <td class="text-center">
-                            <div class="acciones-boton">
-                                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1"
-                                        th:onclick="|verDetalle(${c.idCompra})|" title="Ver Detalle">
+                        <td class="text-center small">
+                            <span th:if="${c.estado == 'PENDIENTE'}" class="badge bg-warning text-dark px-3 rounded-pill">
+                                <i class="fas fa-clock me-1"></i> PENDIENTE
+                            </span>
+                            <span th:if="${c.estado == 'COMPLETADA'}" class="badge bg-success px-3 rounded-pill">
+                                <i class="fas fa-check-circle me-1"></i> COMPLETADA
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button type="button" class="btn-circle btn-ver" th:onclick="|verDetalle(${c.idCompra})|" title="Ver Detalle">
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 <th:block th:if="${c.estado == 'PENDIENTE'}">
-                                    <a th:href="@{/compras/editar/{id}(id=${c.idCompra})}"
-                                       class="btn btn-sm btn-outline-warning rounded-circle me-1" title="Editar">
+                                    <a class="btn-circle btn-edit" th:href="@{/compras/editar/{id}(id=${c.idCompra})}" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-outline-success rounded-circle"
-                                            th:onclick="|confirmarRecepcion(${c.idCompra})|" title="Confirmar Stock">
+                                    <button type="button" class="btn-circle btn-restore" th:onclick="|confirmarRecepcion(${c.idCompra})|" title="Confirmar Stock">
                                         <i class="fas fa-check"></i>
                                     </button>
                                 </th:block>
@@ -133,33 +135,26 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
-            <div class="text-muted-dynamic small">
-                Página <span class="fw-bold" th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">2</span>
+        <div th:if="${totalPages > 1}" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
+            <div class="text-dark small fw-medium">
+                Página <span class="fw-bold text-primary" th:text="${currentPage + 1}"></span> de <span class="fw-bold" th:text="${totalPages}"></span>
             </div>
-
-            <nav aria-label="Navegación de historial">
-                <ul class="pagination pagination-sm mb-0" style="gap: 5px;">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
                     <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                        <a class="page-link shadow-sm border-0"
-                           th:href="@{/compras/historial(page=${currentPage - 1}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
+                        <a class="page-link shadow-sm" th:href="@{/compras/historial(page=${currentPage - 1}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
 
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                        th:if="${(currentPage == 0 and i < 3) or
-                    (currentPage == totalPages - 1 and i > totalPages - 4) or
-                    (i >= currentPage - 1 and i <= currentPage + 1)}"
+                        th:if="${(currentPage == 0 and i < 3) or (currentPage == totalPages - 1 and i > totalPages - 4) or (i >= currentPage - 1 and i <= currentPage + 1)}"
                         th:classappend="${i == currentPage} ? 'active'">
-                        <a class="page-link shadow-sm border-0 rounded"
-                           th:href="@{/compras/historial(page=${i}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
-                           th:text="${i + 1}"></a>
+                        <a class="page-link shadow-sm" th:href="@{/compras/historial(page=${i}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}" th:text="${i + 1}"></a>
                     </li>
 
                     <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                        <a class="page-link shadow-sm border-0"
-                           th:href="@{/compras/historial(page=${currentPage + 1}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
+                        <a class="page-link shadow-sm" th:href="@{/compras/historial(page=${currentPage + 1}, proveedor=${proveedorElegido}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
@@ -168,70 +163,97 @@
         </div>
     </div>
 </main>
-<div class="modal fade" id="modalVerDetalle" tabindex="-1" aria-hidden="true">
+
+<div class="modal fade" id="modalVerDetalle" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
+        <div class="modal-content border-0 shadow-lg">
+
+            <!-- HEADER -->
             <div class="modal-header border-0 bg-dark text-white p-4">
-                <h5 class="modal-title fw-bold">Detalle de la Compra</h5>
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <i class="fas fa-file-invoice"></i>
+                    Detalle de la Compra
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
-                <div class="row mb-4 g-3 align-items-start">
-                    <div class="col-12 col-md-4">
-                        <label class="text-muted-dynamic small d-block">PROVEEDOR</label>
-                        <span id="detProveedor" class="fw-bold text-dynamic fs-6 fs-md-5 d-block text-truncate-custom"></span>
-                    </div>
 
-                    <div class="col-6 col-md-4 text-start text-md-center">
-                        <label class="text-muted-dynamic small d-block">COMPROBANTE</label>
-                        <div id="contenedorComprobante">
-                            <span id="detComprobante" class="fw-bold text-dynamic fs-6 fs-md-5" style="display: none;"></span>
-                            <span id="detSinComprobante" class="badge bg-secondary-subtle text-secondary small" style="display: none;">Pendiente</span>
+            <div class="modal-body p-4">
+
+
+                <div class="row mb-3 g-2">
+
+                    <!-- PROVEEDOR (ARRIBA IZQUIERDA) -->
+                    <div class="col-12">
+                        <label class="text-muted small d-block">PROVEEDOR</label>
+                        <div class="fw-semibold text-dark small text-truncate">
+                            <span id="detProveedor"></span>
                         </div>
                     </div>
 
-                    <div class="col-6 col-md-4 text-end">
-                        <label class="text-muted-dynamic small d-block">FECHA LLEGADA</label>
-                        <span id="detFecha" class="fw-bold text-dynamic fs-6 fs-md-5"></span>
+                    <!-- COMPROBANTE (ABAJO IZQUIERDA) -->
+                    <div class="col-6">
+                        <label class="text-muted small d-block">COMPROBANTE</label>
+                        <div id="contenedorComprobante">
+                            <span id="detComprobante"
+                                  class="badge bg-dark-subtle text-dark small"
+                                  style="display:none;"></span>
+
+                            <span id="detSinComprobante"
+                                  class="badge bg-secondary-subtle text-secondary small"
+                                  style="display:none;">
+                                Pendiente
+                            </span>
+                        </div>
                     </div>
+
+                    <!-- FECHA (ABAJO DERECHA) -->
+                    <div class="col-6 text-end">
+                        <label class="text-muted small d-block">FECHA LLEGADA</label>
+                        <span id="detFecha" class="fw-semibold small text-dark"></span>
+                    </div>
+
                 </div>
+
+                <!-- TABLA -->
                 <div class="table-responsive">
-                <table class="table table-sm border-top">
-                    <thead class="bg-light">
-                    <tr>
-                        <th>Producto</th>
-                        <th class="text-center">Cant.</th>
-                        <th class="text-end">Costo</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-                    </thead>
-                    <tbody id="detTablaCuerpo">
-                    </tbody>
-                    <tfoot>
-                    <tr class="fs-5 fw-bold">
-                        <td colspan="3" class="text-end pt-3 text-dynamic">TOTAL:</td>
-                        <td class="text-end pt-3 text-success">S/ <span id="detTotal">0.00</span></td>
-                    </tr>
-                    </tfoot>
-                </table>
+
+                    <table class="table table-sm align-middle border-top small">
+
+                        <thead class="bg-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-end">Costo</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                        </thead>
+
+                        <tbody id="detTablaCuerpo"></tbody>
+
+                        <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-semibold text-muted pt-3">
+                                TOTAL:
+                            </td>
+                            <td class="text-end fw-bold text-success pt-3">
+                                S/ <span id="detTotal">0.00</span>
+                            </td>
+                        </tr>
+                        </tfoot>
+
+                    </table>
+
                 </div>
+
             </div>
+
         </div>
     </div>
 </div>
 
-
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
-    // --- Configuración Global de SweetAlert2 ---
-    const swalConfig = {
-        confirmButtonColor: '#4b6cb7',
-        background: '#ffffff',
-        color: '#333333'
-    };
-
     document.addEventListener("DOMContentLoaded", () => {
         // 1. Inicializar Validaciones de Filtros
         initFechaValidation();
@@ -260,10 +282,13 @@
                     if (inputDesde.value && inputHasta.value && inputDesde.value > inputHasta.value) {
                         e.preventDefault();
                         Swal.fire({
-                            ...swalConfig,
                             icon: 'warning',
                             title: 'Rango inválido',
-                            text: 'La "Fecha hasta" no puede ser anterior a la "Fecha desde".'
+                            text: 'La "Fecha hasta" no puede ser anterior a la "Fecha desde".',
+                            background: '#ffffff',
+                            color: '#1b254b',
+                            confirmButtonColor: '#3b82f6',
+                            customClass: { popup: 'border-radius-15' }
                         });
                     }
                 });
@@ -279,19 +304,36 @@
         const errorMsg = /*[[${error}]]*/ null;
 
         if (successMsg) {
-            Swal.fire({ ...swalConfig, icon: 'success', title: '¡Logrado!', text: successMsg });
+            Swal.fire({
+                icon: 'success',
+                title: '¡Logrado!',
+                text: successMsg,
+                timer: 2000,
+                showConfirmButton: false,
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6',
+                customClass: { popup: 'border-radius-15' }
+            });
         }
         if (errorMsg) {
-            Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: errorMsg, confirmButtonColor: '#ff4d4d' });
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMsg,
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d'
+            });
         }
     }
 
     /**
-     * Procesa la confirmación de recepción de productos
+     * Procesa la confirmación de recepción de productos (Con el select de comprobante unificado)
      */
     function confirmarRecepcion(id) {
         Swal.fire({
-            ...swalConfig,
             title: 'Confirmar Ingreso de Stock',
             text: "¿Con qué tipo de comprobante llegó el pedido?",
             icon: 'question',
@@ -299,8 +341,14 @@
             inputOptions: { 'BOLETA': 'Boleta de Venta', 'FACTURA': 'Factura' },
             inputPlaceholder: '-- Seleccione --',
             showCancelButton: true,
+            confirmButtonColor: '#3b82f6', // Azul del sistema
+            cancelButtonColor: '#64748b',
             confirmButtonText: 'Confirmar Ingreso',
             cancelButtonText: 'Cancelar',
+            background: '#ffffff',
+            color: '#1b254b',
+            iconColor: '#3b82f6',
+            customClass: { popup: 'border-radius-15' },
             inputValidator: (value) => !value && '¡Debes seleccionar el tipo de comprobante!'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -334,7 +382,7 @@
             // Comprobante
             if (compra.tipoComprobante) {
                 badgeComp.innerText = compra.tipoComprobante;
-                badgeComp.className = "fw-bold text-dynamic fs-5";
+                badgeComp.className = "badge bg-dark-subtle text-dark small";
                 badgeComp.style.display = 'inline-block';
             } else {
                 txtSinComp.style.display = 'inline-block';
@@ -353,12 +401,16 @@
                 return `
                     <tr>
                         <td>
-                            <div class="fw-bold text-dynamic">${d.producto.nombreProducto}</div>
-                            <small class="text-muted">Cód: ${d.producto.codigoBarras}</small>
+                            <div style="font-size: 0.85rem; font-weight: 600; ">
+                                ${d.producto.nombreProducto}
+                            </div>
+                            <div style="font-size: 0.75rem;" class="text-muted">
+                                Cód: ${d.producto.codigoBarras || 'N/A'}
+                            </div>
                         </td>
-                        <td class="text-center">${cantFormateada}</td>
-                        <td class="text-end">S/ ${precio.toFixed(2)}</td>
-                        <td class="text-end fw-bold">S/ ${(cant * precio).toFixed(2)}</td>
+                        <td class="text-center" style="font-size: 0.85rem;">${cantFormateada}</td>
+                        <td class="text-end" style="font-size: 0.85rem;">S/ ${precio.toFixed(2)}</td>
+                        <td class="text-end fw-bold" style="font-size: 0.85rem;">S/ ${(cant * precio).toFixed(2)}</td>
                     </tr>`;
             }).join('');
 
@@ -366,7 +418,7 @@
 
         } catch (error) {
             console.error(error);
-            tablaCuerpo.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar los datos.</td></tr>';
+            tablaCuerpo.innerHTML = '<tr><td colspan="4" class="text-center text-danger" style="font-size: 0.85rem;">Error al cargar los datos.</td></tr>';
         }
     }
 

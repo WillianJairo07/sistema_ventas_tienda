@@ -5,7 +5,6 @@
     <title>Compras - Sistema de Ventas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <script th:src="@{/js/tema.js}"></script>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,9 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link th:href="@{/css/menu.css}" rel="stylesheet">
-    <link th:href="@{/css/menu1.css}" rel="stylesheet">
-    <link th:href="@{/css/modal.css}" rel="stylesheet">
-    <link th:href="@{/css/vencom.css}" rel="stylesheet">
 
 </head>
 <body>
@@ -27,118 +23,150 @@
 
 <main class="content" id="mainContent" style="padding-bottom: 80px;">
     <div class="container-fluid">
-        <div class="mb-4">
-            <h2 class="fw-bold text-dynamic mb-1 fs-3"
-                th:text="${modoEdicion != null ? 'Revisar Compra #' + compra.idCompra : 'Nueva Compra'}">
-                Nueva Compra
-            </h2>
-            <p class="text-muted-dynamic mb-0 small">Verifica los productos antes de ingresar al inventario</p>
+        <!-- CABECERA (Estilo Unificado) -->
+        <div class="row align-items-end mb-4 g-3">
+            <div class="col-12">
+                <h2 class="fw-bold text-dynamic mb-1"
+                    th:text="${modoEdicion != null ? 'Revisar Compra #' + compra.idCompra : 'Nueva Compra'}">
+                    Nueva Compra
+                </h2>
+                <p class="text-muted-dynamic mb-0 small">Verifica los productos antes de ingresar al inventario</p>
+            </div>
         </div>
 
         <form th:action="@{/compras/guardar}" th:object="${compra}" method="post" id="formCompra">
             <input type="hidden" th:field="*{idCompra}" />
 
             <div class="row g-4">
-                <div class="col-lg-8">
-                    <div class="crud-card p-4 shadow mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                            <h5 class="fw-bold mb-0 text-dynamic fs-5" th:text="${modoEdicion != null ? 'Agregar Producto Adicional' : 'Buscar Producto'}">Buscar Producto</h5>
-                            <button type="button" class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalProducto">
-                                <i class="fas fa-plus-circle me-2"></i>Nuevo
-                            </button>
-                        </div>
+                    <!-- COLUMNA IZQUIERDA: PRODUCTOS -->
+                    <div class="col-lg-8">
+                        <div class="crud-card p-3 p-md-4 shadow-sm mb-4 border-0">
+                            <!-- 1. align-items-stretch: Obliga a que todas las columnas de la fila midan lo mismo de alto -->
+                            <div class="row g-3 align-items-stretch">
 
-                        <div class="position-relative">
-                            <div class="input-group shadow-sm border rounded-3 overflow-hidden bg-transparent">
-                                <span class="input-group-text bg-transparent border-0 py-3 ps-3">
-                                    <i class="fas fa-search text-muted-dynamic"></i>
-                                </span>
-                                <input type="text" id="buscadorCompra"
-                                       class="form-control border-0 py-3 bg-transparent text-dynamic"
-                                       placeholder="Escanea o busca el producto..."
-                                       autocomplete="off">
+                                <!-- Columna Buscador -->
+                                <div class="col-12 col-md">
+                                    <!-- 2. h-100: Hace que el contenedor ocupe todo el alto de la columna -->
+                                    <div class="position-relative h-100">
+                                        <div class="search-container custom-search-adaptive w-100 h-100">
+                                            <i class="fas fa-search"></i>
+                                            <!-- 3. d-block y h-100: Aseguran que el input rellene el espacio centrado -->
+                                            <input type="text"
+                                                   id="buscadorCompra"
+                                                   class="form-control shadow-sm h-100"
+                                                   placeholder="Escanea o busca el producto..."
+                                                   autocomplete="off"
+                                                   style="border-radius: 12px; min-height: 46px;">
+                                        </div>
+                                        <!-- Contenedor de resultados (absoluto, no afecta la alineación) -->
+                                        <div id="contenedorResultados" class="custom-search-results shadow-lg d-none"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Columna Botón -->
+                                <div class="col-12 col-md-auto">
+                                    <!-- 4. h-100: El botón se estira para igualar exactamente la altura del input -->
+                                    <button type="button"
+                                            class="btn btn-new-cat shadow-sm px-3 d-flex align-items-center justify-content-center w-100 h-100"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalProducto"
+                                            style="border-radius: 12px; min-height: 46px;">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span class="ms-2">Nuevo</span>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div id="contenedorResultados" class="custom-search-results shadow-lg d-none"></div>
+                            <datalist id="listaProductos" style="display:none;">
+                                <option th:each="p : ${productos}"
+                                        th:value="${p.nombreProducto}"
+                                        th:data-id="${p.idProducto}"
+                                        th:data-precio="${p.precio}"
+                                        th:data-unidad="${p.unidadMedida}"
+                                        th:data-barcode="${p.codigoBarras}"></option>
+                            </datalist>
                         </div>
 
-                        <datalist id="listaProductos" style="display:none;">
-                            <option th:each="p : ${productos}"
-                                    th:value="${p.nombreProducto}"
-                                    th:data-id="${p.idProducto}"
-                                    th:data-precio="${p.precio}"
-                                    th:data-unidad="${p.unidadMedida}"
-                                    th:data-barcode="${p.codigoBarras}"></option>
-                        </datalist>
-                    </div>
-
+                    <!-- ALERTA MODO REVISIÓN -->
                     <div class="alert alert-info border-0 shadow-sm" th:if="${modoEdicion != null}" style="border-radius: 12px;">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Modo Revisión:</strong> Estás conciliando el pedido. Solo puedes ajustar cantidades o quitar productos.
                     </div>
 
-                    <div class="crud-card p-0 shadow overflow-hidden">
-                        <div class="table-responsive" style="max-height: 400px;">
+                    <!-- TABLA DE DETALLES (Estilo Unificado) -->
+                    <div class="crud-card shadow-sm overflow-hidden border-0">
+                        <div class="table-responsive" style="max-height: 500px;">
                             <table class="table custom-table align-middle mb-0">
-                                <thead>
-                                <tr class="text-muted small text-uppercase">
-                                    <th class="ps-4">Producto</th>
-                                    <th class="text-center">Precio Compra</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-center">U. Medida</th>
-                                    <th class="text-center">Subtotal</th>
-                                    <th class="text-center">Acciones</th>
+                                <thead class="bg-light">
+                                <tr class="text-dynamic">
+                                    <th class="ps-4 py-3" style="font-size: 0.8rem; font-weight: 700;">PRODUCTO</th>
+                                    <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">PRECIO COMPRA</th>
+                                    <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">CANTIDAD</th>
+                                    <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">U. MEDIDA</th>
+                                    <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">SUBTOTAL</th>
+                                    <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ACCIONES</th>
                                 </tr>
                                 </thead>
                                 <tbody id="tbodyDetalles">
                                 <tr id="filaVacia" th:if="${#lists.isEmpty(compra.detalles)}" class="fila-vacia-dinamica">
-                                    <td colspan="6" class="text-center"> <div class="contenedor-mensaje">
-                                        <i class="fas fa-shopping-basket icono-carrito"></i>
-                                        <p class="texto-principal">No hay productos en el carrito</p>
-                                    </div>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="contenedor-mensaje">
+                                            <i class="fas fa-shopping-basket icono-carrito mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
+                                            <p class="texto-principal text-muted">No hay productos en el carrito</p>
+                                        </div>
                                     </td>
                                 </tr>
 
                                 <tr th:each="det, stat : *{detalles}" th:id="'f_' + ${det.producto.idProducto}"
                                     th:data-id="${det.producto.idProducto}" class="align-middle border-bottom">
 
-                                    <td class="ps-4 py-3">
+                                    <td class="ps-4 py-3" style="min-width: 200px;">
                                         <input type="hidden" th:field="*{detalles[__${stat.index}__].idDetalleCompra}">
                                         <input type="hidden" th:field="*{detalles[__${stat.index}__].producto.idProducto}" class="prod-id">
-                                        <span class="fw-bold text-dynamic d-block" th:text="${det.producto.nombreProducto}"></span>
-                                        <small class="text-muted-dynamic" th:text="'Cód: ' + ${det.producto.codigoBarras ?: 'N/A'}"></small>
+
+                                        <span class="fw-bold text-dynamic d-block"
+                                              style="font-size: 0.85rem; line-height: 1.2;"
+                                              th:text="${det.producto.nombreProducto}"></span>
                                     </td>
 
                                     <td class="text-center">
                                         <input type="number" step="0.01" th:field="*{detalles[__${stat.index}__].precioCompra}"
-                                               class="form-control form-control-sm text-center fw-bold input-precio"
+                                               class="form-control form-control-sm text-center fw-bold input-precio mx-auto shadow-none"
                                                oninput="actualizarTotales()" onclick="this.select()"
-                                               style="width: 110px !important; height: 38px !important; margin: auto;">
+                                               style="width: 100px !important; height: 32px !important; font-size: 0.85rem;">
                                     </td>
 
                                     <td class="text-center">
                                         <input type="number"
-                                               th:field="*{detalles[__${stat.index}__].cantidad}"
+                                               th:name="|detalles[${stat.index}].cantidad|"
+                                               th:value="${det.producto.unidadMedida == 'KG' ? det.cantidad : #numbers.formatInteger(det.cantidad, 0)}"
                                                th:step="${det.producto.unidadMedida == 'KG' ? '0.001' : '1'}"
-                                               class="form-control form-control-sm text-center fw-bold input-cantidad"
+                                               class="form-control form-control-sm text-center fw-bold input-cantidad mx-auto shadow-none"
                                                th:data-unidad="${det.producto.unidadMedida}"
                                                oninput="validarSegunUnidad(this, this.getAttribute('data-unidad'))"
                                                onclick="this.select()"
-                                               style="width: 100px !important; height: 38px !important; margin: auto;">
+                                               style="width: 80px !important; height: 32px !important; font-size: 0.85rem;">
                                     </td>
 
                                     <td class="text-center">
-                                        <span class="badge badge-unidad" th:text="${det.producto.unidadMedida}">UNIDAD</span>
+                                        <span class="badge bg-light text-dark border fw-medium"
+                                              style="font-size: 0.85rem; padding: 0.4em 0.6em;"
+                                              th:text="${det.producto.unidadMedida}">UNIDAD
+                                        </span>
                                         <input type="hidden" class="prod-unidad" th:value="${det.producto.unidadMedida}">
                                     </td>
 
-                                    <td class="fw-bold text-dynamic">S/ <span class="subtotal-fila">0.00</span></td>
+                                    <td class="text-center">
+                                        <span class="fw-bold text-dynamic" style="font-size: 0.85rem;">
+                                            S/ <span class="subtotal-fila">0.00</span>
+                                        </span>
+                                    </td>
 
                                     <td class="text-center">
                                         <button type="button" th:onclick="|quitar('${det.producto.idProducto}')|"
-                                                class="btn btn-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                style="width: 32px; height: 32px; border: none; background-color: #dc3545 !important;">
-                                            <i class="fas fa-trash-alt text-white"></i>
+                                                class="btn btn-delete d-inline-flex align-items-center justify-content-center rounded-circle"
+                                                style="width: 35px; height: 35px; border: none; transition: all 0.2s;">
+                                            <i class="fas fa-trash-alt" style="font-size: 0.9rem;"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -148,39 +176,49 @@
                     </div>
                 </div>
 
+                <!-- COLUMNA DERECHA: TOTALES Y DATOS -->
                 <div class="col-lg-4">
                     <div class="sticky-top" style="top: 20px;">
-                        <div class="crud-card p-4 shadow">
-                            <h5 class="fw-bold mb-4 text-dynamic fs-5 border-bottom pb-2">Datos del Pedido</h5>
+                        <div class="crud-card p-4 shadow-sm border-0">
+                            <h5 class="fw-bold mb-4 text-dynamic border-bottom pb-2">Datos del Pedido</h5>
 
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted-dynamic">Fecha de Emisión (Hoy)</label>
+                                <label class="form-label small fw-bold text-muted-dynamic">Fecha de Emisión</label>
                                 <div class="input-group">
-                                    <span class="input-group-text border-0"><i class="fas fa-calendar-alt"></i></span>
-                                    <input type="date" th:field="*{fechaInicio}" class="form-control border-0 fecha-inicio" readonly tabindex="-1">
+                                    <span class="input-group-text border-0 bg-light"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="date" th:field="*{fechaInicio}" class="form-control border-0 bg-light fecha-inicio" readonly tabindex="-1">
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-muted-dynamic">Proveedor</label>
-                                <select th:field="*{proveedor.idProveedor}" class="form-select text-dynamic" required>
+                                <select th:field="*{proveedor.idProveedor}" class="form-select shadow-none" required>
                                     <option value="" disabled selected>Selecciona un proveedor</option>
                                     <option th:each="p : ${proveedores}" th:value="${p.idProveedor}" th:text="${p.nombre}"></option>
                                 </select>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted-dynamic">Fecha Estimada de Llegada</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-transparent border-end-0">
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted-dynamic">Fecha Estimada Llegada</label>
+                                <div class="input-group shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                                    <!-- Icono con fondo gris suave y sin borde derecho -->
+                                    <span class="input-group-text bg-light border-0">
                                         <i class="fas fa-truck-loading text-primary"></i>
                                     </span>
-                                    <input type="date" th:field="*{fecha}" class="form-control bg-transparent text-dynamic border-start-0 fecha-llegada" required>
+
+                                    <!-- Input con el mismo fondo, sin borde y altura ajustada -->
+                                    <input type="date"
+                                           th:field="*{fecha}"
+                                           class="form-control bg-light border-0 shadow-none"
+                                           required
+                                           style="height: 46px; font-size: 1rem;">
                                 </div>
                             </div>
-                            <div class="contenedor-total-ticket shadow-sm">
-                                <span class="titulo-total">TOTAL A COBRAR</span>
-                                <div class="monto-total">
+
+                            <!-- CARD DE TOTAL (Tu clase personalizada) -->
+                            <div class="contenedor-total-ticket mb-4">
+                                <span class="titulo-total-etiqueta">TOTAL A PAGAR</span>
+                                <div class="monto-total-display">
                                     S/ <span id="labelTotal" th:text="${compra.total != null ? #numbers.formatDecimal(compra.total, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</span>
                                 </div>
                             </div>
@@ -191,13 +229,12 @@
                                 </span>
                             </div>
 
-                            <button type="submit" id="btnGuardar" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow" disabled>
+                            <button type="submit" id="btnGuardar" class="btn btn-new-cat w-100 py-3 rounded-pill fw-bold shadow-sm" disabled>
                                 <i class="fas fa-save me-2"></i>
                                 <span th:text="${modoEdicion != null ? 'Confirmar revisión' : 'Guardar orden'}"></span>
                             </button>
 
-                            <a href="/compras" onclick="sessionStorage.removeItem('tabla_compra_backup')"
-                               class="btn btn-outline-secondary w-100 mt-2 py-2 rounded-pill small">
+                            <a href="/compras" class="btn btn-secondary-custom w-100 mt-2 py-2 rounded-pill shadow-sm">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
                         </div>
@@ -208,58 +245,132 @@
     </div>
 </main>
 
-<div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+
+<div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header border-0 p-4" style="background: linear-gradient(45deg, #4b6cb7, #182848); border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title fw-bold text-white"><i class="fas fa-box-open me-2"></i>Nuevo Producto </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg">
+            <!-- HEADER -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">
+                    <i class="fas fa-box-open me-2"></i>
+                    Nuevo Producto Rápido
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
-                <form id="formProdRapido">
+            <form id="formProdRapido">
+                <div class="modal-body p-4">
+                    <!-- NOMBRE -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Nombre</label>
-                        <input type="text" class="form-control shadow-sm" id="rapidoNombre" placeholder="Ej: Arroz Costeño 1kg" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Unidad de Medida</label>
-                        <select class="form-select shadow-sm" id="rapidoUnidad" required>
-                            <option value="UNIDAD" selected>Unidad</option>
-                            <option value="KG">Kilogramos</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Categoría</label>
-                        <select class="form-select shadow-sm" id="rapidoCategoria" required>
-                            <option value="" disabled selected>Seleccione...</option>
-                            <option th:each="cat : ${categorias}" th:value="${cat.idCategoria}" th:text="${cat.nombreCategoria}"></option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-dynamic">Precio Unidad/Kilogramo</label>
-                            <input type="number" step="0.01" min="0" class="form-control shadow-sm" id="rapidoPrecio" placeholder="0.00" required>
+                        <label class="form-label fw-bold text-dynamic mb-1"
+                               style="font-size: 0.9rem;">
+                            Nombre del Producto
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text custom-icon-box">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control shadow-none custom-input"
+                                   id="rapidoNombre"
+                                   placeholder="Ingrese el nombre"
+                                   required>
                         </div>
+                    </div>
+                    <!-- FILA -->
+                    <div class="row">
+                        <!-- UNIDAD -->
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-dynamic">Unidad/Kilogramo</label>
-                            <input type="number" min="1" step="1" class="form-control shadow-sm"
-                                   id="rapidoCantidad" placeholder="Ej: 10 o 10.006"
+                            <label class="form-label fw-bold text-dynamic mb-1"
+                                   style="font-size: 0.9rem;">
+                                U. Medida
+                            </label>
+                            <select class="form-select shadow-none custom-input"
+                                    id="rapidoUnidad"
+                                    required>
+                                <option value="UNIDAD" selected>
+                                    Unidad
+                                </option>
+                                <option value="KG">
+                                    Kilogramos
+                                </option>
+                            </select>
+                        </div>
+                        <!-- CATEGORÍA -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-dynamic mb-1"
+                                   style="font-size: 0.9rem;">
+                                Categoría
+                            </label>
+                            <select class="form-select shadow-none custom-input"
+                                    id="rapidoCategoria"
+                                    required>
+                                <option value="" disabled selected>
+                                    Seleccione...
+                                </option>
+                                <option th:each="cat : ${categorias}"
+                                        th:value="${cat.idCategoria}"
+                                        th:text="${cat.nombreCategoria}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- FILA -->
+                    <div class="row">
+                        <!-- PRECIO -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-dynamic mb-1"
+                                   style="font-size: 0.9rem;">
+                                Precio Compra
+                            </label>
+                            <input type="number"
+                                   step="0.01"
+                                   min="0"
+                                   inputmode="decimal"
+                                   class="form-control shadow-none custom-input"
+                                   id="rapidoPrecio"
+                                   placeholder="0.00"
+                                   required>
+                        </div>
+                        <!-- CANTIDAD -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-dynamic mb-1"
+                                   style="font-size: 0.9rem;">
+                                Cantidad Inicial
+                            </label>
+                            <input type="number"
+                                   min="1"
+                                   step="1"
+                                   inputmode="numeric"
+                                   class="form-control shadow-none custom-input"
+                                   id="rapidoCantidad"
+                                   placeholder="Ej: 10"
                                    oninput="validarCantidadMinima(this)">
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0 p-4 pt-0">
-                <button type="button" class="btn btn-secondary px-4 rounded-3" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" onclick="guardarProductoRapido()" class="btn btn-new-cat px-4 rounded-3 shadow">Agregar a la Lista</button>
-            </div>
+                </div>
+                <!-- FOOTER -->
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button"
+                            class="btn btn-secondary-custom px-4"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button"
+                            onclick="guardarProductoRapido()"
+                            class="btn btn-new-cat px-4">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Agregar a Lista
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
-
 <script th:inline="javascript">
     // --- INICIALIZACIÓN DE DATOS ---
     const buscador = document.getElementById('buscadorCompra');
@@ -289,16 +400,42 @@
         if (buscador) buscador.focus();
     });
 
-    // --- LÓGICA DEL BUSCADOR PROFESIONAL (DROPDOWN) ---
+    // --- INTERCEPTAR ENTER DE LA LECTORA EN EL BUSCADOR ---
+    buscador.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Evita que se envíe el formulario o salte de input
+
+            const query = this.value.trim();
+            if (query.length > 0) {
+                // Buscamos coincidencia exacta por código de barras
+                const productoExacto = productosMap.find(p => p.barcode === query && p.barcode !== "");
+                if (productoExacto) {
+                    seleccionarProducto(productoExacto.id, productoExacto.nombre, productoExacto.precio, productoExacto.barcode, productoExacto.unidad);
+                }
+            }
+        }
+    });
+
+    // --- LÓGICA DEL BUSCADOR PROFESIONAL (DROPDOWN + AUTO-AGREGAR) ---
     buscador.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
+        const query = this.value.trim();
+        const queryLower = query.toLowerCase();
+
         if (query.length === 0) {
             contenedorResultados.classList.add('d-none');
             return;
         }
 
+        // Lógica de auto-agregar por evento input (para lectoras que no disparan Enter)
+        const productoExacto = productosMap.find(p => p.barcode === query && p.barcode !== "");
+        if (productoExacto) {
+            seleccionarProducto(productoExacto.id, productoExacto.nombre, productoExacto.precio, productoExacto.barcode, productoExacto.unidad);
+            return;
+        }
+
+        // Filtrado para Dropdown manual
         const filtrados = productosMap.filter(p =>
-            p.nombre.toLowerCase().includes(query) || p.barcode.toLowerCase().includes(query)
+            p.nombre.toLowerCase().includes(queryLower) || p.barcode.includes(query)
         );
 
         renderizarResultados(filtrados);
@@ -325,7 +462,11 @@
         ejecutarAgregar(id, nombre, precio, barcode, unidad);
         buscador.value = "";
         contenedorResultados.classList.add('d-none');
-        buscador.focus();
+
+        // Retardo mínimo para garantizar que el foco se quede firmemente en el buscador
+        setTimeout(() => {
+            buscador.focus();
+        }, 10);
     };
 
     // Cerrar buscador al hacer clic fuera
@@ -336,45 +477,57 @@
     });
 
     // --- LÓGICA DE LA TABLA DE COMPRA ---
+    // --- LÓGICA DE LA TABLA DE COMPRA ---
     function ejecutarAgregar(id, nombre, precio, barcode, unidad = 'UNIDAD') {
         const filaExistente = document.getElementById(`f_${id}`);
+
         if (filaExistente && id > 0) {
             const inputCant = filaExistente.querySelector('.input-cantidad');
-            inputCant.focus();
-            inputCant.select();
+            let cantidadActual = parseFloat(inputCant.value) || 0;
+
+            if (unidad === 'KG') {
+                inputCant.value = (cantidadActual + 1).toFixed(3);
+            } else {
+                inputCant.value = Math.floor(cantidadActual) + 1;
+            }
+
+            actualizarTotales();
             return;
         }
 
         const esPesable = (unidad === 'KG');
+        // MODIFICADO: Se removió la etiqueta <small> del código de barras
         const fila = `
-            <tr id="f_${id}" data-id="${id}" class="align-middle border-bottom">
-                <td class="ps-4 py-3">
-                    <input type="hidden" class="prod-id" value="${id > 0 ? id : ''}">
-                    <span class="fw-bold text-dynamic d-block">${nombre}</span>
-                    <small class="text-muted-dynamic">Cód: ${barcode}</small>
-                </td>
-                <td class="text-center">
-                    <input type="number" step="0.01" class="form-control form-control-sm text-center fw-bold input-precio"
-                           value="${precio.toFixed(2)}" oninput="actualizarTotales()" onclick="this.select()"
-                           style="width: 110px !important; height: 38px !important; margin: auto; border: 1px solid #ced4da;">
-                </td>
-                <td class="text-center">
-                    <input type="number" step="${esPesable ? '0.001' : '1'}" class="form-control form-control-sm text-center fw-bold input-cantidad"
-                           value="1" oninput="validarSegunUnidad(this, '${unidad}')" onclick="this.select()"
-                           style="width: 100px !important; height: 38px !important; border: 1px solid #ced4da !important; margin: auto;">
-                </td>
-                <td class="text-center">
-                    <span class="badge badge-unidad">${unidad}</span>
-                    <input type="hidden" class="prod-unidad" value="${unidad}">
-                </td>
-                <td class="fw-bold text-dynamic">S/ <span class="subtotal-fila">0.00</span></td>
-                <td class="text-center">
-                    <button type="button" onclick="quitar('${id}')" class="btn btn-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                            style="width: 32px; height: 32px; border: none; background-color: #dc3545 !important;">
-                        <i class="fas fa-trash-alt text-white"></i>
-                    </button>
-                </td>
-            </tr>`;
+        <tr id="f_${id}" data-id="${id}" class="align-middle border-bottom">
+            <td class="ps-4 py-3" style="min-width: 200px;">
+                <input type="hidden" class="prod-id" value="${id}">
+                <span class="fw-bold text-dynamic d-block" style="font-size: 0.85rem; line-height: 1.2;">${nombre}</span>
+            </td>
+            <td class="text-center">
+                <input type="number" step="0.01" class="form-control form-control-sm text-center fw-bold input-precio"
+                       value="${precio.toFixed(2)}" oninput="actualizarTotales()" onclick="this.select()"
+                       style="width: 100px !important; height: 32px !important; margin: auto; font-size: 0.85rem;">
+            </td>
+            <td class="text-center">
+                <input type="number" step="${esPesable ? '0.001' : '1'}" class="form-control form-control-sm text-center fw-bold input-cantidad"
+                       value="1" oninput="validarSegunUnidad(this, '${unidad}')" onclick="this.select()"
+                       style="width: 80px !important; height: 32px !important; margin: auto; font-size: 0.85rem;">
+            </td>
+            <td class="text-center">
+                <span class="badge bg-light text-dark border" style="font-size: 0.85rem; padding: 0.4em 0.6em;">${unidad}</span>
+                <input type="hidden" class="prod-unidad" value="${unidad}">
+            </td>
+            <td class="text-center">
+                <span class="fw-bold text-dynamic" style="font-size: 0.85rem;">S/ <span class="subtotal-fila">0.00</span></span>
+            </td>
+            <td class="text-center">
+                <button type="button" onclick="quitar('${id}')"
+                        class="btn btn-delete d-inline-flex align-items-center justify-content-center rounded-circle"
+                        style="width: 35px; height: 35px; border: none; transition: all 0.2s;">
+                    <i class="fas fa-trash-alt" style="font-size: 0.9rem;"></i>
+                </button>
+            </td>
+        </tr>`;
 
         const tbody = document.getElementById("tbodyDetalles");
         const filaVacia = document.getElementById("filaVacia");
@@ -401,12 +554,10 @@
             if (spanSubtotal) spanSubtotal.innerText = sub.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             acumulado += sub;
 
-            // Asignación de Nombres para Spring Boot (List detalles)
             if (idInput) idInput.name = `detalles[${i}].producto.idProducto`;
             if (precInput) precInput.name = `detalles[${i}].precioCompra`;
             if (cantInput) cantInput.name = `detalles[${i}].cantidad`;
 
-            // Campos para productos nuevos (Guardado rápido)
             const pNom = tr.querySelector('.prod-nombre');
             const pUni = tr.querySelector('.prod-unidad');
             const pCat = tr.querySelector('.prod-cat');
@@ -421,11 +572,16 @@
     }
 
     function validarSegunUnidad(input, unidad) {
+        if (input.value === '') {
+            actualizarTotales();
+            return;
+        }
+
         let val = parseFloat(input.value);
         if (isNaN(val) || val < 0) val = 0;
 
         if (unidad === 'UNIDAD') {
-            input.value = Math.floor(val) || 1;
+            input.value = Math.floor(val);
         } else {
             if (input.value.includes('.') && input.value.split('.')[1].length > 3) {
                 input.value = val.toFixed(3);
@@ -438,22 +594,24 @@
         const fila = document.getElementById("f_" + id);
         if (fila) {
             fila.remove();
-            if (document.querySelectorAll('#tbodyDetalles tr[data-id]').length === 0) {
+            const filasRestantes = document.querySelectorAll('#tbodyDetalles tr[data-id]');
+
+            if (filasRestantes.length === 0) {
                 document.getElementById("tbodyDetalles").innerHTML = `
-                    <tr id="filaVacia" class="fila-vacia-dinamica">
-                        <td colspan="6" class="text-center">
-                            <div class="contenedor-mensaje">
-                                <i class="fas fa-shopping-basket icono-carrito"></i>
-                                <p class="texto-principal">No hay productos en el carrito</p>
-                            </div>
-                        </td>
-                    </tr>`;
+                <tr id="filaVacia" class="fila-vacia-dinamica">
+                    <td colspan="6" class="text-center py-5">
+                        <div class="contenedor-mensaje">
+                            <i class="fas fa-shopping-basket icono-carrito mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p class="texto-principal text-muted">No hay productos en el carrito</p>
+                        </div>
+                    </td>
+                </tr>`;
             }
             actualizarTotales();
         }
     }
 
-    // --- FORMULARIO Y BACKUP ---
+    // --- FORMULARIO Y CONFIRMACIÓN CON COLORES COHERENTES ---
     document.getElementById('formCompra').addEventListener('submit', function(e) {
         e.preventDefault();
         Swal.fire({
@@ -461,8 +619,13 @@
             text: "Se registrará el pedido en el inventario.",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#198754',
-            confirmButtonText: 'Sí, registrar'
+            confirmButtonColor: '#3b82f6', // Unificado al azul corporativo del sistema
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, registrar',
+            cancelButtonText: 'Cancelar',
+            background: '#ffffff',
+            color: '#1b254b',
+            customClass: { popup: 'border-radius-15' }
         }).then((r) => {
             if (r.isConfirmed) {
                 sessionStorage.removeItem("tabla_compra_backup");
@@ -493,6 +656,77 @@
             if (filaVacia) filaVacia.remove();
         }
     }
+
+    // --- ENFOQUE AUTOMÁTICO AL INSTANTE DE MOSTRAR EL MODAL ---
+    document.getElementById('modalProducto').addEventListener('shown.bs.modal', function() {
+        const nombreInput = document.getElementById('rapidoNombre');
+        if (nombreInput) nombreInput.focus();
+    });
+
+    function guardarProductoRapido() {
+        const formulario = document.getElementById('formProdRapido');
+        const nombreInput = document.getElementById('rapidoNombre');
+        const catInput = document.getElementById('rapidoCategoria');
+
+        if (!formulario.checkValidity()) {
+            formulario.reportValidity();
+            return;
+        }
+
+        const nombre = nombreInput.value.trim();
+        const unidad = document.getElementById('rapidoUnidad').value;
+        const catId = catInput.value;
+        const precio = parseFloat(document.getElementById('rapidoPrecio').value) || 0;
+        const cantidad = parseFloat(document.getElementById('rapidoCantidad').value) || 1;
+
+        const normalizar = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "").trim();
+        const nombreBusqueda = normalizar(nombre);
+
+        const productoExistente = productosMap.find(p => normalizar(p.nombre) === nombreBusqueda);
+
+        if (productoExistente) {
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('modalProducto'));
+            if (modalInstance) modalInstance.hide();
+
+            Swal.fire({
+                title: 'Atención',
+                text: `El producto '${nombre}' ya existe.`,
+                icon: 'error',
+                confirmButtonColor: '#3b82f6', // Unificado al azul corporativo
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#ee5d5d',
+                customClass: { popup: 'border-radius-15' }
+            });
+            return;
+        }
+
+        const idTemporal = Math.floor(Math.random() * -1000000);
+        ejecutarAgregar(idTemporal, nombre, precio, 'NUEVO', unidad);
+
+        const fila = document.getElementById(`f_${idTemporal}`);
+        if (fila) {
+            fila.insertAdjacentHTML('beforeend', `
+            <input type="hidden" class="prod-nombre" value="${nombre}">
+            <input type="hidden" class="prod-cat" value="${catId}">
+        `);
+
+            const inputCant = fila.querySelector('.input-cantidad');
+            if (inputCant) inputCant.value = cantidad;
+        }
+
+        const modalFinal = bootstrap.Modal.getInstance(document.getElementById('modalProducto'));
+        if (modalFinal) modalFinal.hide();
+
+        actualizarTotales();
+    }
+
+    document.getElementById('modalProducto').addEventListener('hidden.bs.modal', function () {
+        const formulario = this.querySelector('form');
+        if (formulario) {
+            formulario.reset();
+        }
+    });
 </script>
 </body>
 </html>

@@ -19,19 +19,26 @@ public class CategoriaService {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
-    @Autowired
-    private ProductoRepository productoRepository;
+
+    private String normalizarTexto(String texto) {
+        if (texto == null) return "";
+        // 1. Quitar tildes (NFD separa la letra del acento, luego el regex borra el acento)
+        String normalizado = java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD);
+        normalizado = normalizado.replaceAll("\\p{M}", "");
+        // 2. Quitar espacios y pasar a minúsculas
+        return normalizado.replace(" ", "").toLowerCase();
+    }
 
     public Page<Categoria> listarPaginado(boolean activos, int page, int size, String buscar) {
         Pageable pageable = PageRequest.of(page, size);
 
         if (buscar != null && !buscar.trim().isEmpty()) {
-            return categoriaRepository.findByNombreCategoriaContainingIgnoreCaseAndEstado(buscar.trim(), activos, pageable);
+            return categoriaRepository.findByNombreCategoriaContainingIgnoreCaseAndEstadoOrderByIdCategoriaDesc(buscar.trim(), activos, pageable);
         }
 
         return activos ?
-                categoriaRepository.findByEstadoTrueOrderByIdCategoriaAsc(pageable) :
-                categoriaRepository.findByEstadoFalseOrderByIdCategoriaAsc(pageable);
+                categoriaRepository.findByEstadoTrueOrderByIdCategoriaDesc(pageable) :
+                categoriaRepository.findByEstadoFalseOrderByIdCategoriaDesc(pageable);
     }
 
     @Transactional
@@ -46,36 +53,46 @@ public class CategoriaService {
         }
     }
 
+    @Transactional
     public void guardar(Categoria categoria) {
-        String nombreNuevo = categoria.getNombreCategoria().trim();
+        // 1. Limpieza de espacios
+        String nombreNuevo = categoria.getNombreCategoria().trim().replaceAll("\\s+", " ");
 
-        // --- BLOQUE AUTO-REVIVIR (Optimizado) ---
-        // Usamos el método IgnoreCase de JPA para evitar queries nativas
-        Categoria oculta = categoriaRepository.findByNombreCategoriaIgnoreCase(nombreNuevo);
+        // 2. VALIDACIÓN OPTIMIZADA (Sin usar findAll)
 
-        if (oculta != null) {
-            // Caso A: La categoría existe pero está oculta (La revivimos)
-            if (!oculta.isEstado() && categoria.getIdCategoria() == null) {
-                oculta.setEstado(true);
-                oculta.setNombreCategoria(nombreNuevo);
-                categoriaRepository.save(oculta);
-                return;
-            }
+        // Escenario A: NUEVA CATEGORÍA (ID es null)
+        if (categoria.getIdCategoria() == null) {
+            // Buscamos si existe por nombre (ignora mayúsculas/minúsculas)
+            Categoria existente = categoriaRepository.findByNombreCategoriaIgnoreCase(nombreNuevo);
 
-            // Caso B: Existe, está activa y no es la que estamos editando (Duplicado)
-            if (oculta.isEstado()) {
-                if (categoria.getIdCategoria() == null || !categoria.getIdCategoria().equals(oculta.getIdCategoria())) {
-                    throw new IllegalArgumentException("La categoría '" + nombreNuevo + "' ya existe.");
+            if (existente != null) {
+                // Lógica de Auto-revivir: si existe pero está inactiva, la activamos
+                if (!existente.isEstado()) {
+                    existente.setEstado(true);
+                    existente.setNombreCategoria(nombreNuevo);
+                    categoriaRepository.save(existente);
+                    return;
                 }
+                // Si está activa, es un duplicado
+                throw new IllegalArgumentException("Ya existe una categoría similar");
+            }
+        }
+        // Escenario B: EDITANDO CATEGORÍA (ID ya existe)
+        else {
+            // Validamos que el nuevo nombre no lo tenga OTRA categoría distinta a la actual
+            if (categoriaRepository.existsByNombreCategoriaIgnoreCaseAndIdCategoriaNot(nombreNuevo, categoria.getIdCategoria())) {
+                throw new IllegalArgumentException("Ya existe una categoría similar");
             }
         }
 
-        // Si pasó las validaciones, guardamos
+        // 3. GUARDADO O ACTUALIZACIÓN FINAL
         categoria.setNombreCategoria(nombreNuevo);
-        // Solo seteamos true si es una creación nueva
+
+        // Solo forzamos estado true si es un registro totalmente nuevo
         if (categoria.getIdCategoria() == null) {
             categoria.setEstado(true);
         }
+
         categoriaRepository.save(categoria);
     }
 

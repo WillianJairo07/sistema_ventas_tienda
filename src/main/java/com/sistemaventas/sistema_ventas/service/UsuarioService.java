@@ -31,7 +31,6 @@ public class UsuarioService {
         String usernameLimpio = usuario.getUsername().trim();
         Usuario existente = usuarioRepository.findByUsernameIgnoreCase(usernameLimpio).orElse(null);
 
-        // Lógica de validación y auto-revivir
         if (existente != null) {
             if (!existente.getEstado() && usuario.getIdUsuario() == null) {
                 revivirUsuario(existente, usuario);
@@ -60,7 +59,10 @@ public class UsuarioService {
     private void revivirUsuario(Usuario existente, Usuario nuevo) {
         existente.setEstado(true);
         existente.setNombre(nuevo.getNombre());
-        existente.setRoles(nuevo.getRoles());
+        existente.setApellidoPaterno(nuevo.getApellidoPaterno());
+        existente.setApellidoMaterno(nuevo.getApellidoMaterno());
+        existente.setRol(nuevo.getRol());
+
         if (nuevo.getPassword() != null && !nuevo.getPassword().isEmpty()) {
             existente.setPassword(passwordEncoder.encode(nuevo.getPassword()));
         }
@@ -83,14 +85,28 @@ public class UsuarioService {
         Usuario u = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // IMPORTANTE: Encriptar antes de guardar
         u.setPassword(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(u);
     }
 
-
     public Usuario buscarPorUsername(String username) {
         return usuarioRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + username));
+    }
+
+
+    @Transactional
+    public void cambiarPasswordPersonal(String username, String passwordActual, String nuevaPassword) {
+        Usuario usuario = usuarioRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Validamos si la contraseña ingresada coincide con el Hash BCrypt guardado
+        if (!passwordEncoder.matches(passwordActual, usuario.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta.");
+        }
+
+        // Si es correcta, encriptamos la nueva y actualizamos la base de datos
+        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+        usuarioRepository.save(usuario);
     }
 }

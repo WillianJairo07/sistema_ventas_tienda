@@ -18,11 +18,12 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     // Único método necesario para combos (Activos y por ID)
     List<Cliente> findByEstadoTrueOrderByIdClienteDesc();
 
-    // Paginación con búsqueda por Nombre o Apellido
+    // Añadimos ORDER BY c.idCliente DESC para que los nuevos salgan primero
     @Query("SELECT c FROM Cliente c WHERE c.estado = :estado AND " +
             "(LOWER(c.nombre) LIKE LOWER(CONCAT('%', :b, '%')) OR " +
             "LOWER(c.apellidoPat) LIKE LOWER(CONCAT('%', :b, '%')) OR " +
-            "CAST(c.idCliente AS string) LIKE CONCAT('%', :b, '%'))")
+            "CAST(c.idCliente AS string) LIKE CONCAT('%', :b, '%')) " +
+            "ORDER BY c.idCliente DESC")
     Page<Cliente> listarPaginado(@Param("estado") boolean estado,
                                  @Param("b") String buscar,
                                  Pageable pageable);

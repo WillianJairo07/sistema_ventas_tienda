@@ -26,145 +26,278 @@
 
 <main class="content" id="mainContent">
     <div class="container-fluid">
-        <div class="header-container d-flex flex-column justify-content-between align-items-start mb-4 gap-3">
-            <div class="header-text text-start">
+
+        <!-- CABECERA -->
+        <div class="row align-items-end mb-4 g-3">
+            <div class="col-12 col-xl-4">
                 <h2 class="fw-bold text-dynamic mb-1">Gestión de Deudas</h2>
-                <p class="text-muted-dynamic mb-0 small">Administra aquí las deudas de tus clientes.</p>
+                <p class="text-muted-dynamic mb-0 small">
+                    Administra aquí las deudas de tus clientes.
+                </p>
             </div>
 
-            <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
-                <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda"
-                           class="form-control"
-                           th:value="${buscar}"
-                           placeholder="Buscar por cliente o N° de ticket..."
-                           onkeyup="filtrarPagos()">
-                    <i class="fas fa-search" style="cursor:pointer;"></i>
+            <div class="col-12 col-xl-8">
+                <div class="d-flex flex-wrap flex-md-nowrap justify-content-xl-end align-items-center gap-2">
+
+                    <!-- BUSCADOR -->
+                    <div class="search-container custom-search-adaptive">
+                        <i class="fas fa-search"></i>
+                        <input type="text"
+                               id="inputBusqueda"
+                               class="form-control shadow-sm"
+                               th:value="${buscar}"
+                               placeholder="Buscar por cliente o N° de ticket..."
+                               onkeyup="filtrarPagos()">
+                    </div>
+
                 </div>
             </div>
         </div>
 
+        <!-- TABLA -->
         <div id="contenedorTabla">
-            <div class="crud-card p-4 shadow">
+            <div class="crud-card shadow-sm overflow-hidden border-0">
                 <div class="table-responsive">
-                    <table class="table custom-table align-middle" id="tablaPagos">
-                        <thead>
+                    <table class="table custom-table align-middle mb-0" id="tablaPagos">
+
+                        <thead class="bg-light">
                         <tr class="text-dynamic">
-                            <th class="ps-4">TICKET</th>
-                            <th>CLIENTE</th>
-                            <th class="text-center">TOTAL</th>
-                            <th class="text-center">ABONADO</th>
-                            <th class="text-center">SALDO</th>
-                            <th class="text-center">ACCIONES</th>
+                            <th class="text-center ps-4 py-3"
+                                style="font-size: 0.8rem; font-weight: 700;">
+                                TICKET
+                            </th>
+
+                            <th class="text-center py-3"
+                                style="font-size: 0.8rem; font-weight: 700;">
+                                CLIENTE
+                            </th>
+
+                            <th class="text-center py-3"
+                                style="font-size: 0.8rem; font-weight: 700;">
+                                TOTAL
+                            </th>
+
+                            <th class="text-center py-3"
+                                style="font-size: 0.8rem; font-weight: 700;">
+                                ABONADO
+                            </th>
+
+                            <th class="text-center py-3"
+                                style="font-size: 0.8rem; font-weight: 700;">
+                                SALDO
+                            </th>
+
+                            <th class="text-center py-3"
+                                style="font-size: 0.8rem; font-weight: 700;">
+                                ACCIONES
+                            </th>
                         </tr>
                         </thead>
+
                         <tbody>
+
                         <tr th:if="${#lists.isEmpty(ventasConDeuda)}">
                             <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-50"></i>
-                                <p class="mb-0 fw-bold">¡Todo al día! No hay cuentas pendientes.</p>
+                                <p class="mb-0 fw-bold">
+                                    ¡Todo al día! No hay cuentas pendientes.
+                                </p>
                             </td>
                         </tr>
-                        <tr th:each="v : ${ventasConDeuda}">
-                            <td class="ps-4 fw-bold ticket-id" th:text="'#' + ${v[0]}"></td>
-                            <td class="nombre-cliente" th:text="${v[1]}"></td>
-                            <td class="text-center fw-bold">S/ [[${#numbers.formatDecimal(v[2], 1, 2)}]]</td>
-                            <td class="text-center text-success">S/ [[${#numbers.formatDecimal(v[3], 1, 2)}]]</td>
-                            <td class="text-center">
-                                    <span class="badge bg-light text-danger border border-danger px-3 rounded-pill">
-                                        S/ [[${#numbers.formatDecimal(v[4], 1, 2)}]]
-                                    </span>
+
+                        <tr th:each="v : ${ventasConDeuda}" class="border-bottom">
+
+                            <td class="ps-4 fw-bold text-muted text-center"
+                                th:text="${v[0]}">
                             </td>
-                            <td class="text-center">
-                                <button class="btn-circle btn-edit" style="background: #4b6cb7; color: white;"
-                                        th:onclick="'abrirModalAbono(' + ${v[0]} + ', ' + ${v[4]} + ')'">
-                                    <i class="fas fa-plus-circle"></i>
-                                </button>
+
+                            <td class="fw-medium text-muted text-center small nombre-cliente"
+                                th:text="${v[1]}">
                             </td>
+
+                            <td class="text-center fw-bold text-muted small" style="white-space: nowrap;">
+                                S/ [[${#numbers.formatDecimal(v[2], 1, 2)}]]
+                            </td>
+
+                            <td class="text-center text-success fw-medium small" style="white-space: nowrap;">
+                                S/ [[${#numbers.formatDecimal(v[3], 1, 2)}]]
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge bg-light text-danger border border-danger px-3 rounded-pill" style="white-space: nowrap;">
+                                    S/ [[${#numbers.formatDecimal(v[4], 1, 2)}]]
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn-circle btn-edit"
+                                            th:onclick="'abrirModalAbono(' + ${v[0]} + ', ' + ${v[4]} + ')'">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+
                         </tr>
                         </tbody>
+
                     </table>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
-                <div class="text-muted small">
-                    Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
+            <!-- PAGINACIÓN -->
+            <div th:if="${totalPages > 1}"
+                 class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
+
+                <div class="text-dark small fw-medium">
+                    Página
+                    <span class="fw-bold text-primary"
+                          th:text="${currentPage + 1}"></span>
+                    de
+                    <span class="fw-bold"
+                          th:text="${totalPages}"></span>
                 </div>
+
                 <nav>
-                    <ul class="pagination pagination-sm mb-0" style="gap: 5px;">
-                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                            <a class="page-link shadow-sm" th:href="@{/pagos(page=${currentPage - 1}, buscar=${buscar})}">
+                    <ul class="pagination pagination-sm mb-0">
+
+                        <li class="page-item"
+                            th:classappend="${currentPage == 0} ? 'disabled'">
+
+                            <a class="page-link shadow-sm"
+                               th:href="@{/pagos(page=${currentPage - 1}, buscar=${buscar})}">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
 
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        <li class="page-item mx-1"
+                            th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                             th:if="${(currentPage == 0 and i < 3) or
-                        (currentPage == totalPages - 1 and i > totalPages - 4) or
-                        (i >= currentPage - 1 and i <= currentPage + 1)}"
-                            th:classappend="${i == currentPage} ? 'active'">
+                            (currentPage == totalPages - 1 and i > totalPages - 4) or
+                            (i >= currentPage - 1 and i <= currentPage + 1)}"
+                                        th:classappend="${i == currentPage} ? 'active'">
+
                             <a class="page-link shadow-sm"
                                th:href="@{/pagos(page=${i}, buscar=${buscar})}"
-                               th:text="${i + 1}"></a>
+                               th:text="${i + 1}">
+                            </a>
                         </li>
 
-                        <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                            <a class="page-link shadow-sm" th:href="@{/pagos(page=${currentPage + 1}, buscar=${buscar})}">
+                        <li class="page-item"
+                            th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+
+                            <a class="page-link shadow-sm"
+                               th:href="@{/pagos(page=${currentPage + 1}, buscar=${buscar})}">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
+
                     </ul>
                 </nav>
             </div>
+
         </div>
     </div>
 </main>
-<div class="modal fade" id="modalAbono" tabindex="-1">
+<div class="modal fade" id="modalAbono" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header border-0 p-4" style="background: var(--primary-gradient); border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title fw-bold text-white"><i class="fas fa-money-bill-wave me-2"></i>Registrar Abono</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg">
+            <!-- HEADER -->
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Registrar Abono
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
             </div>
-            <form th:action="@{/pagos/registrar}" method="post" id="formAbono">
+            <form th:action="@{/pagos/registrar}"
+                  method="post"
+                  id="formAbono">
                 <div class="modal-body p-4">
-                    <input type="hidden" name="idVenta" id="modalIdVenta">
-
-                    <div class="text-center mb-4 p-3 bg-light rounded-4 border border-dashed shadow-sm">
-                        <label class="text-muted small d-block mb-1 fw-bold">SALDO PENDIENTE ACTUAL</label>
-                        <span class="fs-2 fw-bold text-danger">S/ <span id="labelSaldo">0.00</span></span>
+                    <input type="hidden"
+                           name="idVenta"
+                           id="modalIdVenta">
+                    <!-- SALDO -->
+                    <div class="text-center mb-3 p-3 bg-light rounded-3 border">
+                        <label class="text-muted small d-block mb-1 fw-bold"
+                               style="font-size: 0.8rem;">
+                            SALDO PENDIENTE ACTUAL
+                        </label>
+                        <span class="fs-2 fw-bold text-danger">
+                            S/ <span id="labelSaldo">0.00</span>
+                        </span>
                     </div>
-
+                    <!-- MONTO -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Monto a abonar (S/)</label>
+                        <label class="form-label fw-bold text-dynamic mb-1"
+                               style="font-size: 0.9rem;">
+                            Monto a abonar (S/)
+                        </label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-coins"></i></span>
-                            <input type="number" step="0.01" name="monto" id="inputMonto" class="form-control" required>
+                            <span class="input-group-text custom-icon-box">
+                                <i class="fas fa-coins"></i>
+                            </span>
+                            <input type="number"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   name="monto"
+                                   id="inputMonto"
+                                   class="form-control shadow-none custom-input"
+                                   placeholder="0.00"
+                                   required>
                         </div>
                     </div>
-
+                    <!-- MÉTODO -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Método de Pago</label>
+                        <label class="form-label fw-bold text-dynamic mb-1"
+                               style="font-size: 0.9rem;">
+                            Método de Pago
+                        </label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-wallet"></i></span>
-                            <select name="metodo" class="form-select">
-                                <option value="Efectivo">Efectivo</option>
-                                <option value="Yape">Yape</option>
-                                <option value="Plin">Plin</option>
-                                <option value="Transferencia">Transferencia</option>
+                            <span class="input-group-text custom-icon-box">
+                                <i class="fas fa-wallet"></i>
+                            </span>
+                            <select name="metodo"
+                                    class="form-select shadow-none custom-input">
+                                <option value="Efectivo">
+                                    Efectivo
+                                </option>
+                                <option value="Yape">
+                                    Yape
+                                </option>
+                                <option value="Plin">
+                                    Plin
+                                </option>
                             </select>
                         </div>
                     </div>
-
+                    <!-- NOTA -->
                     <div class="mb-0">
-                        <label class="form-label fw-bold text-dynamic">Nota / Comentario</label>
-                        <textarea name="nota" class="form-control" rows="2" placeholder="Opcional..."></textarea>
+                        <label class="form-label fw-bold text-dynamic mb-1"
+                               style="font-size: 0.9rem;">
+                            Nota / Comentario
+                        </label>
+                        <textarea name="nota"
+                                  class="form-control shadow-none custom-textarea"
+                                  rows="2"
+                                  placeholder="Opcional..."></textarea>
                     </div>
                 </div>
+                <!-- FOOTER -->
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Cerrar</button>
-                    <button type="submit" class="btn btn-new-cat px-4">Confirmar Abono</button>
+                    <button type="button"
+                            class="btn btn-secondary-custom px-4"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="btn btn-new-cat px-4">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Confirmar Abono
+                    </button>
                 </div>
             </form>
         </div>
@@ -176,8 +309,8 @@
     document.addEventListener("DOMContentLoaded", function() {
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
-        const isDark = document.body.classList.contains('dark-mode');
 
+        // --- ALERTAS CON ESTILO UNIFICADO CORPORATIVO ---
         if (successMsg) {
             Swal.fire({
                 icon: 'success',
@@ -185,8 +318,10 @@
                 text: successMsg,
                 timer: 2000,
                 showConfirmButton: false,
-                background: isDark ? '#1c222d' : '#fff',
-                color: isDark ? '#fff' : '#000'
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6', // Azul del sistema
+                customClass: { popup: 'border-radius-15' }
             });
         }
 
@@ -195,9 +330,11 @@
                 icon: 'error',
                 title: 'Atención',
                 text: errorMsg,
-                background: isDark ? '#1c222d' : '#fff',
-                color: isDark ? '#fff' : '#000',
-                confirmButtonColor: '#4b6cb7'
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d', // Rojo para errores
+                customClass: { popup: 'border-radius-15' }
             });
         }
     });
@@ -207,55 +344,51 @@
 
     function filtrarPagos() {
         const input = document.getElementById("inputBusqueda");
-        const texto = input.value.trim().toLowerCase();
-
-
-        const filas = document.querySelectorAll("#tablaPagos tbody tr:not(.fila-vacia)");
-        filas.forEach(fila => {
-            const cliente = fila.querySelector(".nombre-cliente")?.innerText.toLowerCase() || "";
-            const ticket = fila.querySelector(".ticket-id")?.innerText.toLowerCase() || "";
-            fila.style.display = (cliente.includes(texto) || ticket.includes(texto)) ? "" : "none";
-        });
-
+        const texto = input.value.trim();
 
         clearTimeout(timeoutBusqueda);
+
         timeoutBusqueda = setTimeout(() => {
 
-            if (texto.length > 2 || texto.length === 0) {
+            fetch(`/pagos?buscar=${encodeURIComponent(texto)}`)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
 
+                    const nuevoContenido = doc.getElementById('contenedorTabla').innerHTML;
 
-                fetch(`/pagos?buscar=${encodeURIComponent(texto)}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
+                    document.getElementById('contenedorTabla').innerHTML = nuevoContenido;
+                })
+                .catch(err => console.warn("Error en búsqueda:", err));
 
-
-                        const nuevoContenido = doc.getElementById('contenedorTabla').innerHTML;
-
-
-                        document.getElementById('contenedorTabla').innerHTML = nuevoContenido;
-                    })
-                    .catch(err => console.warn("Error en búsqueda:", err));
-            }
-        }, 500);
+        }, 400);
     }
+
+
 
 
     function abrirModalAbono(id, saldo) {
         document.getElementById('modalIdVenta').value = id;
         document.getElementById('labelSaldo').innerText = saldo.toFixed(2);
+
         const inputMonto = document.getElementById('inputMonto');
-
-
         inputMonto.max = saldo;
         inputMonto.value = saldo.toFixed(2);
 
-        const modal = new bootstrap.Modal(document.getElementById('modalAbono'));
+        const modalElement = document.getElementById('modalAbono');
+        const modal = new bootstrap.Modal(modalElement);
+
+        // Evento nativo cuando el modal termina de transicionar visualmente
+        modalElement.addEventListener('shown.bs.modal', function () {
+            inputMonto.focus();
+
+            // Forzar a que el cursor apunte al final sin dejar el bloque de texto seleccionado
+            const longitud = inputMonto.value.length;
+            inputMonto.setSelectionRange(longitud, longitud);
+        }, { once: true });
+
         modal.show();
-
-
-        setTimeout(() => inputMonto.focus(), 450);
     }
 
 

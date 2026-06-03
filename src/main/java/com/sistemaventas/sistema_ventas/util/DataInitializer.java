@@ -7,16 +7,15 @@ import com.sistemaventas.sistema_ventas.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import java.util.List;
 
-@Component // Esto hace que Spring lo ejecute al iniciar
+@Component // Spring lo ejecuta automáticamente al levantar el sistema
 public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Inyectamos las dependencias
+    // Constructor para la inyección de dependencias
     public DataInitializer(UsuarioRepository usuarioRepository, RolRepository rolRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
@@ -25,28 +24,49 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Solo creamos el usuario si la tabla está vacía
-        if (usuarioRepository.count() == 0) {
 
-            // 1. Crear el Rol ADMIN
-            Rol adminRol = new Rol();
+        // 1. PRECARGAR ROLES (Si no existen en la base de datos)
+
+        // Buscar o crear Rol ADMIN
+        Rol adminRol = rolRepository.findAll().stream()
+                .filter(r -> r.getNombreRol().equals("ADMIN"))
+                .findFirst()
+                .orElse(null);
+
+        if (adminRol == null) {
+            adminRol = new Rol();
             adminRol.setNombreRol("ADMIN");
-            rolRepository.save(adminRol);
+            adminRol = rolRepository.save(adminRol);
+        }
 
-            // 2. Crear el Usuario
+        // Buscar o crear Rol VENDEDOR
+        Rol vendedorRol = rolRepository.findAll().stream()
+                .filter(r -> r.getNombreRol().equals("VENDEDOR"))
+                .findFirst()
+                .orElse(null);
+
+        if (vendedorRol == null) {
+            vendedorRol = new Rol();
+            vendedorRol.setNombreRol("VENDEDOR");
+            rolRepository.save(vendedorRol);
+        }
+
+
+        // 2. CREAR USUARIO ADMINISTRADOR INICIAL (Solo si la tabla de usuarios está vacía)
+        if (usuarioRepository.count() == 0) {
             Usuario admin = new Usuario();
             admin.setNombre("Jairo");
+            admin.setApellidoPaterno("Quispe");
+            admin.setApellidoMaterno("Canazas");
             admin.setUsername("willianjairo07");
-
-            // AQUÍ OCURRE EL HASHEO:
-            // Usamos el passwordEncoder que definiste en SecurityConfig
             admin.setPassword(passwordEncoder.encode("jairo1elproxd"));
-
             admin.setEstado(true);
-            admin.setRoles(List.of(adminRol));
+
+            // Le asignamos el objeto de Rol que acabamos de asegurar arriba
+            admin.setRol(adminRol);
 
             usuarioRepository.save(admin);
-
+            System.out.println(">> DataInitializer: Roles y usuario administrador inicial creados con éxito.");
         }
     }
 }

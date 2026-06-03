@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Service
 public class UserDetailServiceImpl implements UserDetailsService {
@@ -24,18 +24,18 @@ public class UserDetailServiceImpl implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-        // Convertimos tus Roles en GrantedAuthority que Spring entiende
-        var authorities = usuario.getRoles().stream()
-                .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombreRol()))
-                .collect(Collectors.toList());
+        // CAMBIO: Al tener un solo Rol, creamos la autoridad directamente sin streams
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getNombreRol());
 
-        // Retornamos el objeto User de Spring Security
+        // Retornamos el objeto User de Spring Security pasando el rol único dentro de una lista inmutable
         return new User(
                 usuario.getUsername(),
                 usuario.getPassword(),
                 usuario.getEstado(), // Si el estado es false, no podrá loguearse
-                true, true, true,
-                authorities
+                true,
+                true,
+                true,
+                List.of(authority) // Creamos la lista con nuestra autoridad única
         );
     }
 }

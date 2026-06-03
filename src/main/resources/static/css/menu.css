@@ -1,512 +1,1189 @@
+/* --- VARIABLES GLOBALES --- */
 :root {
-    --primary-gradient: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
-    --sidebar-color: #182848;
-    --sidebar-hover: #4b6cb7;
-    --sidebar-width: 250px;
-    --sidebar-width-mobile: 210px;
-    --transition-speed: 0.4s;
-    --ease-logic: cubic-bezier(0.25, 0.8, 0.25, 1);
-    --hover-circle: rgba(255, 255, 255, 0.15);
-
-}
-
-/* --- RESET CRÍTICO PARA ELIMINAR LÍNEAS BLANCAS --- */
-* {
-    box-sizing: border-box;
-}
-
-html.dark-mode {
-    --main-bg: #0b0e14;
-    --main-text: #e9ecef;
-}
-
-html.light-mode {
-    --main-bg: #f8f9fa;
-    --main-text: #212529;
-}
-
-html.dark-mode {
-    color-scheme: dark;
-}
-
-html.light-mode {
-    color-scheme: light;
-}
-
-/* Reset global y control de scroll */
-html, body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;           /* evita scroll horizontal */
-    overscroll-behavior-y: none;  /* evita overscroll / rebote en móviles */
-    height: 100dvh;               /* asegura altura completa del viewport */
+    --navy-dark: #0f172a;       /* Color de cabeceras y fondos oscuros */
+    --slate-sidebar: #1e293b;   /* Color principal del menú lateral */
+    --accent-blue: #3b82f6;     /* Color de énfasis (botones, activos) */
+    --text-muted: #94a3b8;      /* Color de texto secundario */
+    --bg-body: #f8fafc;         /* Fondo general de la aplicación */
+    --sidebar-width: 260px;     /* Ancho fijo del sidebar */
+    --navbar-height: 65px;      /* Altura fija de la barra superior */
+    /* Curva de aprendizaje para movimientos fluidos (Efecto "Seda") */
+    --transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 body {
+    background-color: var(--bg-body);
+    margin: 0;
     font-family: 'Inter', sans-serif;
-
-    background-color: var(--main-bg) !important;
-    color: var(--main-text) !important;
-
-    overflow-x: hidden;
-    overflow-y: hidden;
-
-    transition: background-color 0.3s ease, color 0.3s ease;
-
-    position: relative;
+    overflow-x: hidden; /* Evita scroll horizontal durante animaciones */
 }
 
-
-
-/* Sidebar */
+/* --- ESTRUCTURA DEL SIDEBAR --- */
 #sidebar {
     width: var(--sidebar-width);
-    height: 100dvh; /* altura real del viewport en móviles */
-
+    height: 100vh;
+    background: var(--slate-sidebar);
     position: fixed;
-    top: 0;
-    left: 0;
-
-    background: var(--sidebar-color);
-
+    left: 0; top: 0;
     z-index: 1200;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
 
+/* Oculta el sidebar desplazándolo a la izquierda */
+body.sidebar-closed #sidebar {
     transform: translateX(-100%);
-    transition: transform var(--transition-speed) var(--ease-logic),
-    width var(--transition-speed) var(--ease-logic);
-
-    display: flex;
-    flex-direction: column;
-
-    box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-
-    border: none;
-
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.2) transparent;
-
-    /* 🔧 evita glitches de renderizado */
-    will-change: transform;
-    backface-visibility: hidden;
 }
 
-/* Scrollbar */
-#sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-
-#sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-}
-
-/* Sidebar visible */
-body.sidebar-open #sidebar {
-    transform: translateX(0);
-}
-
-.brand-sidebar {
-    padding: 30px 20px;
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    flex-shrink: 0;
-}
-.brand-sidebar img { height: 40px; margin-bottom: 12px; }
-.brand-sidebar span { display: block; font-weight: 700; color: #fff; font-size: 1.2rem; letter-spacing: 0.5px; }
-
-.sidebar-menu {
-    flex-grow: 1;
-    padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-}
-
-#sidebar a, #sidebar .btn-logout {
-    color: rgba(255,255,255,0.7);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    padding: 14px 25px;
-    gap: 15px;
-    border: none;
-    background: transparent;
-    width: 100%;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-}
-
-#sidebar a:hover, #sidebar .btn-logout:hover {
-    background-color: var(--sidebar-hover);
-    color: #fff;
-    padding-left: 35px;
-}
-/* Navbar Superior */
-.top-navbar {
-    height: 70px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-
-    padding: 0 25px;
-    margin: 0;
-
-    background: var(--primary-gradient);
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    z-index: 1100;
-
-    border: none;
-    outline: none;
-
-    box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-
-    transition: width var(--transition-speed) var(--ease-logic),
-    left var(--transition-speed) var(--ease-logic);
-
-    /* 🔧 ESTABILIDAD DE SCROLL */
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-}
-
-/* Efectos de Navbar */
-.hamburger-container, .user-link {
+/* --- BOTÓN FLOTANTE (INDICADOR DE ESTADO) --- */
+.edge-toggle-btn {
+    position: absolute;
+    right: -22px; /* Mitad del botón fuera del sidebar */
+    top: 80px;
+    width: 44px;
+    height: 44px;
+    background: var(--accent-blue);
+    color: white;
+    border: 4px solid #ffffff; /* Borde grueso para resaltar sobre el fondo */
     border-radius: 50%;
-    transition: background 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    z-index: 1300;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    /* Transiciones individuales para suavizar el hover */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.hamburger-container { width: 45px; height: 45px; }
-.hamburger-container:hover { background: var(--hover-circle); }
-.hamburger-container:active { transform: scale(0.92); }
-/* --- ICONO DEL MENÚ HAMBURGUESA --- */
-.hamburger {
-    font-size: 1.5rem;
-    color: #ffffff !important; /* color por defecto */
-    transition: color 0.3s ease;
+.edge-toggle-btn:hover {
+    background: var(--navy-dark);
+    transform: scale(1.15); /* Efecto de crecimiento suave */
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
 
-
-
-/* Theme Switch */
-.theme-switch {
-    display: flex;
-    background: rgba(0,0,0,0.2);
-    padding: 5px;
-    border-radius: 50px;
-    margin-right: 15px;
+/* Animación de rotación de la flecha interna */
+.toggle-icon {
+    font-size: 1rem;
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
-.theme-switch input { display: none; }
-.theme-switch label {
-    cursor: pointer; width: 34px; height: 34px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; transition: 0.3s;
-    font-size: 0.9rem;
-}
-.theme-switch input:checked + label { background: #ffd700; color: #000; }
-
-/* User Link & Dropdown */
-.user-link {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    padding: 6px 16px;
-    border-radius: 30px;
-    gap: 14px;
-}
-.user-link:hover { background: var(--hover-circle); }
-.user-avatar { width: 32px; height: 32px; line-height: 32px; border-radius: 50%; transition: transform 0.3s ease; }
-.user-link:active .user-avatar { transform: scale(0.9); }
-
-.dropdown-menu-end {
-    position: absolute !important;
-    right: 0 !important;
-    left: auto !important;
-    min-width: 220px;
-    padding: 12px;
-    border-radius: 15px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-    margin-top: 15px !important;
-    animation: fadeIn 0.3s var(--ease-logic);
-    border: 1px solid rgba(0,0,0,0.05);
+body.sidebar-closed .toggle-icon {
+    transform: rotate(180deg);
 }
 
-.dropdown-header-mobile { display: none; }
-
-html.dark-mode .dropdown-menu-end { background: #1c222d; border: 1px solid rgba(255,255,255,0.1); }
-html.dark-mode .dropdown-item { color: #ffffff !important; }
-html.dark-mode .dropdown-item i { color: #ffffff !important; }
-
-.dropdown-item {
-    border-radius: 10px; padding: 10px 15px;
-    display: flex; align-items: center; gap: 12px;
-    font-weight: 500; transition: all 0.2s ease;
-}
-.dropdown-item:hover { background-color: var(--sidebar-hover) !important; color: white !important; transform: translateX(5px); }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-
-/* Contenido Principal */
-.content {
-    margin-top: 70px;
-    padding: 30px;
-
-    height: calc(100dvh - 70px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    scroll-behavior: smooth;
-
-    /* mejora rendimiento del scroll */
-    will-change: transform;
-
-    transition: transform var(--transition-speed) var(--ease-logic),
-    margin-left var(--transition-speed) var(--ease-logic);
-}
-
-/* --- RESPONSIVIDAD MINI (MÓVIL) --- */
-@media(max-width: 768px) {
-    #sidebar { width: var(--sidebar-width-mobile); }
-    .top-navbar { padding: 0 8px; height: 55px; top: 0 !important; }
-    .content { padding-top: 75px; } /* Ajuste para navbar móvil más baja */
-    .hamburger-container { width: 38px; height: 38px; }
-    .hamburger {
-        font-size: 1rem;
-        color: #ffffff !important; /* Añade esto aquí también */
-    }
-    .theme-switch { margin-right: 8px; padding: 2px; }
-    .theme-switch label { width: 24px; height: 24px; font-size: 0.65rem; }
-    .user-link { padding: 0; width: 38px; height: 38px; border-radius: 50%; gap: 0; }
-    .user-link span { display: none; }
-    .user-link::after { display: none !important; }
-    .user-avatar { width: 26px; height: 26px; line-height: 26px; font-size: 0.75rem; }
-    .dropdown-menu-end { min-width: 170px; padding: 6px; margin-top: 8px !important; }
-    .dropdown-header-mobile { display: block; padding: 8px; font-weight: 700; font-size: 0.8rem; text-align: center; color: #4b6cb7; border-bottom: 1px solid rgba(128,128,128,0.2); margin-bottom: 5px; }
-    .dropdown-item { padding: 8px 10px; font-size: 0.8rem; }
-    body.sidebar-open .hamburger-container { transform: translateX(var(--sidebar-width-mobile)); }
-    body.sidebar-open .content { transform: translateX(var(--sidebar-width-mobile)); opacity: 1; }
-}
-
-@media(min-width: 769px) {
-    body.sidebar-open .top-navbar { width: calc(100% - var(--sidebar-width)); left: var(--sidebar-width); }
-    body.sidebar-open .content { margin-left: var(--sidebar-width); }
-}
-
-
-/* --- ESTILO BASE --- */
-.btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
-    transition: all 0.3s ease;
+/* --- CABECERA Y LOGO --- */
+.sidebar-header {
+    height: var(--navbar-height);
+    background: var(--navy-dark);
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
+    padding: 0 20px;
+}
+.brand-sidebar { display: flex; align-items: center; gap: 12px; }
+/* Controlamos el tamaño del logo para que no se desborde */
+.brand-sidebar img { height: 35px; width: auto; object-fit: contain; }
+.brand-sidebar span { color: white; font-weight: 700; font-size: 1.1rem; }
+
+/* --- TOPBAR (BARRA SUPERIOR) --- */
+.top-navbar {
+    height: var(--navbar-height);
+    background: white;
+    position: fixed;
+    top: 0;
+    right: 0; /* Fijado a la derecha siempre */
+    left: var(--sidebar-width); /* Empieza donde termina el sidebar */
+    z-index: 1100;
+    border-bottom: 1px solid #e2e8f0;
+    transition: var(--transition);
+}
+
+/* Cuando el sidebar cierra, la navbar se estira hasta la izquierda (0) */
+body.sidebar-closed .top-navbar { left: 0; }
+
+/* Posicionamiento absoluto para que los iconos no se empujen entre sí */
+.topbar-left { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); }
+.topbar-right { position: absolute; right: 25px; top: 50%; transform: translateY(-50%); }
+
+/* Botón hamburguesa que aparece al cerrar el sidebar */
+.hamburger-btn {
+    background: #f1f5f9; border: none; width: 40px; height: 40px;
+    border-radius: 8px; cursor: pointer; display: none;
+    align-items: center; justify-content: center; color: var(--navy-dark);
+}
+body.sidebar-closed .hamburger-btn { display: flex; }
+
+/* --- MENÚ DE NAVEGACIÓN LATERAL --- */
+.sidebar-menu { flex-grow: 1; padding: 15px 0; overflow-y: auto; }
+.sidebar-menu a, .btn-logout {
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 12px 25px;
+    display: flex; align-items: center; gap: 15px;
+    font-size: 0.95rem;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease; /* Suavizado de hover */
+    background: none; border: none; width: 100%; cursor: pointer; font-family: inherit;
+}
+
+.sidebar-menu a:hover, .btn-logout:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border-left: 3px solid var(--accent-blue);
+    padding-left: 32px; /* Efecto de desplazamiento suave */
+}
+
+.sidebar-menu a.active {
+    background: rgba(59, 130, 246, 0.15);
+    color: white;
+    border-left: 3px solid var(--accent-blue);
+}
+
+/* --- DROPDOWN Y SUBMENÚ --- */
+.user-profile { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--navy-dark); font-weight: 600; }
+.avatar-wrapper { width: 38px; height: 38px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 200px;
+    position: absolute;
+    top: 100% !important;
+    right: 0 !important;
+    left: auto !important;
+    margin-top: 10px !important;
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+    /* Efecto de entrada: sube ligeramente mientras aparece */
+    transform: translateY(10px) !important;
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) !important;
+}
+
+/* Hover suave para los enlaces del submenú */
+.dropdown-item {
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: var(--navy-dark);
     font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f5f9;
+    color: var(--accent-blue);
+    transform: translateX(5px); /* Pequeño desplazamiento a la derecha */
+}
+
+.dropdown-item i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+.dropdown-item:hover i { color: var(--accent-blue); }
+
+
+.user-name-submenu {
+    padding: 10px 15px;
+    text-align: center;      /* Centrado solicitado */
+    font-weight: 700;        /* Negrita para que resalte */
+    color: var(--navy-dark);
+    font-size: 0.85rem;
+}
+
+/*ESTILO PARA DASHBOARD*/
+/* --- LAYOUT DEL CONTENIDO --- */
+.content {
+    margin-left: var(--sidebar-width);
+    padding: calc(var(--navbar-height) + 25px) 1.5rem 1.5rem 1.5rem;
+    transition: var(--transition);
+    min-height: 100vh;
+    background-color: var(--bg-body);
+}
+
+body.sidebar-closed .content { margin-left: 0; }
+
+/* --- BARRA DE REPORTES & FILTROS --- */
+.report-filter-bar {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+    padding: 15px 20px;
+}
+
+.select-clean {
+    cursor: pointer;
+    border: 1px solid #eef2f6 !important;
+    font-weight: 600;
+    color: var(--navy-dark);
+    padding: 0.4rem 2rem 0.4rem 1rem;
+    transition: var(--transition);
+}
+
+.select-clean:focus, .btn:focus, .form-select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: var(--accent-blue) !important;
+}
+
+/* Quitar el borde azul de los botones de SweetAlert2 al hacer click o tener foco */
+.swal2-styled:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* --- TARJETAS DASHBOARD --- */
+.bg-dashboard-card {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1px solid #eef2f6;
+    transition: var(--transition);
+    transform: none; /* Por defecto no se mueven */
+}
+
+/* Solo sombra para Gráfico y Listas (Sin levantarse) */
+.bg-dashboard-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: none;
+}
+
+/* EFECTO ESPECIAL: Solo para las 5 tarjetas KPI superiores */
+.kpi-card:hover {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* --- ICONOS Y TEXTOS --- */
+.icon-box-dash {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 1rem;
+}
+
+.text-xs-bold { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.dynamic-value { color: var(--navy-dark); font-size: 1.4rem; font-weight: 700; }
+
+/* --- BOTONES DASHBOARD (Sin efecto de levantarse) --- */
+.btn-dash {
+    border-radius: 5px !important;
+    padding: 10px 20px !important;
+    transition: background-color 0.3s ease, filter 0.3s ease;
+    background-color: var(--accent-blue);
+    border: none;
+    color: white;
+}
+.btn-dash:hover {
+    filter: brightness(110%);
+    transform: none !important; /* No se levanta */
+}
+
+/* --- TABLAS COMPACTAS --- */
+.table-dash { font-size: 0.85rem; }
+.table-dash tbody tr td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 992px) {
+    .content { margin-left: 0; }
+    .report-filter-bar .justify-content-lg-end {
+        justify-content: flex-start !important;
+        margin-top: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .btn-dash {
+        padding: 12px 10px !important; /* Más altura para facilitar el toque */
+        font-size: 0.85rem !important; /* Texto ligeramente más grande para legibilidad */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap; /* Evita que el texto salte de línea */
+    }
+
+    /* Espaciado extra entre el select y los botones en móvil */
+    .select-clean {
+        margin-bottom: 8px;
+    }
+}
+
+/* ==========================================================================
+   GESTIÓN DE CATEGORÍAS - OPTIMIZADO & RESPONSIVE
+   ========================================================================== */
+
+/* --- Cabecera y Textos --- */
+.text-dynamic {
+    color: var(--navy-dark) !important;
+    font-size: clamp(1.25rem, 5vw, 1.75rem); /* Tamaño fluido */
+    font-weight: 700;
+}
+
+.text-muted-dynamic {
+    color: var(--text-muted) !important;
+    font-weight: 500;
+}
+
+/* --- Buscador Adaptativo --- */
+.custom-search-adaptive {
+    position: relative;
+    max-width: 500px;
+    width: 100%;
+}
+
+.custom-search-adaptive input {
+    height: 45px;
+    padding-left: 45px;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+    background: #f8fafc;
+    color: var(--navy-dark);
+    transition: var(--transition);
+}
+
+/* SOLO CAMBIAMOS ESTA REGLA: Sin borde de color, solo sombra suave */
+.custom-search-adaptive input:focus {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    background: #fff;
+}
+
+.custom-search-adaptive i {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+/* --- BOTONES DE CABECERA (Copia fiel de .btn-dash) --- */
+.btn-new-cat, .btn-ver-inactivos, .btn-ver-activos {
+    height: 45px;
+    padding: 10px 20px !important;
+    border-radius: 5px !important; /* Según tu clase .btn-dash */
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: none !important;
+    color: white !important;
+    transition: background-color 0.3s ease, filter 0.3s ease; /* Transición igual a .btn-dash */
     white-space: nowrap;
-    border-radius: 8px; /* Redondeado uniforme */
+    font-size: 14px;
 }
 
-/* EFECTO HOVER: Aquí aplicamos el levantamiento a todos los botones */
-.btn-ver-inactivos:hover,
-.btn-new-cat:hover,
-.btn-ver-activos:hover {
-    transform: translateY(-2px) !important; /* Se levanta 4px */
-    filter: brightness(1.1); /* Brilla un poco */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra para dar profundidad */
+.btn-new-cat { background-color: var(--accent-blue) !important; }
+.btn-ver-inactivos,.badge-agotado { background-color: var(--slate-sidebar) !important; }
+.btn-ver-activos,.badge-disponible { background-color: #10b981 !important; }
+
+/* Hover estilo Dashboard: Más claro y sin levantarse */
+.btn-ver-inactivos:hover, .btn-ver-activos:hover {
+    transform: none !important;
+    color: white !important;
 }
 
-
-.btn-ver-inactivos,.btn-ver-activos  {
-    background-color: #198754 !important;
-    color: #ffffff !important;
-    border: none;
+.btn-ver-inactivos:hover{
+    background-color: #323f59 !important;
 }
 
-/* Color Azul para el botón de Agregar (opcional si usas btn-primary de Bootstrap) */
-.btn-new-cat {
-    background-color: #4b6cb7 !important;
-    color: #fff !important;
-    border: none;
-}
-
-/* --- RESPONSIVE ESPECÍFICO --- */
-
-/* Comportamiento debajo de la descripción (< 1270px) */
-@media (max-width: 1270px) {
-    .header-container {
-        flex-direction: column !important;
-    }
-
-    .controles-wrapper {
-        justify-content: space-between;
-        margin-top: 15px; /* Más espacio con la descripción */
-        width: 100% !important;
-        gap: 15px; /* Separación entre buscador y botones */
-    }
-
-    .btn-group-adaptive {
-        gap: 10px !important; /* SEPARACIÓN ENTRE LOS DOS BOTONES */
-    }
-
-    .custom-search-adaptive {
-        max-width: 450px;
-    }
-}
-
-/* MÓVIL (< 576px) */
-@media (max-width: 576px) {
-    .controles-wrapper {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 12px;
-    }
-
-    .custom-search-adaptive {
-        width: 100% !important;
-        max-width: none !important;
-        order: -1;
-        margin-right: 0 !important;
-    }
-
-    .btn-group-adaptive {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr;
-        width: 100% !important;
-        gap: 10px !important;
-    }
-
-    .btn-ver-inactivos, .btn-new-cat, .btn-ver-activos {
-        font-size: 0.75rem !important;
-        height: 45px;
-    }
-}
-
-/* DESKTOP AMPLIO (> 1271px) */
-@media (min-width: 1271px) {
-    .header-container {
-        flex-direction: row !important;
-        align-items: center !important;
-    }
-
-    .controles-wrapper {
-        justify-content: flex-end;
-        max-width: 70%;
-    }
-
-    .custom-search-adaptive {
-        min-width: 350px;
-        max-width: 500px;
-        margin-right: 20px;
-    }
-
-    .btn-group-adaptive {
-        gap: 12px;
-    }
+.btn-ver-activos:hover{
+    background-color: #39eca3 !important;
 }
 
 
-
-.pagination { gap: 5px; }
-.page-link {
-    border: none !important; color: #64748b !important; background: #fff !important;
-    padding: 8px 16px !important; border-radius: 8px !important; font-weight: 600;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s;
-}
-.page-item.active .page-link { background: #4b6cb7 !important; color: #fff !important; }
-[data-bs-theme="dark"] .page-link { background: #1e293b !important; color: #94a3b8 !important; }
-
-
-.btn-restore {
-    background-color: #28a745 !important;
+.btn-new-cat:hover{
+    background-color: #085cb3 !important;
+    transform: none !important;
     color: white !important;
 }
 
 
+/* --- ACCIONES EN TABLA (Circulares y Centradas) --- */
+.btn-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50% !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: 0;
+    cursor: pointer;
 
-
-
-/* Contenedor principal alineado */
-.d-flex.justify-content-between {
-    gap: 1rem;
-    flex-wrap: wrap;
-    align-items: center !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+.btn-circle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.btn-circle i {
+    font-size: 0.9rem;
+    line-height: 1;
+    color: inherit;
+    display: block;
 }
 
+@media (max-width: 576px) {
+    .btn-circle {
+        width: 32px;
+        height: 32px;
+    }
+
+    .btn-circle i {
+        font-size: 0.75rem;
+    }
+}
+
+.btn-edit { background: #ffc107; color: #000; }
+.btn-edit:hover { background: #e0a800 }
+
+.bg-danger{background: #ef4444;color: white}
+.btn-delete{ background: #fee2e2; color: #ef4444; }
+.btn-delete:hover{ background: #ef4444; color: white}
+
+.btn-ver{background-color: var(--slate-sidebar); color: white}
+.btn-ver:hover { background-color: #323f59}
+.btn-restore { background: #dcfce7; color: #10b981; }
+.btn-restore:hover { background: #10b981; color: white }
+
+/* --- PAGINACIÓN (Ancha y Estilizada) --- */
+.pagination {
+    gap: 6px;
+}
 
 .pagination .page-link {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 40px !important;
-    height: 40px !important;
-    padding: 0 !important;
-    margin: 0 3px !important;
+    min-width: 42px; /* Más anchos como pediste */
+    height: 40px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none !important;
+    background: #f1f5f9 !important;
+    color: var(--navy-dark) !important;
+    font-weight: 700;
     border-radius: 8px !important;
-    border: 1px solid #4b6cb7 !important;
-    background-color: #4b6cb7 !important;
-    color: #ffffff !important;
-    font-size: 0.95rem !important;
-    transition: opacity 0.2s ease-in-out !important;
-    outline: none !important;
-    box-shadow: none !important;
+    transition: var(--transition);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--accent-blue) !important;
+    color: white !important;
+    min-width: 52px; /* El número activo resalta por ancho */
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.page-link:hover:not(.active) {
+    background: #e2e8f0 !important;
+    transform: translateY(-2px);
+    color: var(--accent-blue) !important;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 991px) {
+    .custom-search-adaptive {
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .btn-group-adaptive {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+    }
+
+    .text-dynamic { text-align: center; }
+    .text-muted-dynamic { text-align: center; margin-bottom: 1rem; }
+}
+
+@media (max-width: 576px) {
+    /* Ajuste fino para paginación en pantallas muy pequeñas */
+    .pagination .page-link {
+        min-width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
+    }
+    .pagination .page-item.active .page-link {
+        min-width: 42px;
+    }
 }
 
 
-.pagination .page-link:hover,
-.page-item.active .page-link {
-    background-color: #4b6cb7 !important;
-    border-color: #4b6cb7 !important;
-    color: #ffffff !important;
-    opacity: 0.85;
-    outline: none !important;
-    box-shadow: none !important;
+/* ==========================================================================
+   ESTILOS: MODAL DASHBOARD (SISTEMA DE VENTAS)
+   ========================================================================== */
+
+/* --- 1. CONTROL DE SCROLL Y JERARQUÍA (FIX) --- */
+
+/* Bloquea el scroll del body pero permite el del modal si es necesario */
+body.modal-open {
+    overflow: hidden !important;
+    padding-right: 0 !important;
+}
+
+/* Asegura que el modal siempre esté sobre el menú superior (z-index) */
+.modal {
+    z-index: 2000 !important;
+}
+.modal-backdrop {
+    z-index: 1950 !important;
+}
+
+/* Estabilización: Evita que el modal "salte" al enfocar el input */
+.modal-content {
     transform: none !important;
+    border-radius: 15px !important;
+    overflow: hidden;
+    background-color: var(--bg-body, #f4f7fe);
+}
+
+/* --- 2. DISEÑO DE CABECERA Y CUERPO --- */
+
+.modal-header {
+    /* Degradado usando tus colores de sidebar */
+    background: linear-gradient(135deg, var(--navy-dark, #1b254b) 0%, var(--slate-sidebar, #2b3674) 100%);
+    padding: 1.5rem 2rem !important;
+}
+
+.modal-body {
+    background-color: #ffffff;
+}
+
+/* Estilo de Inputs "Efecto Seda" */
+.modal-body .input-group-text {
+    background-color: #f8fafc;
+    border: 1px solid #eef2f6;
+    border-right: none;
+    color: #64748b;
+    border-radius: 10px 0 0 10px !important;
+}
+
+.modal-body .form-control {
+    height: 48px;
+    border: 1px solid #eef2f6;
+    background-color: #f8fafc;
+    border-radius: 0 10px 10px 0 !important;
+    transition: all 0.4s ease; /* Tu variable de transición */
+    font-weight: 500;
+}
+
+/* Hover y Focus del Input */
+.modal-body .form-control:focus {
+    background-color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
 }
 
 
-.pagination .page-link i {
+/* --- 3. BOTONES PERSONALIZADOS --- */
+
+/* Botón Cancelar */
+.btn-secondary-custom {
+    background-color: #e2e8f0 !important;
+    color: #1b254b !important;
+    border: none !important;
+    height: 45px;
+    font-weight: 600;
+    border-radius: 8px !important;
+    transition: 0.3s ease;
+}
+
+.btn-secondary-custom:hover {
+    background-color: #cbd5e1 !important;
+    filter: brightness(95%);
+}
+
+/* Botón Guardar (Basado en btn-new-cat) */
+.btn-new-cat {
+    height: 45px;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    background-color: #3b82f6 !important; /* Tu color accent-blue */
     color: #ffffff !important;
-    font-size: 0.9rem !important;
+    border: none !important;
+    font-weight: 600;
+    transition: 0.3s ease;
+}
+
+.btn-new-cat:hover {
+    background-color: #085cb3 !important; /* Azul profundo solicitado */
+    box-shadow: 0 4px 12px rgba(8, 92, 179, 0.2);
+}
+
+/* --- 4. RESPONSIVE --- */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 1rem;
+    }
+
+    .modal-footer {
+        display: grid;
+        grid-template-columns: 1fr; /* Botones apilados en móvil */
+        gap: 10px;
+    }
 }
 
 
-.page-link:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: #4b6cb7 !important;
+
+/*ESTILO DE TOTAL*/
+/* El contenedor principal con el estilo de la imagen */
+.contenedor-total-ticket {
+    background-color: #dcfce7 !important; /* Verde claro */
+    border: 1px dashed #16a34a !important; /* Borde punteado verde */
+    border-radius: 1.2rem !important; /* Esquinas redondeadas */
+    padding: 1.2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilo para el texto "TOTAL A PAGAR" */
+.titulo-total-etiqueta {
+    text-uppercase: uppercase;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: #4b5563 !important; /* Gris oscuro sutil */
+    margin-bottom: 4px;
+}
+
+/* Estilo para el monto S/ 0.00 */
+.monto-total-display {
+    color: #15803d !important; /* Verde fuerte de la imagen */
+    font-weight: 700;
+    font-size: 2.2rem;
+    line-height: 1.1;
 }
 
 
-.page-item.disabled .page-link {
-    background-color: #a5b4d4 !important;
-    color: #eeeeee !important;
-    border-color: #a5b4d4 !important;
-    cursor: not-allowed !important;
-    opacity: 0.6;
+     /* 1. AJUSTES PARA EL BUSCADOR (Header y Placeholder) */
+@media (max-width: 576px) {
+    .search-container input::placeholder {
+        font-size: 0.75rem; /* Achica el placeholder para que quepa el texto */
+    }
+
+    /* ELIMINAMOS EL display: none PARA QUE EL TEXTO APAREZCA */
+    .btn-new-cat span {
+        display: inline !important;
+        font-size: 0.8rem;
+    }
 }
 
-/* Responsividad */
+/* 2. AJUSTES PARA LA TABLA (Encabezados en una sola fila) */
+.custom-table th {
+    white-space: nowrap; /* Obliga a los encabezados a estar en una sola fila */
+    vertical-align: middle;
+}
+
+/* 3. AJUSTES PARA EL NOMBRE DEL PRODUCTO Y CÓDIGO */
+.custom-table td span.text-dynamic {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Máximo 2 líneas para el nombre si es muy largo */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+/* 4. OPTIMIZACIÓN DE ESPACIOS EN MÓVIL */
+@media (max-width: 992px) {
+    .custom-table th, .custom-table td {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    /* Ajuste de inputs en tabla para que no deformen la fila */
+    .input-precio, .input-cantidad {
+        width: 70px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Extra: Prevenir que la tabla sea demasiado ancha */
+.table-responsive {
+    border-radius: 8px;
+}
+
+
+/* ESTILO PARA LOS RESULTADOS DEL BUSCADOR COMPRAS Y VENTAS */
+/* UNIFICADO: Compras (#contenedorResultados) y Ventas (#res-busqueda) */
+#contenedorResultados,
+#res-busqueda {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background-color: white;
+    border-radius: 0 0 12px 12px;
+    margin-top: 2px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* Item de búsqueda común para ambos */
+.search-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f5f9;
+    gap: 20px; /* Este es el aire que necesitabas */
+}
+
+.search-item:hover {
+    background-color: #f8fafc;
+}
+
+/* Contenedor de la izquierda (Nombre + Detalles) */
+.search-item > div:first-child,
+.info-principal {
+    flex: 1;
+    min-width: 0;
+}
+
+.search-item .nombre {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-item .detalles {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Badge del Precio a la derecha */
+.badge-precio {
+    background-color: #f0f7ff;
+    color: #0284c7;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px solid #e0f2fe;
+}
+
+/* Scrollbar para ambos */
+#contenedorResultados::-webkit-scrollbar,
+#res-busqueda::-webkit-scrollbar {
+    width: 6px;
+}
+
+#contenedorResultados::-webkit-scrollbar-thumb,
+#res-busqueda::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+
+/*ESTILO PARA TARJETAS EN VENTAS*/
+/* Contenedor de la opción */
+.opcion-card {
+    cursor: pointer;
+    background: #ffffff;
+    border: 2px solid #edf2f7;
+    border-radius: 12px;
+    padding: 10px 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+    min-width: 80px;
+    user-select: none;
+}
+
+.opcion-card i {
+    font-size: 1.2rem;
+    color: #a0aec0;
+    transition: all 0.2s ease;
+}
+
+.opcion-card span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #718096;
+}
+
+/* Estado activo (Seleccionado) */
+.opcion-card.active {
+    border-color: #3b82f6; /* Color primario */
+    background: #f7fafc;
+    box-shadow: 0 4px 6px rgba(76, 81, 191, 0.1);
+}
+
+.opcion-card.active i {
+    color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.opcion-card.active span {
+    color: #2d3748;
+}
+
+/* Efecto hover */
+.opcion-card:hover:not(.active) {
+    border-color: #cbd5e0;
+    background: #f8fafc;
+}
+
+
+
+
+/* Ajuste para que el nombre del producto respire en móviles */
 @media (max-width: 768px) {
-    .d-flex.justify-content-between {
-        justify-content: center !important;
-        flex-direction: column !important;
-        text-align: center !important;
+    /* Forzamos un ancho mínimo a la columna del producto */
+    .col-producto-header,
+    .col-producto-body {
+        min-width: 180px !important;
     }
-    .pagination {
-        margin-top: 15px !important;
-        justify-content: center !important;
+
+    /* Reducimos un poco el padding general de la tabla para ganar espacio */
+    .custom-table th, .custom-table td {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
 }
+
+/* Estilo para el contenedor de texto del producto */
+.producto-info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+
+/*BUSCADOR DE CLIENTE*/
+/* Contenedor del buscador con sombra sutil */
+.buscador-container-moderno {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+.buscador-container-moderno:focus-within {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* La clave: position absolute para que no empuje el contenido */
+.resultados-flotantes {
+    position: absolute !important;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1060 !important; /* Asegura que esté por encima de tablas y botones */
+    background: white;
+    margin-top: 5px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+/* Ajuste de Placeholder para móviles */
+#inputCliente::placeholder {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+    #inputCliente::placeholder {
+        font-size: 0.8rem;
+    }
+    #inputCliente {
+        font-size: 0.85rem;
+    }
+}
+
+
+/* 1. ELIMINAR DIVISIÓN Y FONDO DEL ICONO  CLIENTE SEARCH*/
+/* 1. CONTENEDOR: Espaciado y Fondo unificado */
+.buscador-container-moderno {
+    display: flex;
+    align-items: center;
+    background-color: #f8fafc !important; /* Fondo suave inicial */
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding-left: 12px; /* Espacio para que el icono no esté pegado al borde */
+    transition: all 0.3s ease;
+}
+
+/* 2. ICONO: Color placeholder y sin fondo */
+.buscador-container-moderno .input-group-text {
+    background: transparent !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    padding: 0 10px 0 0 !important; /* Espacio entre icono y texto */
+}
+
+/* 3. INPUT: Sin bordes y con altura cómoda */
+#inputCliente {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    height: 46px;
+    padding-left: 5px !important; /* Espacio interno para el texto */
+}
+
+/* 4. ESTADO FOCUS: Sombra suave y fondo blanco */
+.buscador-container-moderno:focus-within {
+    background-color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+#inputCliente:focus {
+    outline: none !important;
+}
+
+/*ESTILO PARA EL STOCK UNIDAD y PESO EN VENTAS*/
+.input-group-text {
+    border-color: #dee2e6; /* Color de borde suave */
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* Evita que las flechitas del input number tapen el texto en algunos navegadores */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    margin-left: 5px;
+}
+
+.custom-form-input:focus {
+    border-color: #ced4da;
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.05);
+    outline: 0 none;
+}
+
+
+.custom-form-input {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+
+
+/* ==========================================================================
+   Módulo de Control Responsivo y Estilos Avanzados (Compras y Ventas)
+   ========================================================================== */
+
+.badge-comprobante{
+    padding: 0.2rem 0.6rem;
+    border-radius: 50rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.badge-factura{
+    background-color: var(--accent-blue) !important;
+}
+
+.badge-boleta{
+    background-color: #10b981 !important;
+}
+
+.badge-pendiente{
+    background-color: var(--slate-sidebar) !important;
+}
+
+
+
+/* --- COLORS PERSONALIZADOS PARA BADGES (Yape y Plin) --- */
+.bg-yape {
+    background-color: #9117a0 !important;
+    color: #ffffff !important;
+}
+
+.bg-plin {
+    background-color: #00A4E4 !important;
+    color: #ffffff !important;
+}
+
+/* --- 1. CONFIGURACIÓN DE ESCRITORIO (Anchos completos > 830px) --- */
+.cabecera-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.seccion-titulo {
+    text-align: left;
+    flex-shrink: 0; /* Bloquea el movimiento del título hacia la derecha */
+}
+
+.seccion-boton {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Forzar que tanto btn-new-cat como btn-primary (en ventas) mantengan el estilo unificado */
+.seccion-boton .btn-nueva-orden {
+    width: auto;
+    white-space: nowrap;
+}
+
+/* Manejo de columnas personalizado integrado con la fila nativa de Bootstrap */
+.formulario-filtros-contenedor .col-custom-proveedor { flex: 0 0 33.3333%; max-width: 33.3333%; }
+.formulario-filtros-contenedor .col-custom-fecha     { flex: 0 0 25%; max-width: 25%; }
+.formulario-filtros-contenedor .col-custom-boton     { flex: 0 0 16.6666%; max-width: 16.6666%; }
+
+.btn-buscar-nivelado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(1.5em + 0.75rem + 2px); /* Forzado matemático exacto a la altura del input */
+}
+
+
+/* --- 2. PUNTO DE QUIEBRE CRÍTICO RESPONSIVO (Pistas e inputs de <= 830px) --- */
+@media (max-width: 830px) {
+
+    .cabecera-flex{
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .seccion-titulo{
+        width: 100%;
+        text-align: center;
+    }
+    .seccion-boton {
+        width: 100%;
+    }
+
+    .seccion-boton .btn-nueva-orden {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Reseteo y orientación de subtítulos a la izquierda */
+    .formulario-filtros-contenedor .col-custom-proveedor,
+    .formulario-filtros-contenedor .col-custom-fecha,
+    .formulario-filtros-contenedor .col-custom-boton {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Redefinición de columnas para el formulario colapsado */
+    .formulario-filtros-contenedor .col-custom-proveedor { flex: 0 0 100%; max-width: 100%; }
+    .formulario-filtros-contenedor .col-custom-fecha     { flex: 0 0 50%; max-width: 50%; }
+
+    /* El Botón Buscar rompe abajo del formulario ocupando todo el largo disponible con separación ideal */
+    .formulario-filtros-contenedor .col-custom-boton     {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-top: 12px; /* Margen perfecto para evitar que esté pegado a los inputs superiores */
+    }
+
+    .btn-buscar-nivelado {
+        height: auto;
+        padding: 0.5rem 1rem; /* Padding cómodo táctil para móviles */
+    }
+}
+
+
+@media (max-width: 768px) {
+    .badge-comprobante {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+    }
+}
+
+/*CUENTAS POR COBRAR*/
+/* ICONOS */
+.custom-icon-box{
+    background: #f8f9fa;
+    border-right: 0 !important;
+    color: #6c757d;
+}
+
+/* INPUTS / SELECTS / TEXTAREA */
+.custom-input,
+.custom-textarea{
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+}
+
+/* ALTURA UNIFORME */
+.custom-input{
+    height: 42px;
+}
+
+/* PLACEHOLDERS */
+.custom-input::placeholder,
+.custom-textarea::placeholder{
+    font-size: 0.9rem;
+    color: rgb(99 99 99 / 0.86);
+    opacity: 1;
+}
+
+/* INPUT CON ICONO */
+.input-group .custom-input{
+    border-left: 0 !important;
+}
+
+/* FOCUS */
+.custom-input:focus,
+.custom-textarea:focus,
+.form-control:focus,
+.form-select:focus,
+textarea:focus{
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: #ced4da !important;
+}
+
+/* BORDE DEL ICONO EN FOCUS */
+.input-group:focus-within .custom-icon-box{
+    border-color: #ced4da !important;
+}
+
+/* TEXTAREA */
+.custom-textarea{
+    resize: none;
+}
+
+
+

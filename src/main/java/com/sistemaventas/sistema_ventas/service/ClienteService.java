@@ -99,7 +99,6 @@ public class ClienteService {
     }
 
     private String limpiarTexto(String texto) {
-        // Trim, quita espacios dobles y pasa a MAYÚSCULAS
-        return (texto == null) ? "" : texto.trim().replaceAll("\\s+", " ").toUpperCase();
+        return (texto == null) ? "" : texto.trim().replaceAll("\\s+", " ");
     }
 }

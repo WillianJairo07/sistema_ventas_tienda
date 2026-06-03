@@ -17,7 +17,8 @@ public class Rol {
     @Column(name = "nombre_rol", nullable = false, length = 100)
     private String nombreRol;
 
-    @ManyToMany(mappedBy = "roles")
+    // CAMBIO: De Muchos a Muchos -> Un Rol está asignado a MUCHOS Usuarios
+    @OneToMany(mappedBy = "rol", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Usuario> usuarios;
 }

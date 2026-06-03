@@ -5,13 +5,10 @@
     <title>Productos - Sistema de Ventas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <script th:src="@{/js/tema.js}"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link th:href="@{/css/menu.css}" rel="stylesheet">
-    <link th:href="@{/css/menu1.css}" rel="stylesheet">
-    <link th:href="@{/css/modal.css}" rel="stylesheet">
 </head>
 <body>
 
@@ -23,79 +20,87 @@
 
 <main class="content" id="mainContent">
     <div class="container-fluid">
-        <div class="header-container d-flex flex-column justify-content-between align-items-start mb-4 gap-3">
-            <div class="header-text text-start">
+        <!-- CABECERA -->
+        <div class="row align-items-end mb-4 g-3">
+            <div class="col-12 col-xl-4">
                 <h2 class="fw-bold text-dynamic mb-1">Gestión de Productos</h2>
-                <p class="text-muted-dynamic mb-0 small">Administra aquí todos tus productos</p>
+                <p class="text-muted-dynamic mb-0 small">Administra el inventario y stock de tus productos</p>
             </div>
 
-            <div class="controles-wrapper d-flex align-items-center w-100 gap-3">
-                <div class="search-container custom-search-adaptive flex-grow-1">
-                    <input type="text" id="inputBusqueda" class="form-control"
-                           th:value="${buscar}"
-                           placeholder="Busca por nombre o código..."
-                           onkeyup="manejarBusqueda(event)">
-                    <i class="fas fa-search"></i>
-                </div>
+            <div class="col-12 col-xl-8">
+                <div class="d-flex flex-wrap flex-md-nowrap justify-content-xl-end align-items-center gap-2">
+                    <div class="search-container custom-search-adaptive">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="inputBusqueda" class="form-control shadow-sm"
+                               th:value="${buscar}" placeholder="Buscar por nombre o código..." onkeyup="manejarBusqueda(event)">
+                    </div>
 
-                <div class="btn-group-adaptive d-flex flex-nowrap gap-2">
-                    <a th:if="${!verInactivos}" th:href="@{/productos(verInactivos=true, buscar=${buscar})}" class="btn btn-ver-inactivos shadow-sm">
-                        <i class="fas fa-eye-slash"></i> <span>Ver Inactivos</span>
-                    </a>
-                    <a th:if="${verInactivos}" th:href="@{/productos(verInactivos=false, buscar=${buscar})}" class="btn btn-ver-activos shadow-sm">
-                        <i class="fas fa-eye"></i> <span>Ver Activos</span>
-                    </a>
-                    <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="nuevoFormulario()">
-                        <i class="fas fa-plus-circle"></i> <span>Agregar</span>
-                    </button>
+                    <div class="btn-group-adaptive d-flex gap-2">
+                        <a th:if="${!verInactivos}" th:href="@{/productos(verInactivos=true, buscar=${buscar})}" class="btn btn-ver-inactivos shadow-sm">
+                            <i class="fas fa-eye-slash"></i> <span>Inactivos</span>
+                        </a>
+                        <a th:if="${verInactivos}" th:href="@{/productos(verInactivos=false, buscar=${buscar})}" class="btn btn-ver-activos shadow-sm">
+                            <i class="fas fa-eye"></i> <span>Activos</span>
+                        </a>
+                        <button class="btn btn-new-cat shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="nuevoFormulario()">
+                            <i class="fas fa-plus-circle"></i> <span>Agregar</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="crud-card p-4 shadow">
+        <!-- TABLA DE PRODUCTOS -->
+        <div class="crud-card shadow-sm overflow-hidden border-0">
             <div class="table-responsive">
-                <table class="table custom-table align-middle" id="tablaProductos">
-                    <thead>
+                <table class="table custom-table align-middle mb-0" id="tablaProductos">
+                    <thead class="bg-light">
                     <tr class="text-dynamic">
-                        <th style="width: 50px;"></th>
-                        <th class="ps-4">ID</th>
-                        <th>CÓDIGO</th>
-                        <th>PRODUCTO</th>
-                        <th>CATEGORÍA</th>
-                        <th>PRECIO VENTA</th>
-                        <th>STOCK/PESO TOTAL</th>
-                        <th class="text-center">ACCIONES</th>
+                        <th style="width: 40px;"></th>
+                        <th class="text-center py-3" style="font-size: 0.75rem; font-weight: 700;">ID</th>
+                        <th class="text-center py-3" style="font-size: 0.75rem; font-weight: 700; min-width: 100px;">CÓDIGO</th>
+                        <th class="text-center py-3" style="font-size: 0.75rem; font-weight: 700; min-width: 150px;">PRODUCTO</th>
+                        <th class="text-center py-3" style="font-size: 0.75rem; font-weight: 700;">CATEGORÍA</th>
+                        <th class="text-center py-3 text-nowrap" style="font-size: 0.75rem; font-weight: 700; min-width: 110px;">PRECIO VENTA</th>
+                        <th class="text-center py-3" style="font-size: 0.75rem; font-weight: 700;">STOCK</th>
+                        <th class="text-center py-3" style="font-size: 0.75rem; font-weight: 700;">ACCIONES</th>
                     </tr>
                     </thead>
                     <tbody>
                     <th:block th:each="p : ${productos}" th:if="${p != null}">
-                        <tr class="producto-fila">
-                            <td>
-                                <button class="btn btn-sm btn-toggle-lotes" type="button"
-                                        th:onclick="|toggleLotes('lotes-${p.idProducto}', this)|">
-                                    <i class="fas fa-chevron-right" style="transition: transform 0.3s;"></i>
+                        <tr class="border-bottom">
+                            <td class="text-center">
+                                <button class="btn btn-sm p-0 shadow-none border-0" type="button"
+                                        th:onclick="|toggleLotes('lotes-${p.idProducto}', this)|"
+                                        style="background: transparent; outline: none; box-shadow: none;">
+                                    <i class="fas fa-chevron-right text-muted" style="transition: transform 0.3s;"></i>
                                 </button>
                             </td>
-                            <td class="ps-4 fw-bold text-neon" th:text="${p.idProducto}"></td>
-                            <td th:text="${p.codigoBarras} ?: 'SIN CÓDIGO'" class="text-muted small td-codigo"></td>
-                            <td class="nombre-prod text-dynamic fw-semibold" th:text="${p.nombreProducto}"></td>
-                            <td>
-                                <span class="badge-categoria-tag"
+                            <td class="fw-bold text-muted text-center small" th:text="${p.idProducto}"></td>
+                            <td class="text-center small text-muted px-2">
+                                <code class="text-muted" style="font-size: 0.8rem;" th:text="${p.codigoBarras} ?: '---'"></code>
+                            </td>
+                            <td class="fw-medium text-muted text-center px-2 ">
+                                <span class="nombre-prod" style="font-size: 0.9rem;" th:text="${p.nombreProducto}"></span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-light text-dark border px-3 fw-medium" style="font-size: 0.85rem;"
                                       th:text="${p.categoria != null ? p.categoria.nombreCategoria : 'SIN CATEGORÍA'}">
                                 </span>
                             </td>
-                            <td class="fw-bold text-dynamic" th:text="${p.precio != null} ? 'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)} : 'S/ 0.00'"></td>
-                            <td>
-                                <div th:with="esKilo=${p.unidadMedida == 'KG'}">
-                                    <span th:if="${p.stock == 0}" class="badge-stock bg-secondary text-white">Agotado</span>
+                            <td class="fw-bold text-dynamic text-center text-nowrap px-2" style="font-size: 0.9rem;"
+                                th:text="${p.precio != null} ? 'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)} : 'S/ 0.00'"></td>
+                            <td class="text-center" style="font-size: 1.1rem;">
+                                <div th:with="esKilo=${p.unidadMedida == 'KG'}" >
+                                    <span th:if="${p.stock == 0}" class="badge badge-agotado">Agotado</span>
                                     <span th:if="${p.stock > 0}"
-                                          th:class="${p.stock <= 5} ? 'badge-stock bg-danger text-white' : 'badge-stock bg-success text-white'">
-                                        <span th:text="${esKilo ? #numbers.formatDecimal(p.stock, 1, 3) : #numbers.formatInteger(p.stock, 1)}"></span>
-                                        <small th:text="${p.unidadMedida}"></small>
+                                          th:class="${p.stock <= 5} ? 'badge bg-danger' : 'badge badge-disponible'">
+                                            <span th:text="${esKilo ? #numbers.formatDecimal(p.stock, 1, 3) : #numbers.formatInteger(p.stock, 1)}"></span>
+                                            <small th:text="${p.unidadMedida}"></small>
                                     </span>
                                 </div>
                             </td>
-                            <td class="text-center">
+                            <td>
                                 <div class="d-flex justify-content-center gap-2">
                                     <th:block th:if="${p.estado}">
                                         <button class="btn-circle btn-edit" th:onclick="'editarProducto(' + ${p.idProducto} + ')'" data-bs-toggle="modal" data-bs-target="#modalProducto">
@@ -106,31 +111,32 @@
                                         </button>
                                     </th:block>
                                     <th:block th:if="${!p.estado}">
-                                        <a th:href="@{/productos/restaurar/{id}(id=${p.idProducto})}" class="btn-circle btn-restore" title="Restaurar">
+                                        <a th:href="@{/productos/restaurar/{id}(id=${p.idProducto})}" class="btn-circle btn-restore">
                                             <i class="fas fa-trash-restore"></i>
                                         </a>
                                     </th:block>
                                 </div>
                             </td>
                         </tr>
-                        <tr th:id="'lotes-' + ${p.idProducto}" class="lotes-fila" style="display:none;">
-                            <td colspan="8" class="p-0 border-0">
-                                <div class="p-3 lote-detalle-container" style="background: rgba(0,0,0,0.02);">
-                                    <table class="table table-sm table-bordered mb-0">
-                                        <thead class="table-light">
-                                        <tr>
-                                            <th>N° Lote</th>
-                                            <th>Cant. Inicial</th>
-                                            <th>Precio Compra</th>
-                                            <th>Stock Actual</th>
+                        <!-- FILA DE LOTES -->
+                        <tr th:id="'lotes-' + ${p.idProducto}" style="display:none; background-color: #f8fafc;">
+                            <td colspan="8" class="p-3">
+                                <div class="card card-body border-0 shadow-sm p-0 overflow-hidden" style="border-radius: 10px;">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="text-white" style="background: var(--slate-sidebar);">
+                                        <tr style="font-size: 0.75rem;">
+                                            <th class="text-center ps-3 py-2">ID Lote</th>
+                                            <th class="text-center py-2">Cant. Inicial</th>
+                                            <th class="text-center py-2">P. Compra</th>
+                                            <th class="text-center py-2">Stock Actual</th>
                                         </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody style="font-size: 0.8rem;">
                                         <tr th:each="lote : ${p.detallesCompra}" th:if="${lote != null and lote.stockActual > 0}">
-                                            <td th:text="${lote.idDetalleCompra}"></td>
-                                            <td th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.cantidad, 1, 3) : #numbers.formatInteger(lote.cantidad, 1)}"></td>
-                                            <td th:text="'S/ ' + ${#numbers.formatDecimal(lote.precioCompra, 1, 2)}"></td>
-                                            <td class="fw-bold text-success" th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.stockActual, 1, 3) : #numbers.formatInteger(lote.stockActual, 1)}"></td>
+                                            <td class="text-center ps-3" th:text="${lote.idDetalleCompra}"></td>
+                                            <td class= text-center th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.cantidad, 1, 3) : #numbers.formatInteger(lote.cantidad, 1)}"></td>
+                                            <td class= text-center th:text="'S/ ' + ${#numbers.formatDecimal(lote.precioCompra, 1, 2)}"></td>
+                                            <td class="text-center fw-bold text-success" th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.stockActual, 1, 3) : #numbers.formatInteger(lote.stockActual, 1)}"></td>
                                         </tr>
                                         </tbody>
                                     </table>
@@ -143,23 +149,28 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-3 px-2" th:if="${totalPages > 1}">
-            <div class="text-muted-dynamic small">
-                Página <span class="fw-bold" th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span>
+        <!-- PAGINACIÓN DE PRODUCTOS -->
+        <div th:if="${totalPages > 1}" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
+            <div class="text-dark small fw-medium">
+                Página <span class="fw-bold text-primary" th:text="${currentPage + 1}"></span> de <span class="fw-bold" th:text="${totalPages}"></span>
             </div>
             <nav>
                 <ul class="pagination pagination-sm mb-0">
+                    <!-- Botón Anterior -->
                     <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
+
+                    <!-- Números de Página -->
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                        th:if="${i >= currentPage - 1 and i <= currentPage + 1}"
                         th:classappend="${i == currentPage} ? 'active'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
                     </li>
-                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+
+                    <!-- Botón Siguiente -->
+                    <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
                             <i class="fas fa-chevron-right"></i>
                         </a>
@@ -169,64 +180,86 @@
         </div>
     </div>
 </main>
-<div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+
+<div class="modal fade" id="modalProducto" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header border-0 p-4" style="background: linear-gradient(45deg, #4b6cb7, #182848); border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title fw-bold text-white" id="modalTitulo">Nuevo Producto</h5>
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white" id="modalTitulo">
+                    <i class="fas fa-box-open me-2"></i>Nuevo Producto
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <form th:action="@{/productos/guardar}" th:object="${producto}" method="post">
                 <div class="modal-body p-4">
                     <input type="hidden" th:field="*{idProducto}" id="idProducto">
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Código de Barras</label>
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Código de Barras</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-barcode"></i></span>
+                            <span class="input-group-text bg-light border-end-0" style="border: 1px solid #dee2e6; border-radius: 10px 0 0 10px;">
+                                <i class="fas fa-barcode text-muted"></i>
+                            </span>
                             <input type="text" th:field="*{codigoBarras}" id="codigoBarras"
-                                   class="form-control" placeholder="Escanee el código aquí..." required>
+                                   class="form-control shadow-none border-start-0"
+                                   placeholder="Escriba el código..." required
+                                   style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6; border-radius: 0 10px 10px 0;">
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Nombre del Producto</label>
-                        <input type="text" th:field="*{nombreProducto}" id="nombreProducto" class="form-control" placeholder="Ej: Arroz 1kilo" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Unidad de Medida</label>
-                        <select th:field="*{unidadMedida}" id="unidadMedida" class="form-select" required>
-                            <option value="UNIDAD">Unidad</option>
-                            <option value="KG">Kilogramos</option>
-                        </select>
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Nombre del Producto</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border: 1px solid #dee2e6; border-radius: 10px 0 0 10px;">
+                                <i class="fas fa-tag text-muted"></i>
+                            </span>
+                            <input type="text" th:field="*{nombreProducto}" id="nombreProducto"
+                                   class="form-control shadow-none border-start-0"
+                                   placeholder="Ej: Arroz Costeño" required
+                                   style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6; border-radius: 0 10px 10px 0;">
+                        </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-dynamic">Precio (S/)</label>
-                            <input type="number" step="0.01" min="0.01" th:field="*{precio}" id="precio" class="form-control" placeholder="0.00" required>
+                            <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">U. Medida</label>
+                            <select th:field="*{unidadMedida}" class="form-select shadow-none"
+                                    style="height: 42px; border-radius: 10px; font-size: 0.9rem; border: 1px solid #dee2e6;">
+                                <option value="UNIDAD">Unidad</option>
+                                <option value="KG">Kilogramos (KG)</option>
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-dynamic">Stock actual</label>
-                            <input type="number" step="0.001" min="0" th:field="*{stock}" id="stock"
-                                   class="form-control" placeholder="0.000" required>
-                            <small id="stockHelp" class="text-muted" style="display:none; font-size: 0.7rem; color: #ffc107 !important;">
-                                * El stock se actualiza automáticamente mediante Compras.
-                            </small>
+                            <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Categoría</label>
+                            <select th:field="*{categoria.idCategoria}" class="form-select shadow-none"
+                                    style="height: 42px; border-radius: 10px; font-size: 0.9rem; border: 1px solid #dee2e6;">
+                                <option th:each="cat : ${categorias}" th:value="${cat.idCategoria}" th:text="${cat.nombreCategoria}"></option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dynamic">Categoría</label>
-                        <select th:field="*{categoria.idCategoria}" id="categoriaSelect" class="form-select" required>
-                            <option value="" disabled selected>Seleccione una categoría</option>
-                            <option th:each="cat : ${categorias}" th:value="${cat.idCategoria}" th:text="${cat.nombreCategoria}"></option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Precio Venta (S/)</label>
+                            <input type="number" step="0.01" th:field="*{precio}"
+                                   class="form-control shadow-none" placeholder="0.00" required
+                                   style="height: 42px; border-radius: 10px; font-size: 0.9rem; border: 1px solid #dee2e6;">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Stock Actual</label>
+                            <input type="number" step="0.001" th:field="*{stock}"
+                                   class="form-control shadow-none" placeholder="0.000" required
+                                   style="height: 42px; border-radius: 10px; font-size: 0.9rem; border: 1px solid #dee2e6;">
+                        </div>
                     </div>
                 </div>
+
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-new-cat px-4">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary-custom px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-new-cat px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
                 </div>
             </form>
         </div>
@@ -243,81 +276,98 @@
     document.addEventListener("DOMContentLoaded", function() {
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
-        const isDark = document.body.classList.contains('dark-mode');
 
-        const swalBase = {
-            background: isDark ? '#1a1d21' : '#fff',
-            color: isDark ? '#fff' : '#000'
-        };
-
+        // ALERTAS UNIFICADAS (Estilo Categorías)
         if (successMsg) {
             Swal.fire({
-                ...swalBase,
                 icon: 'success',
-                title: '¡Logrado!',
+                title: '¡Hecho!',
                 text: successMsg,
                 timer: 2000,
-                showConfirmButton: false
+                showConfirmButton: false,
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6',
+                customClass: {
+                    popup: 'border-radius-15'
+                }
             });
         }
 
         if (errorMsg) {
             Swal.fire({
-                ...swalBase,
                 icon: 'error',
                 title: 'Atención',
                 text: errorMsg,
-                confirmButtonColor: '#ff4d4d'
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d',
+                customClass: {
+                    popup: 'border-radius-15'
+                }
             });
         }
-
-        // Manejo de tema
-        const temaActual = localStorage.getItem('tema-seleccionado') || 'dark-mode';
-        const darkRadio = document.getElementById('darkMode');
-        const lightRadio = document.getElementById('lightMode');
-        if (temaActual === 'dark-mode' && darkRadio) darkRadio.checked = true;
-        else if (lightRadio) lightRadio.checked = true;
     });
 
-    // --- NUEVA LÓGICA DE BÚSQUEDA HÍBRIDA ---
+    // --- ACCIONES DE ELIMINAR / RESTAURAR (Colores Unificados) ---
+    function confirmarEliminar(id) {
+        Swal.fire({
+            title: '¿Eliminar producto?',
+            text: "El producto se moverá a la lista de inactivos.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6', // Azul corporativo
+            cancelButtonColor: '#64748b',   // Gris neutro
+            confirmButtonText: 'Sí, mover',
+            cancelButtonText: 'Cancelar',
+            background: '#ffffff',
+            color: '#1b254b',
+            customClass: {
+                popup: 'border-radius-15'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/productos/eliminar/${id}?verInactivos=${CURRENT_VER_INACTIVOS}&buscar=${encodeURIComponent(CURRENT_BUSQUEDA)}`;
+            }
+        });
+    }
+
+    // --- LÓGICA DE BÚSQUEDA HÍBRIDA ---
     function manejarBusqueda(event) {
         const texto = document.getElementById("inputBusqueda").value.toLowerCase();
 
-        // 1. SI PRESIONA ENTER: Búsqueda profunda en Servidor (Spring Boot)
         if (event.key === 'Enter') {
-            window.location.href = `/productos?buscar=${encodeURIComponent(texto)}&verInactivos=${CURRENT_VER_INACTIVOS}`;
+            window.location.href = `/productos?page=0&buscar=${encodeURIComponent(texto)}&verInactivos=${CURRENT_VER_INACTIVOS}`;
             return;
         }
 
-        // 2. MIENTRAS ESCRIBE: Filtro visual instantáneo (Frontend)
-        const filasProducto = document.querySelectorAll(".producto-fila");
+        const filas = document.querySelectorAll("#tablaProductos tbody tr");
+        filas.forEach(fila => {
+            if (fila.id.startsWith('lotes-')) return;
+            const celdas = fila.getElementsByTagName("td");
 
-        filasProducto.forEach(fila => {
-            const nombre = fila.querySelector(".nombre-prod")?.innerText.toLowerCase() || "";
-            const codigo = fila.querySelector(".td-codigo")?.innerText.toLowerCase() || "";
-            const categoria = fila.querySelector(".badge-categoria-tag")?.innerText.toLowerCase() || "";
-            const id = fila.querySelector(".text-neon")?.innerText.toLowerCase() || "";
+            if (celdas.length >= 4) {
+                const codigo = celdas[2].textContent.toLowerCase();
+                const nombre = celdas[3].textContent.toLowerCase();
 
-            if (nombre.includes(texto) || codigo.includes(texto) || categoria.includes(texto) || id.includes(texto)) {
-                fila.style.display = "";
-            } else {
-                fila.style.display = "none";
-
-                // Si ocultamos el producto, también ocultamos su fila de lotes si estaba expandida
-                const idLoteFila = fila.querySelector(".btn-toggle-lotes")
-                    ?.getAttribute("onclick")
-                    ?.match(/'([^']+)'/)?.[1];
-                if(idLoteFila) {
-                    const loteFila = document.getElementById(idLoteFila);
-                    if(loteFila) loteFila.style.display = "none";
-                    const icono = fila.querySelector(".btn-toggle-lotes i");
-                    if(icono) icono.style.transform = 'rotate(0deg)';
+                if (nombre.includes(texto) || codigo.includes(texto)) {
+                    fila.style.display = "";
+                } else {
+                    fila.style.display = "none";
+                    const idLoteFila = fila.querySelector('button[onclick*="toggleLotes"]')
+                        ?.getAttribute("onclick")
+                        ?.match(/'([^']+)'/)?.[1];
+                    if (idLoteFila) {
+                        const loteFila = document.getElementById(idLoteFila);
+                        if (loteFila) loteFila.style.display = "none";
+                    }
                 }
             }
         });
     }
 
-    // --- FUNCIONES DE FORMULARIO Y EDICIÓN ---
+    // --- FUNCIONES DE FORMULARIO ---
     function nuevoFormulario() {
         document.getElementById('modalTitulo').innerText = 'Nuevo Producto';
         document.getElementById('idProducto').value = '';
@@ -354,29 +404,7 @@
             .catch(err => console.error('Error:', err));
     }
 
-    // --- ACCIONES DE ELIMINAR / RESTAURAR ---
-    function confirmarEliminar(id) {
-        const isDark = document.body.classList.contains('dark-mode');
-        Swal.fire({
-            title: '¿Eliminar producto?',
-            text: "El producto se moverá a la lista de inactivos.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ff4d4d',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            background: isDark ? '#1a1d21' : '#fff',
-            color: isDark ? '#fff' : '#000'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Redirigimos respetando el estado de la búsqueda y filtros
-                window.location.href = `/productos/eliminar/${id}?verInactivos=${CURRENT_VER_INACTIVOS}&buscar=${encodeURIComponent(CURRENT_BUSQUEDA)}`;
-            }
-        });
-    }
-
-    // --- MANEJO DE LOTES Y TABLAS ---
+    // --- MANEJO DE LOTES ---
     function toggleLotes(idFila, btn) {
         const fila = document.getElementById(idFila);
         if (!fila) return;
