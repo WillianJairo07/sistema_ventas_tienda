@@ -242,9 +242,6 @@
         idInput.value = '';
         nombreInput.value = '';
 
-        modalEl.addEventListener('shown.bs.modal', function () {
-            nombreInput.focus();
-        }, { once: true });
     }
 
     function editarCategoria(id) {
@@ -258,9 +255,6 @@
                 const nombreInput = document.getElementById('nombreCategoria');
                 nombreInput.value = data.nombreCategoria;
 
-                modalEl.addEventListener('shown.bs.modal', function () {
-                    nombreInput.focus();
-                }, { once: true });
             })
             .catch(err => {
                 console.error("Error al cargar categoría:", err);

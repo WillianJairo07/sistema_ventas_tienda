@@ -262,12 +262,6 @@
     if (inputNombre) inputNombre.value = '';
     document.getElementById('telefono').value = '';
 
-    // Foco instantáneo al abrir en modo Nuevo
-    if (modalEl && inputNombre) {
-      modalEl.addEventListener('shown.bs.modal', function () {
-        inputNombre.focus();
-      }, { once: true });
-    }
   }
 
   function editarProveedor(id) {
@@ -283,16 +277,6 @@
               if (inputNombre) inputNombre.value = data.nombre || '';
               document.getElementById('telefono').value = data.telefono || '';
 
-              // Captura el evento para posicionar el cursor al final sin seleccionar todo
-              if (modalEl && inputNombre) {
-                modalEl.addEventListener('shown.bs.modal', function () {
-                  inputNombre.focus();
-
-                  // Forzar el cursor al final exacto de la palabra
-                  const longitud = inputNombre.value.length;
-                  inputNombre.setSelectionRange(longitud, longitud);
-                }, { once: true });
-              }
             })
             .catch(err => {
               console.error('Error:', err);

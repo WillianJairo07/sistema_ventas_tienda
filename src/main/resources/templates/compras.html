@@ -657,11 +657,6 @@
         }
     }
 
-    // --- ENFOQUE AUTOMÁTICO AL INSTANTE DE MOSTRAR EL MODAL ---
-    document.getElementById('modalProducto').addEventListener('shown.bs.modal', function() {
-        const nombreInput = document.getElementById('rapidoNombre');
-        if (nombreInput) nombreInput.focus();
-    });
 
     function guardarProductoRapido() {
         const formulario = document.getElementById('formProdRapido');

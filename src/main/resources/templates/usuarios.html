@@ -336,12 +336,6 @@
         document.getElementById('eyeIcon').className = 'fas fa-eye';
         document.getElementById('rolesSelect').value = '';
 
-        // Foco automático al abrir para agilizar la inserción
-        if (modalEl && nombreInput) {
-            modalEl.addEventListener('shown.bs.modal', function () {
-                nombreInput.focus();
-            }, { once: true });
-        }
     }
 
     function editarUsuario(id) {
@@ -362,12 +356,6 @@
                 document.getElementById('username').value = data.username;
                 document.getElementById('rolesSelect').value = data.rol ? data.rol.idRol : '';
 
-                // Foco automático al cargar los datos en el modal de edición
-                if (modalEl && nombreInput) {
-                    modalEl.addEventListener('shown.bs.modal', function () {
-                        nombreInput.focus();
-                    }, { once: true });
-                }
             })
             .catch(err => {
                 console.error("Error al cargar usuario:", err);

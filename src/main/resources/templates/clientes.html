@@ -282,12 +282,6 @@
                 document.getElementById('apellidoPat').value = data.apellidoPat || '';
                 document.getElementById('apellidoMat').value = data.apellidoMat || '';
 
-                // Auto foco al abrir para agilizar la edición
-                if (modalEl) {
-                    modalEl.addEventListener('shown.bs.modal', function () {
-                        nombreInput.focus();
-                    }, { once: true });
-                }
             })
             .catch(err => {
                 console.error("Error al cargar cliente:", err);
@@ -354,12 +348,6 @@
         document.getElementById('apellidoPat').value = '';
         document.getElementById('apellidoMat').value = '';
 
-        // Auto foco al abrir para agilizar el registro
-        if (modalEl) {
-            modalEl.addEventListener('shown.bs.modal', function () {
-                nombreInput.focus();
-            }, { once: true });
-        }
     }
 </script>
 </body>

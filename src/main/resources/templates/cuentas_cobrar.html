@@ -379,15 +379,6 @@
         const modalElement = document.getElementById('modalAbono');
         const modal = new bootstrap.Modal(modalElement);
 
-        // Evento nativo cuando el modal termina de transicionar visualmente
-        modalElement.addEventListener('shown.bs.modal', function () {
-            inputMonto.focus();
-
-            // Forzar a que el cursor apunte al final sin dejar el bloque de texto seleccionado
-            const longitud = inputMonto.value.length;
-            inputMonto.setSelectionRange(longitud, longitud);
-        }, { once: true });
-
         modal.show();
     }
 
