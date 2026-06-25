@@ -39,8 +39,9 @@ public class HomeController {
         model.addAttribute("cantidadDeudores",
                 dashboardService.obtenerCantidadDeudores());
 
-        model.addAttribute("datosVentas",
-                new Double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0});
+        // Datos para las TABLAS
+        model.addAttribute("topProductosCriticos", dashboardService.obtenerTopProductosCriticos());
+        model.addAttribute("listaDeudoresAntiguos", dashboardService.obtenerDeudoresAntiguos());
 
 
         return "home";

@@ -1,10 +1,7 @@
 package com.sistemaventas.sistema_ventas.service;
 
 import com.sistemaventas.sistema_ventas.model.*;
-import com.sistemaventas.sistema_ventas.repository.DetalleCompraRepository;
-import com.sistemaventas.sistema_ventas.repository.PagoRepository;
-import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
-import com.sistemaventas.sistema_ventas.repository.VentaRepository;
+import com.sistemaventas.sistema_ventas.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -15,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class VentaService {
@@ -33,13 +29,19 @@ public class VentaService {
     private PagoRepository pagoRepository;
 
 
+    @Autowired
+    private MovimientoEnvaseRepository movimientoEnvaseRepository;
+
+    @Autowired
+    private  EnvaseRepository envaseRepository;
+
     @Transactional
     public Venta registrarVenta(Venta venta) {
         if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
             throw new RuntimeException("No se puede realizar una venta sin productos.");
         }
 
-        // --- LÓGICA DE STOCK Y PEPS (SE MANTIENE IGUAL) ---
+        // --- 1. LÓGICA DE STOCK Y PEPS ---
         for (DetalleVenta detalle : venta.getDetalles()) {
             Producto producto = productoRepository.findById(detalle.getProducto().getIdProducto())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
@@ -73,28 +75,48 @@ public class VentaService {
             producto.setStock(producto.getStock().subtract(cantidadAVender));
             productoRepository.save(producto);
 
+            // Vínculo bidireccional obligatorio
             detalle.setVenta(venta);
         }
 
-        // --- 1. GUARDAMOS LA VENTA ---
-        // Importante: Asegúrate de que la Venta también tenga la fecha/hora actual si tu modelo lo requiere
         if (venta.getFecha() == null) {
-            venta.setFecha(java.time.LocalDateTime.now());
+            venta.setFecha(LocalDateTime.now());
         }
 
+        // --- 2. PREPARACIÓN DE ENVASES ---
+        // Procesamos antes de guardar la venta para asegurar integridad en cascada
+        if (venta.getMovimientosEnvase() != null) {
+            for (MovimientoEnvase mov : venta.getMovimientosEnvase()) {
+                Envase envReal = envaseRepository.findById(mov.getEnvase().getIdEnvase())
+                        .orElseThrow(() -> new RuntimeException("Envase no existe"));
+
+                int cantidadMovida = mov.getCantidad();
+                envReal.setStock(envReal.getStock() - cantidadMovida);
+
+                if (envReal.getStock() < 0) {
+                    throw new RuntimeException("Stock insuficiente para: " + envReal.getNombre());
+                }
+                envaseRepository.save(envReal);
+
+                // Vínculo bidireccional obligatorio
+                mov.setEnvase(envReal);
+                mov.setVenta(venta);
+                mov.setFecha(LocalDateTime.now());
+                mov.setCliente(venta.getCliente());
+            }
+        }
+
+        // --- 3. GUARDAR VENTA (La cascada guardará Detalles y Movimientos automáticamente) ---
         Venta ventaGuardada = ventaRepository.save(venta);
 
-        // --- 2. NUEVA LÓGICA DE PAGOS ---
+        // --- 4. LÓGICA DE PAGOS INICIALES ---
         BigDecimal pagoInicial = ventaGuardada.getMontoPagado() != null ? ventaGuardada.getMontoPagado() : BigDecimal.ZERO;
 
         if (pagoInicial.compareTo(BigDecimal.ZERO) > 0) {
             Pago primerPago = new Pago();
             primerPago.setVenta(ventaGuardada);
             primerPago.setMonto(pagoInicial);
-
-            // CAMBIO CLAVE: Usamos LocalDateTime para que coincida con tu modelo Pago
-            primerPago.setFecha(java.time.LocalDateTime.now());
-
+            primerPago.setFecha(LocalDateTime.now());
             primerPago.setMetodoPago(ventaGuardada.getMetodoPago() != null ? ventaGuardada.getMetodoPago() : "EFECTIVO");
             primerPago.setNota("Pago inicial realizado al momento de la venta.");
 
@@ -104,49 +126,26 @@ public class VentaService {
         return ventaGuardada;
     }
 
+    // =========================================================================
+    // OPTIMIZADO: PAGINACIÓN REAL EN BASE DE DATOS (CERO SOBRECARGA EN MEMORIA)
+    // =========================================================================
     public Page<Venta> obtenerVentasPaginadas(String buscar, String fechaDesde, String fechaHasta, int page, int size) {
-        // 1. Traemos todo en un solo viaje a la BD usando tu método optimizado
-        List<Venta> todas = ventaRepository.findAllOptimized();
+        Pageable pageable = PageRequest.of(page, size);
 
-        // 2. Filtramos en memoria (Java) para evitar errores de tipos en PostgreSQL
-        List<Venta> filtradas = todas.stream()
-                .filter(v -> {
-                    // Filtro de búsqueda (ID o Nombre de Cliente)
-                    if (buscar != null && !buscar.trim().isEmpty()) {
-                        String b = buscar.toLowerCase().trim();
-                        String nombreCliente = (v.getCliente().getNombre() + " " + v.getCliente().getApellidoPat()).toLowerCase();
-                        if (!nombreCliente.contains(b) && !v.getIdVenta().toString().contains(b)) {
-                            return false;
-                        }
-                    }
+        String termino = (buscar != null && !buscar.trim().isEmpty()) ? buscar.trim() : null;
+        LocalDateTime desde = null;
+        LocalDateTime hasta = null;
 
-                    // Filtro de Fecha Desde
-                    if (fechaDesde != null && !fechaDesde.isEmpty()) {
-                        LocalDateTime desde = LocalDate.parse(fechaDesde).atStartOfDay();
-                        if (v.getFecha().isBefore(desde)) return false;
-                    }
-
-                    // Filtro de Fecha Hasta
-                    if (fechaHasta != null && !fechaHasta.isEmpty()) {
-                        LocalDateTime hasta = LocalDate.parse(fechaHasta).atTime(LocalTime.MAX);
-                        if (v.getFecha().isAfter(hasta)) return false;
-                    }
-
-                    return true;
-                })
-                .collect(Collectors.toList());
-
-        // 3. Paginación manual de la lista filtrada
-        int start = (int) PageRequest.of(page, size).getOffset();
-        int end = Math.min((start + size), filtradas.size());
-
-        // Si la página solicitada está fuera de rango, devolvemos lista vacía
-        if (start > filtradas.size()) {
-            return new PageImpl<>(List.of(), PageRequest.of(page, size), filtradas.size());
+        // Conversión segura de filtros temporales
+        if (fechaDesde != null && !fechaDesde.trim().isEmpty()) {
+            desde = LocalDate.parse(fechaDesde.trim()).atStartOfDay();
+        }
+        if (fechaHasta != null && !fechaHasta.trim().isEmpty()) {
+            hasta = LocalDate.parse(fechaHasta.trim()).atTime(LocalTime.MAX);
         }
 
-        List<Venta> subList = filtradas.subList(start, end);
-        return new PageImpl<>(subList, PageRequest.of(page, size), filtradas.size());
+        // La base de datos se encarga de resolver los filtros y el ordenamiento en milisegundos
+        return ventaRepository.filtrarVentas(termino, desde, hasta, pageable);
     }
 
     public Venta buscarPorId(Integer id) {
@@ -154,4 +153,3 @@ public class VentaService {
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada con ID: " + id));
     }
 }
-

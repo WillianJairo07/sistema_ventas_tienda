@@ -59,5 +59,8 @@ public class Compra {
     @Column(name = "tipo_comprobante", length = 20)
     private String tipoComprobante;
 
+    @Column(name = "es_comprobante_propio", nullable = false)
+    private boolean esComprobantePropio = true;
+
 
 }

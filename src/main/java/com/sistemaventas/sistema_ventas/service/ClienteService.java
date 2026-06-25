@@ -4,9 +4,9 @@ import com.sistemaventas.sistema_ventas.model.Cliente;
 import com.sistemaventas.sistema_ventas.repository.ClienteRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;        // <--- Importante
-import org.springframework.data.domain.PageRequest; // <--- Importante
-import org.springframework.data.domain.Pageable;    // <--- Importante
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,21 +18,19 @@ public class ClienteService {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    // 1. LISTADO PAGINADO (Optimizado para la tabla principal)
     public Page<Cliente> listarPaginado(boolean estado, String buscar, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         String b = (buscar != null) ? buscar.trim() : "";
         return clienteRepository.listarPaginado(estado, b, pageable);
     }
 
-    // 2. LISTADO PARA COMBOS (Para el formulario de Ventas)
     public List<Cliente> listarParaCombos() {
         return clienteRepository.findByEstadoTrueOrderByIdClienteDesc();
     }
 
     @Transactional
     public Cliente guardar(Cliente cliente) {
-        // Limpieza y estandarización de textos (Todo a MAYÚSCULAS para evitar líos)
+        // Limpieza de espacios extras
         String nombreLimpio = limpiarTexto(cliente.getNombre());
         String apePatLimpio = limpiarTexto(cliente.getApellidoPat());
         String apeMatLimpio = limpiarTexto(cliente.getApellidoMat());
@@ -41,26 +39,29 @@ public class ClienteService {
             throw new IllegalArgumentException("Nombre y Apellido Paterno son obligatorios.");
         }
 
-        // Lógica de validación de Duplicados / Auto-revivir
-        Optional<Cliente> existenteOpt = clienteRepository.findByNombreIgnoreCaseAndApellidoPatIgnoreCaseAndApellidoMatIgnoreCase(
+        // NUEVA VALIDACIÓN OPTIMIZADA (Usa la consulta que ignora tildes de la BD)
+        Optional<Cliente> existenteOpt = clienteRepository.findClienteDuplicadoSinTildesNiEspacios(
                 nombreLimpio, apePatLimpio, apeMatLimpio);
 
         if (existenteOpt.isPresent()) {
             Cliente existente = existenteOpt.get();
 
-            // Si es un registro NUEVO pero los datos ya existen en la base de datos
+            // Si es un registro NUEVO
             if (cliente.getIdCliente() == null) {
                 if (!existente.isEstado()) {
-                    // Si estaba inactivo, lo "revivimos" con los nuevos datos (si hubiera cambios)
+                    // Auto-revivir intacto
                     existente.setEstado(true);
+                    existente.setNombre(nombreLimpio);
+                    existente.setApellidoPat(apePatLimpio);
+                    existente.setApellidoMat(apeMatLimpio);
                     return clienteRepository.save(existente);
                 }
-                throw new IllegalArgumentException("¡ERROR! Este cliente ya se encuentra registrado y activo.");
+                throw new IllegalArgumentException("¡Ya existe un cliente similar");
             }
 
-            // Si es una EDICIÓN, verificamos que no estemos duplicando a otro cliente diferente
+            // Si es una EDICIÓN
             if (cliente.getIdCliente() != null && !existente.getIdCliente().equals(cliente.getIdCliente())) {
-                throw new IllegalArgumentException("Ya existe otro cliente con el mismo nombre y apellidos.");
+                throw new IllegalArgumentException("Ya existe un cliente con el mismo nombre y apellidos.");
             }
         }
 
@@ -70,7 +71,7 @@ public class ClienteService {
         cliente.setApellidoMat(apeMatLimpio);
 
         if (cliente.getIdCliente() == null) {
-            cliente.setEstado(true); // Registros nuevos siempre nacen activos
+            cliente.setEstado(true);
         }
 
         return clienteRepository.save(cliente);

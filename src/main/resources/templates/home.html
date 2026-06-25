@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Home - Sistema de Ventas</title>
@@ -7,6 +9,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link th:href="@{/css/menu.css}" rel="stylesheet">
 
 </head>
@@ -19,36 +22,40 @@
 
 <main class="content" id="mainContent">
     <div class="container-fluid">
-        <div class="report-filter-bar shadow-sm mb-4">
-            <div class="row align-items-center">
-                <div class="col-lg-4">
-                    <h4 class="fw-bold mb-0" style="color: var(--navy-dark);">Panel de Control</h4>
-                    <!-- CORRECCIÓN: Ahora usa el objeto global usuarioLogueado para pintar el Nombre Real -->
-                    <p class="text-muted small mb-0">Bienvenido, <span th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}" class="fw-bold text-success"></span></p>
-                </div>
-                <div class="col-lg-8">
-                    <form class="row g-2 justify-content-lg-end w-100 m-0">
-                        <div class="col-12 col-md-auto">
-                            <select class="form-select form-select-sm select-clean bg-light w-100">
-                                <option value="diario">Hoy</option>
-                                <option value="semanal">Esta Semana</option>
-                                <option value="mensual">Este Mes</option>
-                            </select>
-                        </div>
-                        <!-- Cambiado a col-12 para móvil y col-sm-6 para pantallas un poco más grandes -->
-                        <div class="col-12 col-sm-6 col-md-auto">
-                            <button type="button" class="btn btn-sm btn-primary btn-dash px-3 fw-bold w-100 text-nowrap">
-                                <i class="fas fa-file-invoice-dollar me-1"></i> Reporte Ventas
-                            </button>
-                        </div>
-                        <div class="col-12 col-sm-6 col-md-auto">
-                            <button type="button" class="btn btn-sm btn-dark btn-dash px-3 fw-bold border-0 w-100 text-nowrap" style="background-color: var(--slate-sidebar);">
-                                <i class="fas fa-file-import me-1"></i> Reporte Compras
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <div class="custom-filter-container mb-4">
+            <div class="filter-title">
+                <h4 class="fw-bold text-dark mb-0">Panel de control</h4>
+                <p class="text-muted small mb-0">Bienvenido, <span th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}"></span></p>
             </div>
+
+            <form th:action="@{/reportes/exportar}" method="GET" class="filter-actions" id="reportForm">
+
+                <select name="periodo" id="periodoSelect" class="form-select" onchange="toggleDateFields()">
+                    <option value="diario">Hoy</option>
+                    <option value="semanal">Esta Semana</option>
+                    <option value="mensual">Este Mes</option>
+                    <option value="personalizado">Rango Personalizado</option>
+                </select>
+
+                <div id="dateFieldsContainer" class="date-fields-wrapper date-field-hidden">
+                    <input type="date" name="fechaInicio" class="form-control">
+                    <input type="date" name="fechaFin" class="form-control">
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" name="tipo" value="ventas"
+                            class="btn btn-primary btn-report"
+                            style="background-color: #3b82f6 !important; border-color: #3b82f6 !important;">
+                        Reporte Ventas
+                    </button>
+
+                    <button type="submit" name="tipo" value="compras"
+                            class="btn btn-dark btn-report"
+                            style="background-color: #0f172a !important; border-color: #0f172a !important;">
+                        Reporte Compras
+                    </button>
+                </div>
+            </form>
         </div>
 
         <div class="row g-3 mb-4">
@@ -99,31 +106,51 @@
             </div>
         </div>
 
-        <div class="row g-4 mb-4">
+        <div class="row g-3 mb-4">
             <div class="col-12">
-                <div class="card bg-dashboard-card p-4 h-100 shadow-sm">
-                    <h6 class="fw-bold mb-4 text-navy" style="color: var(--navy-dark);">
-                        <i class="fas fa-clock me-2 text-primary" style="color: var(--accent-blue) !important;"></i> Ventas de Hoy (Flujo por hora)
-                    </h6>
-                    <div style="height: 300px;">
-                        <canvas id="ventasHoraChart"></canvas>
-                    </div>
-                </div>
+                <h6 class="fw-bold mb-3 text-navy">
+                    <i class="fas fa-rocket me-2 text-primary"></i> Accesos Rápidos
+                </h6>
+            </div>
+
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/ventas/nueva}" class="card-link-dash"><div class="icon-circle bg-primary-subtle text-primary"><i class="fas fa-shopping-cart"></i></div><span>Nueva Venta</span></a></div>
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/ventas}" class="card-link-dash"><div class="icon-circle bg-secondary-subtle text-secondary"><i class="fas fa-history"></i></div><span>Historial Ventas</span></a></div>
+
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/compras/nueva}" class="card-link-dash"><div class="icon-circle bg-success-subtle text-success"><i class="fas fa-file-import"></i></div><span>Nueva Compra</span></a></div>
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/compras}" class="card-link-dash"><div class="icon-circle bg-success-subtle text-success"><i class="fas fa-list-alt"></i></div><span>Historial Compras</span></a></div>
+
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/productos}" class="card-link-dash"><div class="icon-circle bg-info-subtle text-info"><i class="fas fa-box"></i></div><span>Productos</span></a></div>
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/categorias}" class="card-link-dash"><div class="icon-circle bg-info-subtle text-info"><i class="fas fa-tags"></i></div><span>Categorías</span></a></div>
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/proveedores}" class="card-link-dash"><div class="icon-circle bg-info-subtle text-info"><i class="fas fa-truck"></i></div><span>Proveedores</span></a></div>
+
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/clientes}" class="card-link-dash"><div class="icon-circle bg-warning-subtle text-warning"><i class="fas fa-user-friends"></i></div><span>Clientes</span></a></div>
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/pagos}" class="card-link-dash"><div class="icon-circle bg-danger-subtle text-danger"><i class="fas fa-hand-holding-usd"></i></div><span>Cuentas</span></a></div>
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2"><a th:href="@{/usuarios/perfil}" class="card-link-dash"><div class="icon-circle bg-dark-subtle text-dark"><i class="fas fa-user-circle"></i></div><span>Mi Perfil</span></a></div>
+
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2" sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/usuarios}" class="card-link-dash">
+                    <div class="icon-circle bg-danger-subtle text-danger"><i class="fas fa-users-cog"></i></div>
+                    <span>Usuarios</span>
+                </a>
             </div>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-6">
                 <div class="card bg-dashboard-card p-3 border-top border-warning border-4 shadow-sm">
-                    <h6 class="fw-bold mb-3">📦 Reposición Crítica (Top 5)</h6>
+                    <h6 class="fw-bold mb-3 text-navi">📦 Productos con bajo stock</h6>
                     <div class="table-responsive">
                         <table class="table table-dash mb-0">
                             <thead><tr class="text-muted text-xs-bold"><th>Producto</th><th>Stock</th><th class="text-end">Acción</th></tr></thead>
                             <tbody>
                             <tr th:each="p : ${topProductosCriticos}">
-                                <td th:text="${p.nombre}" class="fw-bold">Producto</td>
-                                <td><span class="badge bg-danger-subtle text-danger" th:text="${p.stock}">0</span></td>
-                                <td class="text-end"><a href="/compras/nueva" class="btn btn-sm btn-light py-0 px-2 text-xs-bold">Comprar</a></td>
+                                <td th:text="${p.nombreProducto}" class="fw-bold">Producto</td>
+                                <td>
+                                    <span class="badge bg-danger-subtle text-danger" th:text="${p.stockFormateado}">0</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="/compras/nueva" class="btn btn-sm py-0 px-2 text-xs-bold text-white" style="background: #3b82f6">Comprar</a>
+                                </td>
                             </tr>
                             </tbody>
                         </table>
@@ -132,15 +159,15 @@
             </div>
             <div class="col-lg-6">
                 <div class="card bg-dashboard-card p-3 border-top border-danger border-4 shadow-sm">
-                    <h6 class="fw-bold mb-3">📅 Deudores más Antiguos (Top 5)</h6>
+                    <h6 class="fw-bold mb-3 text-navi">📅 Deudores más antiguos </h6>
                     <div class="table-responsive">
                         <table class="table table-dash mb-0">
                             <thead><tr class="text-muted text-xs-bold"><th>Cliente</th><th>Monto</th><th class="text-end">Fecha</th></tr></thead>
                             <tbody>
                             <tr th:each="d : ${listaDeudoresAntiguos}">
-                                <td th:text="${d.cliente.nombre}" class="fw-bold">Cliente</td>
-                                <td class="text-danger fw-bold" th:text="'S/ ' + ${d.montoPendiente}">S/ 0</td>
-                                <td class="text-end text-muted" th:text="${#temporals.format(d.fecha, 'dd/MM/yyyy')}">01/01/2026</td>
+                                <td th:text="${d.nombreCliente}" class="fw-bold"></td>
+                                <td class="text-danger fw-bold" th:text="'S/ ' + ${#numbers.formatDecimal(d.saldo, 1, 2)}"></td>
+                                <td class="text-end text-muted" th:text="${#temporals.format(d.fecha, 'dd/MM/yyyy')}"></td>
                             </tr>
                             </tbody>
                         </table>
@@ -153,77 +180,36 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script th:inline="javascript">
-    document.addEventListener("DOMContentLoaded", function() {
-        // 1. Gráfico de Líneas (Ventas Hoy)
-        const canvasVentas = document.getElementById('ventasHoraChart');
-        if (canvasVentas) {
-            const ctxVentas = canvasVentas.getContext('2d');
-            const datosVentas = /*[[${datosVentas}]]*/ [0, 0, 0, 0, 0, 0, 0, 0];
+    // 1. Detectar el parámetro de error en la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMsg = urlParams.get('error');
 
-            new Chart(ctxVentas, {
-                type: 'line',
-                data: {
-                    labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
-                    datasets: [{
-                        label: 'Ventas (S/)',
-                        data: datosVentas,
-                        borderColor: '#3b82f6',
-                        borderWidth: 3,
-                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#3b82f6'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
+    // 2. Si existe un error, mostrar la alerta
+    if (errorMsg) {
+        Swal.fire({
+            icon: 'warning',
+            title: '¡Atención!',
+            text: errorMsg.replace(/\+/g, ' '), // Decodifica los espacios
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'Entendido',
+            allowOutsideClick: false
+        }).then(() => {
+            // 3. Limpiar la URL para que no vuelva a aparecer al refrescar
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        });
+    }
+
+    function toggleDateFields() {
+        const select = document.getElementById('periodoSelect');
+        const container = document.getElementById('dateFieldsContainer');
+        if (select.value === 'personalizado') {
+            container.classList.remove('date-field-hidden');
+        } else {
+            container.classList.add('date-field-hidden');
         }
-
-        // 2. Gráfico de Dona (Top Categorías)
-        const canvasCat = document.getElementById('categoriasPieChart');
-        if (canvasCat) {
-            const ctxCat = canvasCat.getContext('2d');
-
-            // Reemplaza estos nombres y valores por datos reales de tu modelo si los tienes
-            const labelsCat = /*[[${nombresCategorias}]]*/ ['Electrónica', 'Hogar', 'Varios'];
-            const valoresCat = /*[[${valoresCategorias}]]*/ [55, 25, 20];
-
-            new Chart(ctxCat, {
-                type: 'doughnut',
-                data: {
-                    labels: labelsCat,
-                    datasets: [{
-                        data: valoresCat,
-                        backgroundColor: ['#3b82f6', '#0fc56d', '#f59e0b', '#ef4444', '#8b5cf6'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 12, padding: 20, font: { size: 11 } }
-                        }
-                    }
-                }
-            });
-        }
-    });
+    }
 </script>
 </body>
 </html>

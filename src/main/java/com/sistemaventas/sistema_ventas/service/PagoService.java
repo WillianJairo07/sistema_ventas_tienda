@@ -22,39 +22,45 @@ public class PagoService {
 
     @Transactional
     public Pago registrarPago(Integer idVenta, BigDecimal montoAbono, String metodo, String nota) {
+        // 1. Validar existencia de la venta objetivo
         Venta venta = ventaRepo.findById(idVenta)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
 
+        // 2. Calcular el estado financiero real antes del nuevo abono
         BigDecimal pagadoActualmente = pagoRepo.totalPagadoVenta(idVenta);
-        if (pagadoActualmente == null) pagadoActualmente = BigDecimal.ZERO;
+        if (pagadoActualmente == null) {
+            pagadoActualmente = BigDecimal.ZERO;
+        }
 
         BigDecimal saldoPendiente = venta.getTotalVenta().subtract(pagadoActualmente);
 
-        // Validación con margen de error para decimales
+        // 3. Validación de límite con margen de seguridad para evitar desbordes de centavos
         if (montoAbono.compareTo(saldoPendiente.add(new BigDecimal("0.01"))) > 0) {
-            throw new RuntimeException("El monto excede el saldo pendiente (S/ " + saldoPendiente + ")");
+            throw new IllegalArgumentException("El monto excede el saldo pendiente (Saldo actual: S/ " + saldoPendiente + ")");
         }
 
+        // 4. Instanciar y configurar la entidad del nuevo abono
         Pago nuevoPago = new Pago();
         nuevoPago.setVenta(venta);
         nuevoPago.setMonto(montoAbono);
-        nuevoPago.setMetodoPago(metodo);
-        nuevoPago.setNota(nota);
+        nuevoPago.setMetodoPago(metodo != null && !metodo.isBlank() ? metodo.trim() : "EFECTIVO");
+        nuevoPago.setNota(nota != null ? nota.trim() : null);
+        nuevoPago.setFecha(LocalDateTime.now()); // Registro preciso de auditoría temporal
 
-        // GUARDAR CON HORA Y MINUTOS
-        nuevoPago.setFecha(LocalDateTime.now());
-
-        // 1. Guardamos el registro del nuevo abono de forma normal
+        // 5. Persistir el abono en la base de datos
         Pago pagoGuardado = pagoRepo.save(nuevoPago);
 
         // ====================================================================
-        // SOLUCIÓN AL DESFASE DE DATOS: Actualizar la cabecera de la Venta
+        // OPTIMIZACIÓN DE SINCRONIZACIÓN ATÓMICA (EVITA DESFASES DEFINITIVAMENTE)
         // ====================================================================
-        // Sumamos el monto actual de la cabecera + el nuevo abono
-        BigDecimal montoInicialEnVenta = venta.getMontoPagado() != null ? venta.getMontoPagado() : BigDecimal.ZERO;
-        venta.setMontoPagado(montoInicialEnVenta.add(montoAbono));
+        // Forzamos un flush de Hibernate para asegurar que el nuevo pago ya se sume en el motor
+        pagoRepo.flush();
 
-        // Guardamos la venta con su columna 'monto_pagado' sincronizada
+        // Recalculamos la suma real directo desde la tabla de pagos para actualizar la cabecera
+        BigDecimal nuevoTotalPagado = pagoRepo.totalPagadoVenta(idVenta);
+        venta.setMontoPagado(nuevoTotalPagado);
+
+        // Sincronizamos la venta con su estado de cuentas al día
         ventaRepo.save(venta);
         // ====================================================================
 

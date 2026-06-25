@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Fragments</title>
+    <meta th:name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
 
@@ -37,12 +39,11 @@
         <a th:href="@{/compras/nueva}"><i class="fas fa-file-import"></i> <span>Compras</span></a>
         <a th:href="@{/compras}"><i class="fas fa-list-alt"></i> <span>Historial Compras</span></a>
         <a th:href="@{/clientes}"><i class="fas fa-user-friends"></i> <span>Clientes</span></a>
+        <a th:href="@{/envases}"><i class="fas fa-wine-bottle"></i> <span>Envases</span></a>
         <a th:href="@{/ventas/nueva}"><i class="fas fa-shopping-cart"></i> <span>Realizar Venta</span></a>
         <a th:href="@{/ventas}"><i class="fas fa-history"></i> <span>Historial Ventas</span></a>
         <a th:href="@{/pagos}"><i class="fas fa-hand-holding-usd"></i> <span>Cuentas por Cobrar</span></a>
-
-        <!-- MODIFICACIÓN: Condicional directo usando el nuevo modelo de un solo Rol -->
-        <a th:href="@{/usuarios}" th:if="${usuarioLogueado != null && usuarioLogueado.rol != null && usuarioLogueado.rol.nombreRol == 'ADMIN'}">
+        <a th:href="@{/usuarios}" sec:authorize="hasRole('ADMIN')">
             <i class="fas fa-users-cog"></i> <span>Usuarios</span>
         </a>
 
@@ -66,7 +67,6 @@
     <div class="topbar-right">
         <div class="dropdown">
             <a href="#" class="user-profile dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
-                <!-- MODIFICACIÓN: Muestra el Nombre Real (Ej: Jairo) si está cargado, de lo contrario un fallback -->
                 <span class="user-name d-none d-md-inline"
                       th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}">Usuario</span>
                 <div class="avatar-wrapper"><i class="fas fa-user"></i></div>
@@ -74,7 +74,6 @@
 
             <ul class="dropdown-menu shadow">
                 <li class="d-md-none">
-                    <!-- MODIFICACIÓN: Nombre Real en el menú desplegable móvil -->
                     <div class="user-name-submenu"
                          th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}">Nombre Usuario</div>
                     <hr class="dropdown-divider">

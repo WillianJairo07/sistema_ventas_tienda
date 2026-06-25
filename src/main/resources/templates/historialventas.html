@@ -2,9 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Historial de Compras - Sistema de Ventas</title>
+    <title>Historial de Ventas - Sistema de Ventas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -109,6 +110,12 @@
                                         title="Imprimir Ticket">
                                     <i class="fas fa-print"></i>
                                 </button>
+
+                                <button type="button" class="btn-circle btn-edit"
+                                        th:onclick="'verEnvasesDetalle(' + ${v.idVenta} + ')'"
+                                        title="Gestionar Envases">
+                                    <i class="fas fa-wine-bottle"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -151,44 +158,30 @@
         </div>
     </div>
 </main>
+
 <div class="modal fade" id="modalVerDetalleVenta" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px">
-
-            <!-- HEADER (TÍTULO LIMPIO) -->
             <div class="modal-header border-0 bg-dark text-white p-4">
-                <h5 class="modal-title fw-bold d-flex align-items-center gap-2 m-0 text-nowrap">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2 m-0 text-nowrap text-white">
                     <i class="fas fa-receipt"></i>
                     Detalle de la venta
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
-            <!-- BODY -->
             <div class="modal-body p-4">
-
-                <!-- CLIENTE Y FECHA EN UNA SOLA FILA (FIJA) -->
                 <div class="row mb-3 align-items-end">
-
-                    <!-- CLIENTE -->
                     <div class="col-6">
                         <label class="text-muted small d-block">CLIENTE</label>
                         <span id="detClienteVenta" class="fw-semibold text-dark small"></span>
                     </div>
-
-                    <!-- FECHA (SE MANTIENE EN SU MISMA FILA) -->
                     <div class="col-6 text-end">
                         <label class="text-muted small d-block">FECHA DE VENTA</label>
                         <span id="detFechaVenta" class="fw-semibold text-dark small"></span>
                     </div>
-
                 </div>
-
-                <!-- TABLA -->
                 <div class="table-responsive">
-
                     <table class="table table-sm align-middle border-top small">
-
                         <thead class="bg-light text-nowrap">
                         <tr>
                             <th>Producto</th>
@@ -197,56 +190,97 @@
                             <th class="text-end">Subtotal</th>
                         </tr>
                         </thead>
-
                         <tbody id="detCuerpoVenta"></tbody>
-
                         <tfoot>
-
                         <tr>
-                            <td colspan="3" class="text-end fw-semibold text-muted pt-3">
-                                TOTAL DE VENTA:
-                            </td>
-                            <td class="text-end fw-bold text-primary pt-3">
-                                S/ <span id="detTotalVenta">0.00</span>
-                            </td>
+                            <td colspan="3" class="text-end fw-semibold text-muted pt-3">TOTAL DE VENTA:</td>
+                            <td class="text-end fw-bold text-primary pt-3">S/ <span id="detTotalVenta">0.00</span></td>
                         </tr>
-
                         <tr id="filaDetPagaCon" class="d-none">
                             <td colspan="3" class="text-end text-muted small">EFECTIVO RECIBIDO:</td>
-                            <td class="text-end text-muted small">
-                                S/ <span id="detMontoRecibido">0.00</span>
-                            </td>
+                            <td class="text-end text-muted small">S/ <span id="detMontoRecibido">0.00</span></td>
                         </tr>
-
                         <tr id="filaDetVuelto" class="d-none">
                             <td colspan="3" class="text-end fw-semibold text-info">VUELTO ENTREGADO:</td>
-                            <td class="text-end fw-semibold text-info">
-                                S/ <span id="detVueltoEntregado">0.00</span>
-                            </td>
+                            <td class="text-end fw-semibold text-info">S/ <span id="detVueltoEntregado">0.00</span></td>
                         </tr>
-
                         <tr id="filaDetPago" class="d-none">
                             <td colspan="3" class="text-end fw-semibold text-success">PAGO / ABONO:</td>
-                            <td class="text-end fw-semibold text-success">
-                                S/ <span id="detTotalPagado">0.00</span>
-                            </td>
+                            <td class="text-end fw-semibold text-success">S/ <span id="detTotalPagado">0.00</span></td>
                         </tr>
-
                         <tr id="filaDetSaldo" class="d-none">
                             <td colspan="3" class="text-end fw-semibold text-danger">SALDO PENDIENTE:</td>
-                            <td class="text-end fw-semibold text-danger">
-                                S/ <span id="detSaldoPendiente">0.00</span>
-                            </td>
+                            <td class="text-end fw-semibold text-danger">S/ <span id="detSaldoPendiente">0.00</span></td>
                         </tr>
-
                         </tfoot>
-
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="modal fade" id="modalEnvasesVenta" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center text-white">
+                    <i class="fas fa-wine-bottle me-2"></i> Gestión de Envases
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="contenedorBalance" class="mb-4"></div>
+                <h6 class="small fw-bold text-muted mb-3 text-uppercase">Historial</h6>
+                <div class="table-responsive border rounded mb-4" style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                        <tr>
+                            <th class="ps-3 py-2">Envase</th>
+                            <th class="py-2 text-center">Cant.</th>
+                            <th class="py-2 text-end">Garantía</th>
+                            <th class="py-2 text-center">Tipo</th>
+                            <th class="py-2 text-end pe-3">Fecha</th>
+                        </tr>
+                        </thead>
+                        <tbody id="cuerpoEnvasesHistorial"></tbody>
+                    </table>
                 </div>
 
-            </div>
+                <h6 class="small fw-bold text-primary mb-3 text-uppercase">Nuevo Movimiento</h6>
+                <div id="seccionNuevoMovimiento" class="row g-2 align-items-end">
+                    <div class="col-6 col-md-6">
+                        <label class="small fw-bold text-muted">Envase</label>
+                        <select id="selectEnvase" class="form-select shadow-none"></select>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <label class="small fw-bold text-muted">Tipo</label>
+                        <select id="selectTipoDevolucion" class="form-select shadow-none">
+                            <option value="PRESTAMO">Préstamo</option>
+                            <option value="DEVOLUCION">Devolución</option>
+                        </select>
+                    </div>
 
+                    <div class="col-5 col-md-4">
+                        <label class="small fw-bold text-muted">Cant.</label>
+                        <input type="number" id="inputCantEnvase" class="form-control shadow-none" placeholder="0">
+                    </div>
+                    <div class="col-5 col-md-5">
+                        <label class="small fw-bold text-muted">Garantía S/</label>
+                        <input type="number" id="inputMontoGarantia" class="form-control shadow-none" placeholder="0.00">
+                    </div>
+                    <div class="col-2 col-md-3">
+                        <button class="btn btn-add-circle w-100" onclick="agregarAlCarrito()" title="Agregar al lote">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <ul id="listaCarritoEnvases" class="list-group mt-3 small"></ul>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-secondary-custom px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-new-cat px-4" onclick="guardarTodoElLote()">Guardar Cambios</button>
+            </div>
         </div>
     </div>
 </div>
@@ -254,53 +288,67 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
+    let ventaActualId = null;
+    let carritoEnvases = [];
+
     document.addEventListener('DOMContentLoaded', function() {
         const successMsg = /*[[${success}]]*/ null;
         const errorMsg = /*[[${error}]]*/ null;
         const idVentaTicket = /*[[${idVentaGenerada}]]*/ null;
 
-        // --- ALERTAS CON COLORES CORPORATIVOS UNIFICADOS ---
         if (successMsg) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Operación Exitosa!',
-                text: successMsg,
-                timer: 2000,
-                showConfirmButton: false,
-                background: '#ffffff',
-                color: '#1b254b',
-                iconColor: '#3b82f6',
-                customClass: { popup: 'border-radius-15' }
-            });
-
-            if (idVentaTicket) {
-                abrirTicketVenta(idVentaTicket);
-            }
+            Swal.fire({ icon: 'success', title: '¡Operación Exitosa!', text: successMsg, timer: 2000, showConfirmButton: false, background: '#ffffff', color: '#1b254b', iconColor: '#3b82f6', customClass: { popup: 'border-radius-15' } });
+            if (idVentaTicket) abrirTicketVenta(idVentaTicket);
         }
-
         if (errorMsg) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Atención',
-                text: errorMsg,
-                background: '#ffffff',
-                color: '#1b254b',
-                confirmButtonColor: '#3b82f6',
-                iconColor: '#ee5d5d'
-            });
+            Swal.fire({ icon: 'error', title: 'Atención', text: errorMsg, background: '#ffffff', color: '#1b254b', confirmButtonColor: '#3b82f6', iconColor: '#ee5d5d' });
         }
-    });
 
-    // --- FILTRO VISUAL EN TIEMPO REAL ---
-    document.getElementById('filtroVentasJS')?.addEventListener('keyup', function() {
-        let valor = this.value.toLowerCase();
-        let filas = document.querySelectorAll('#tablaVentas tbody tr');
-        filas.forEach(f => {
-            f.style.display = f.innerText.toLowerCase().includes(valor) ? '' : 'none';
+        fetch('/ventas/api/envases/lista')
+            .then(res => res.json())
+            .then(lista => {
+                const select = document.getElementById('selectEnvase');
+                if (select) {
+                    lista.forEach(e => {
+                        select.innerHTML += `<option value="${e.idEnvase}" data-precio="${e.precioGarantiaBase}">${e.nombre}</option>`;
+                    });
+                }
+            });
+
+        // Limpiar formulario al cerrar el modal
+        document.getElementById('modalEnvasesVenta').addEventListener('hidden.bs.modal', function () {
+            limpiarFormularioEnvases();
         });
     });
 
-    // --- GENERACIÓN E IMPRESIÓN ASÍNCRONA DE TICKET ---
+    // Función unificada para calcular garantía
+    function calcularGarantia() {
+        const sel = document.getElementById('selectEnvase');
+        const inputCant = document.getElementById('inputCantEnvase');
+        const inputMonto = document.getElementById('inputMontoGarantia');
+        if (!sel || !inputCant || !inputMonto) return;
+        const cantidad = parseInt(inputCant.value) || 0;
+        const precioBase = parseFloat(sel.options[sel.selectedIndex]?.getAttribute('data-precio')) || 0;
+        inputMonto.value = (cantidad * precioBase).toFixed(2);
+    }
+
+    // Asociar eventos al cálculo
+    document.getElementById('selectEnvase')?.addEventListener('change', calcularGarantia);
+    document.getElementById('inputCantEnvase')?.addEventListener('input', calcularGarantia);
+
+    function limpiarFormularioEnvases() {
+        document.getElementById('inputCantEnvase').value = '';
+        document.getElementById('inputMontoGarantia').value = '0.00';
+        carritoEnvases = [];
+        renderizarCarrito();
+    }
+
+    document.getElementById('filtroVentasJS')?.addEventListener('keyup', function() {
+        let valor = this.value.toLowerCase();
+        let filas = document.querySelectorAll('#tablaVentas tbody tr');
+        filas.forEach(f => f.style.display = f.innerText.toLowerCase().includes(valor) ? '' : 'none');
+    });
+
     function abrirTicketVenta(id) {
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
@@ -309,100 +357,195 @@
         setTimeout(() => document.body.removeChild(iframe), 2000);
     }
 
-    // --- CONSULTA DE DETALLES DE VENTA (API) ---
     function verDetalleVenta(id) {
         fetch('/ventas/api/' + id)
-            .then(response => {
-                if (!response.ok) throw new Error('Venta no encontrada');
-                return response.json();
-            })
+            .then(res => res.json())
             .then(data => {
                 document.getElementById('detClienteVenta').innerText = data.cliente.nombreCompleto;
-                const fecha = new Date(data.fecha);
+                const fecha = new Date(data.fecha).toLocaleString('es-PE');
+                document.getElementById('detFechaVenta').innerHTML = `<div>${fecha}</div>`;
+                document.getElementById('detTotalVenta').innerText = parseFloat(data.totalVenta).toFixed(2);
 
-                const fechaSolo = fecha.toLocaleDateString('es-PE');
-                const horaSolo = fecha.toLocaleTimeString('es-PE', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+                const isContado = data.tipoVenta === 'CONTADO';
+                document.getElementById('filaDetPagaCon').classList.toggle('d-none', !isContado);
+                document.getElementById('filaDetVuelto').classList.toggle('d-none', !isContado);
+                document.getElementById('filaDetPago').classList.toggle('d-none', isContado);
+                document.getElementById('filaDetSaldo').classList.toggle('d-none', isContado);
 
-                document.getElementById('detFechaVenta').innerHTML = `
-                    <div>${fechaSolo}</div>
-                    <div class="text-muted small">${horaSolo}</div>
-                `;
-
-                const total = parseFloat(data.totalVenta) || 0;
-                const montoRecibido = parseFloat(data.montoPagado) || 0;
-                const totalAbonos = parseFloat(data.totalPagado) || 0;
-                const saldo = parseFloat(data.saldoPendiente) || 0;
-
-                document.getElementById('detTotalVenta').innerText = total.toFixed(2);
-
-                const fPagaCon = document.getElementById('filaDetPagaCon');
-                const fVuelto = document.getElementById('filaDetVuelto');
-                const fPago = document.getElementById('filaDetPago');
-                const fSaldo = document.getElementById('filaDetSaldo');
-
-                if (data.tipoVenta === 'CONTADO') {
-                    fPagaCon.classList.remove('d-none');
-                    fVuelto.classList.remove('d-none');
-                    fPago.classList.add('d-none');
-                    fSaldo.classList.add('d-none');
-
-                    const vuelto = montoRecibido - total;
-                    document.getElementById('detMontoRecibido').innerText = montoRecibido.toFixed(2);
-                    document.getElementById('detVueltoEntregado').innerText = (vuelto > 0 ? vuelto : 0).toFixed(2);
+                if (isContado) {
+                    document.getElementById('detMontoRecibido').innerText = parseFloat(data.montoPagado).toFixed(2);
+                    document.getElementById('detVueltoEntregado').innerText = Math.max(0, data.montoPagado - data.totalVenta).toFixed(2);
                 } else {
-                    fPagaCon.classList.add('d-none');
-                    fVuelto.classList.add('d-none');
-                    fPago.classList.remove('d-none');
-                    fSaldo.classList.remove('d-none');
-
-                    document.getElementById('detTotalPagado').innerText = totalAbonos.toFixed(2);
-                    document.getElementById('detSaldoPendiente').innerText = saldo.toFixed(2);
-
-                    const contenedorSaldo = document.getElementById('detSaldoPendiente').parentElement;
-                    if(saldo <= 0) {
-                        contenedorSaldo.classList.replace('text-danger', 'text-success');
-                    } else {
-                        contenedorSaldo.classList.replace('text-success', 'text-danger');
-                    }
+                    document.getElementById('detTotalPagado').innerText = parseFloat(data.totalPagado).toFixed(2);
+                    document.getElementById('detSaldoPendiente').innerText = parseFloat(data.saldoPendiente).toFixed(2);
                 }
 
-                let html = '';
-                data.detalles.forEach(d => {
-                    let subtotal = d.cantidad * d.precioVenta;
-                    html += `
-                    <tr>
-                        <td>
-                            <div class="fw-semibold small text-dark">
-                                ${d.producto.nombreProducto}
-                            </div>
-                        </td>
-                        <td class="text-center small">${d.cantidad}</td>
-                        <td class="text-end small">S/ ${parseFloat(d.precioVenta).toFixed(2)}</td>
-                        <td class="text-end fw-semibold small">S/ ${subtotal.toFixed(2)}</td>
-                    </tr>`;
-                });
-
+                let html = data.detalles.map(d => `<tr><td>${d.producto.nombreProducto}</td><td class="text-center">${d.cantidad}</td><td class="text-end">S/ ${parseFloat(d.precioVenta).toFixed(2)}</td><td class="text-end fw-bold">S/ ${(d.cantidad * d.precioVenta).toFixed(2)}</td></tr>`).join('');
                 document.getElementById('detCuerpoVenta').innerHTML = html;
-
-                const modal = new bootstrap.Modal(document.getElementById('modalVerDetalleVenta'));
-                modal.show();
-            })
-            .catch(error => {
-                console.error(error);
-                // Alerta del catch adaptada correctamente al diseño limpio
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de carga',
-                    text: 'No se pudo obtener el desglose de la venta.',
-                    background: '#ffffff',
-                    color: '#1b254b',
-                    confirmButtonColor: '#3b82f6',
-                    iconColor: '#ee5d5d'
-                });
+                new bootstrap.Modal(document.getElementById('modalVerDetalleVenta')).show();
             });
+    }
+
+    function verEnvasesDetalle(idVenta, abrirModal = true) { // Añadimos parámetro para controlar si se abre
+        ventaActualId = idVenta;
+        const seccionNuevo = document.getElementById('seccionNuevoMovimiento');
+
+        fetch('/ventas/api/' + idVenta)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('cuerpoEnvasesHistorial');
+                const balance = {};
+                tbody.innerHTML = data.envases?.map(e => {
+                    let cant = parseInt(e.cantidad);
+                    balance[e.nombre] = (balance[e.nombre] || 0) + cant;
+                    return `<tr>
+                    <td class="ps-3 fw-medium">${e.nombre}</td>
+                    <td class="text-center">${Math.abs(cant)}</td>
+                    <td class="text-end">S/ ${parseFloat(e.montoGarantiaDejado || 0).toFixed(2)}</td>
+                    <td class="text-center"><span class="badge ${e.tipo === 'PRESTAMO' ? 'bg-warning text-dark' : 'bg-success'}">${e.tipo}</span></td>
+                    <td class="text-end pe-3 text-muted small">${e.fecha}</td>
+                </tr>`;
+                }).join('') || '<tr><td colspan="5" class="text-center py-3 text-muted">Sin movimientos.</td></tr>';
+
+                let pendientes = Object.entries(balance).filter(([n, s]) => s > 0);
+                const contenedorBalance = document.getElementById('contenedorBalance');
+
+                if (pendientes.length > 0) {
+                    let texto = pendientes.map(([n, s]) => `${n}: ${s}`).join(', ');
+                    contenedorBalance.innerHTML = `<div class="alert alert-danger mb-0 fw-bold small">Debe: ${texto}</div>`;
+                    seccionNuevo.style.display = 'flex';
+                } else {
+                    contenedorBalance.innerHTML = `<div class="alert alert-success mb-0 fw-bold small"><i class="fas fa-check-circle"></i> Cuenta Saldada</div>`;
+                    seccionNuevo.style.display = 'none';
+                }
+
+                // SOLO abrir modal si el parámetro es true
+                if (abrirModal) {
+                    new bootstrap.Modal(document.getElementById('modalEnvasesVenta')).show();
+                }
+            });
+    }
+
+    function agregarAlCarrito() {
+        const sel = document.getElementById('selectEnvase');
+        const cant = document.getElementById('inputCantEnvase').value;
+        if (!sel.value || !cant || cant <= 0) return Swal.fire({
+            icon: 'warning',
+            title: 'Atención',
+            text: 'Seleccione envase y cantidad válida',
+            background: '#ffffff',
+            color: '#1b254b',
+            confirmButtonColor: '#3b82f6',
+            iconColor: '#f59e0b', // Color ámbar para advertencias
+            customClass: { popup: 'border-radius-15' }
+        });
+
+        carritoEnvases.push({
+            idEnvase: sel.value,
+            nombre: sel.options[sel.selectedIndex].text,
+            cantidad: cant,
+            tipo: document.getElementById('selectTipoDevolucion').value,
+            monto: document.getElementById('inputMontoGarantia').value
+        });
+
+        renderizarCarrito();
+        document.getElementById('inputCantEnvase').value = '';
+        document.getElementById('inputMontoGarantia').value = '0.00';
+    }
+
+    function renderizarCarrito() {
+        const ul = document.getElementById('listaCarritoEnvases');
+        ul.innerHTML = carritoEnvases.map((e, i) => `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><strong>${e.nombre}</strong> (x${e.cantidad}) - ${e.tipo}</span>
+                <button class="btn btn-circle btn-delete" onclick="carritoEnvases.splice(${i},1); renderizarCarrito()">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </li>
+        `).join('');
+    }
+
+    async function guardarTodoElLote() {
+        if (carritoEnvases.length === 0) {
+            return Swal.fire({
+                icon: 'info',
+                title: 'Atención',
+                text: 'Agregue al menos un movimiento al carrito',
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#f59e0b',
+                target: 'body', // Asegura que se dibuje sobre el modal
+                customClass: {
+                    popup: 'border-radius-15'
+                }
+            });
+        }
+
+        const btn = event.target;
+        btn.disabled = true;
+
+        try {
+            const csrfToken = document.querySelector("meta[name='_csrf']")?.getAttribute("content");
+            const csrfHeader = document.querySelector("meta[name='_csrf_header']")?.getAttribute("content");
+
+            for (let mov of carritoEnvases) {
+                const formData = new URLSearchParams();
+                formData.append('idVenta', ventaActualId);
+                formData.append('idEnvase', mov.idEnvase);
+                formData.append('cantidad', mov.cantidad);
+                formData.append('tipo', mov.tipo);
+                formData.append('montoDejado', mov.monto || "0.00");
+
+                const response = await fetch('/ventas/api/envases/registrar', {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+            }
+
+            // CERRAR MODAL
+            const modalEl = document.getElementById('modalEnvasesVenta');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            // ESPERAR A QUE EL BACKDROP DESAPAREZCA
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // MOSTRAR ÉXITO Y LUEGO RECARGAR DATOS
+            // ÉXITO
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: 'Movimientos registrados correctamente',
+                timer: 1500,
+                showConfirmButton: false,
+                background: '#ffffff',
+                color: '#1b254b',
+                iconColor: '#3b82f6',
+                target: 'body',
+                customClass: { popup: 'border-radius-15' }
+            }).then(() => {
+                verEnvasesDetalle(ventaActualId, false);
+            });
+
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Hubo un problema al registrar',
+                background: '#ffffff',
+                color: '#1b254b',
+                confirmButtonColor: '#3b82f6',
+                iconColor: '#ee5d5d',
+                target: 'body',
+                customClass: { popup: 'border-radius-15' }
+            });
+        } finally {
+            btn.disabled = false;
+        }
     }
 </script>
 </body>

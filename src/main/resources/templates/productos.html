@@ -103,7 +103,8 @@
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
                                     <th:block th:if="${p.estado}">
-                                        <button class="btn-circle btn-edit" th:onclick="'editarProducto(' + ${p.idProducto} + ')'" data-bs-toggle="modal" data-bs-target="#modalProducto">
+                                        <button class="btn-circle btn-edit"
+                                                th:onclick="'abrirModalEditar(' + ${p.idProducto} + ')'">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button class="btn-circle btn-delete" th:onclick="'confirmarEliminar(' + ${p.idProducto} + ')'">
@@ -186,7 +187,7 @@
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header border-0">
                 <h5 class="modal-title fw-bold text-white" id="modalTitulo">
-                    <i class="fas fa-box-open me-2"></i>Nuevo Producto
+                    <i class="fas fa-plus-circle me-2"></i>Nuevo Producto
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -232,9 +233,12 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Categoría</label>
-                            <select th:field="*{categoria.idCategoria}" class="form-select shadow-none"
+                            <select name="categoria.idCategoria" id="categoriaSelect" class="form-select shadow-none"
                                     style="height: 42px; border-radius: 10px; font-size: 0.9rem; border: 1px solid #dee2e6;">
-                                <option th:each="cat : ${categorias}" th:value="${cat.idCategoria}" th:text="${cat.nombreCategoria}"></option>
+                                <option value="" disabled selected>Seleccione una categoría...</option>
+                                <option th:each="cat : ${categorias}"
+                                        th:value="${cat.idCategoria}"
+                                        th:text="${cat.nombreCategoria}"></option>
                             </select>
                         </div>
                     </div>
@@ -369,7 +373,7 @@
 
     // --- FUNCIONES DE FORMULARIO ---
     function nuevoFormulario() {
-        document.getElementById('modalTitulo').innerText = 'Nuevo Producto';
+        document.getElementById('modalTitulo').innerHTML = '<i class="fas fa-plus-circle me-2"></i>Nuevo Producto';
         document.getElementById('idProducto').value = '';
         document.getElementById('codigoBarras').value = '';
         document.getElementById('nombreProducto').value = '';
@@ -378,39 +382,79 @@
         document.getElementById('categoriaSelect').value = '';
         document.getElementById('unidadMedida').value = 'UNIDAD';
 
-        document.getElementById('stock').readOnly = false;
-        document.getElementById('stockHelp').style.display = 'none';
+        // Desbloqueamos el stock para productos nuevos
+        const stockInput = document.getElementById('stock');
+        if (stockInput) stockInput.readOnly = false;
 
-        setTimeout(() => { document.getElementById('codigoBarras').focus(); }, 450);
+        // VALIDACIÓN SEGURA: Solo intentamos acceder a 'style' si el elemento realmente existe
+        const stockHelp = document.getElementById('stockHelp');
+        if (stockHelp) {
+            stockHelp.style.display = 'none';
+        }
+
+
     }
 
     function editarProducto(id) {
-        document.getElementById('modalTitulo').innerText = 'Editar Producto';
+        const titulo = document.getElementById('modalTitulo');
+        if (titulo) titulo.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Producto';
+
         fetch(`/productos/editar/${id}`)
             .then(res => res.json())
             .then(data => {
-                document.getElementById('idProducto').value = data.idProducto;
-                document.getElementById('codigoBarras').value = data.codigoBarras || '';
-                document.getElementById('nombreProducto').value = data.nombreProducto;
-                document.getElementById('precio').value = data.precio;
-                document.getElementById('stock').value = data.stock;
+                // Asignación segura de valores
+                const campos = {
+                    'idProducto': data.idProducto,
+                    'codigoBarras': data.codigoBarras || '',
+                    'nombreProducto': data.nombreProducto,
+                    'precio': data.precio,
+                    'stock': data.stock
+                };
 
-                if(data.unidadMedida) document.getElementById('unidadMedida').value = data.unidadMedida;
-                if(data.categoria) document.getElementById('categoriaSelect').value = data.categoria.idCategoria;
+                // Llenar inputs si existen
+                Object.keys(campos).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = campos[id];
+                });
 
-                document.getElementById('stock').readOnly = true;
-                document.getElementById('stockHelp').style.display = 'block';
+                // Selects
+                if(data.unidadMedida) {
+                    const el = document.getElementById('unidadMedida');
+                    if (el) el.value = data.unidadMedida;
+                }
+                if(data.categoria) {
+                    const el = document.getElementById('categoriaSelect');
+                    if (el) el.value = data.categoria.idCategoria;
+                }
+
+                // Bloqueo de stock (con validación de existencia)
+                const stockInput = document.getElementById('stock');
+                if (stockInput) stockInput.readOnly = true;
+
+                // --- ELIMINAMOS EL AVISO AQUÍ ---
+                const stockHelp = document.getElementById('stockHelp');
+                if (stockHelp) {
+                    stockHelp.style.display = 'block';
+                }
+
             })
-            .catch(err => console.error('Error:', err));
+            .catch(err => {
+                console.error('Error al cargar producto:', err);
+            });
     }
 
     // --- MANEJO DE LOTES ---
     function toggleLotes(idFila, btn) {
         const fila = document.getElementById(idFila);
-        if (!fila) return;
+        if (!fila) return; // Si no existe la fila, no hace nada
 
-        const icono = btn.querySelector('i');
-        if (fila.style.display === 'none' || fila.style.display === '') {
+        // Obtenemos el icono de forma segura
+        const icono = btn ? btn.querySelector('i') : null;
+
+        // Comprobamos el estado actual
+        const estaVisible = fila.style.display === 'table-row';
+
+        if (!estaVisible) {
             fila.style.display = 'table-row';
             if (icono) icono.style.transform = 'rotate(90deg)';
         } else {
@@ -425,6 +469,16 @@
         filasAgotadas.forEach(fila => {
             fila.style.display = (fila.style.display === 'none') ? '' : 'none';
         });
+    }
+
+    function abrirModalEditar(id) {
+        // 1. Cargar los datos mediante tu función existente
+        editarProducto(id);
+
+        // 2. Abrir el modal manualmente usando la API de Bootstrap
+        const modalElement = document.getElementById('modalProducto');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
     }
 </script>
 

@@ -10,12 +10,11 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
-
+import java.util.Optional;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
-    // Cambiado: Este es el que usará el Service para los combos
     List<Producto> findByEstadoTrueOrderByIdProductoDesc();
 
     @Query(value = "SELECT p FROM Producto p JOIN FETCH p.categoria " +
@@ -31,9 +30,30 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
                                         @Param("termino") String termino,
                                         Pageable pageable);
 
-    boolean existsByNombreProductoIgnoreCase(String nombre);
     boolean existsByCodigoBarras(String codigo);
     boolean existsByCodigoBarrasAndIdProductoNot(String codigo, Integer id);
-    Producto findByNombreProductoIgnoreCaseAndEstadoFalse(String nombre);
     long countByStockLessThanEqualAndEstadoTrue(BigDecimal limite);
+
+    // =========================================================================
+    // OPTIMIZACIÓN DE TEXTO CON TILDES (JPQL PORTABLE)
+    // =========================================================================
+
+    // 1. Verifica si ya existe por nombre ignorando tildes
+    @Query("SELECT COUNT(p) > 0 FROM Producto p WHERE " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.nombreProducto, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) = " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(:nombre, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) " +
+            "AND (:id IS NULL OR p.idProducto != :id)")
+    boolean existsByNombreSinTildesNiEspacios(@Param("nombre") String nombre, @Param("id") Integer id);
+
+    // 2. Busca inactivo ignorando tildes Y espacios para el Auto-revivir
+    @Query("SELECT p FROM Producto p WHERE p.estado = false AND " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.nombreProducto, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) = " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(:nombre, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u'))")
+    Producto findInactivoByNombreSinTildesNiEspacios(@Param("nombre") String nombre);
+
+    // 3. Método requerido por el módulo de Compras para no usar findAll()
+    @Query("SELECT p FROM Producto p WHERE " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.nombreProducto, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) = " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(:nombre, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u'))")
+    Optional<Producto> findByNombreSinTildesNiEspacios(@Param("nombre") String nombre);
 }

@@ -102,7 +102,8 @@ public class CompraController {
 
     @GetMapping("/confirmar/{id}")
     public String confirmarCompra(@PathVariable Integer id,
-                                  @RequestParam("tipo") String tipoComprobante, // <--- RECIBIMOS EL DATO
+                                  @RequestParam("tipo") String tipoComprobante,
+                                  @RequestParam("esComprobantePropio") boolean esComprobantePropio,
                                   RedirectAttributes attribute) {
         try {
             // Validamos que no llegue vacío por seguridad del negocio
@@ -111,7 +112,7 @@ public class CompraController {
             }
 
             // Pasamos ambos datos al service
-            compraService.confirmarRecepcion(id, tipoComprobante);
+            compraService.confirmarRecepcion(id, tipoComprobante, esComprobantePropio);
 
             // El mensaje ahora es más específico
             attribute.addFlashAttribute("success", "Pedido aceptado con " + tipoComprobante + " exitosamente");

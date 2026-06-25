@@ -170,7 +170,7 @@
 
             <!-- HEADER -->
             <div class="modal-header border-0 bg-dark text-white p-4">
-                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2 text-white">
                     <i class="fas fa-file-invoice"></i>
                     Detalle de la Compra
                 </h5>
@@ -334,25 +334,43 @@
      */
     function confirmarRecepcion(id) {
         Swal.fire({
-            title: 'Confirmar Ingreso de Stock',
-            text: "¿Con qué tipo de comprobante llegó el pedido?",
+            title: 'Confirmar Ingreso',
             icon: 'question',
-            input: 'select',
-            inputOptions: { 'BOLETA': 'Boleta de Venta', 'FACTURA': 'Factura' },
-            inputPlaceholder: '-- Seleccione --',
             showCancelButton: true,
-            confirmButtonColor: '#3b82f6', // Azul del sistema
+            confirmButtonColor: '#3b82f6',
             cancelButtonColor: '#64748b',
-            confirmButtonText: 'Confirmar Ingreso',
+            confirmButtonText: 'Confirmar',
             cancelButtonText: 'Cancelar',
-            background: '#ffffff',
-            color: '#1b254b',
-            iconColor: '#3b82f6',
             customClass: { popup: 'border-radius-15' },
-            inputValidator: (value) => !value && '¡Debes seleccionar el tipo de comprobante!'
+            width: '350px',
+            html: `
+            <div style="text-align: left; font-family: sans-serif;">
+                <label style="font-size: 0.85rem; color: #666; margin-bottom: 5px; display: block;">Tipo de comprobante:</label>
+                <select id="swal-tipo" class="swal2-select" style="display: flex; width: 100%; margin: 0 0 15px 0; height: 35px; font-size: 0.85rem; padding: 0 10px; outline: none !important; box-shadow: none !important;">
+                    <option value="">-- Seleccione --</option>
+                    <option value="BOLETA">Boleta de Venta</option>
+                    <option value="FACTURA">Factura</option>
+                </select>
+
+                <label style="font-size: 0.85rem; color: #666; display: block; margin-bottom: 5px;">¿Es a nombre propio?</label>
+                <div style="font-size: 0.85rem;">
+                    <label style="cursor:pointer; font-weight: normal;"><input type="radio" name="esPropio" value="true" checked style="outline: none !important; box-shadow: none !important;"> Sí</label>
+                    <label style="cursor:pointer; font-weight: normal; margin-left: 20px;"><input type="radio" name="esPropio" value="false" style="outline: none !important; box-shadow: none !important;"> No</label>
+                </div>
+            </div>
+        `,
+            preConfirm: () => {
+                const tipo = document.getElementById('swal-tipo').value;
+                if (!tipo) {
+                    Swal.showValidationMessage('¡Seleccione un tipo!');
+                    return false;
+                }
+                return tipo;
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = `/compras/confirmar/${id}?tipo=${result.value}`;
+                const esPropio = document.querySelector('input[name="esPropio"]:checked').value;
+                window.location.href = `/compras/confirmar/${id}?tipo=${result.value}&esComprobantePropio=${esPropio}`;
             }
         });
     }

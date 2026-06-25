@@ -91,4 +91,16 @@ public class ProductoController {
         Producto p = productoService.buscarPorId(id);
         return p != null ? ResponseEntity.ok(p) : ResponseEntity.notFound().build();
     }
+
+
+    @PostMapping("/guardar-rapido")
+    @ResponseBody
+    public ResponseEntity<?> guardarRapido(@RequestBody Producto producto) {
+        try {
+            productoService.guardar(producto);
+            return ResponseEntity.ok(producto);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

@@ -1,15 +1,12 @@
 package com.sistemaventas.sistema_ventas.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sistemaventas.sistema_ventas.model.Envase;
+import com.sistemaventas.sistema_ventas.model.MovimientoEnvase;
 import com.sistemaventas.sistema_ventas.model.Usuario;
 import com.sistemaventas.sistema_ventas.model.Venta;
-import com.sistemaventas.sistema_ventas.repository.ClienteRepository;
-import com.sistemaventas.sistema_ventas.repository.PagoRepository;
-import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
-import com.sistemaventas.sistema_ventas.repository.UsuarioRepository;
-import com.sistemaventas.sistema_ventas.service.ClienteService;
-import com.sistemaventas.sistema_ventas.service.ProductoService;
-import com.sistemaventas.sistema_ventas.service.TicketService;
-import com.sistemaventas.sistema_ventas.service.VentaService;
+import com.sistemaventas.sistema_ventas.repository.*;
+import com.sistemaventas.sistema_ventas.service.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,7 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +34,10 @@ public class VentaController {
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private TicketService ticketService;
     @Autowired private PagoRepository pagoRepository;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private EnvaseService envaseService;
+    @Autowired private EnvaseRepository envaseRepository;
+    @Autowired private MovimientoEnvaseRepository movimientoEnvaseRepository;
 
     // 1. VER HISTORIAL DE VENTAS
 
@@ -68,15 +69,51 @@ public class VentaController {
     public String nuevaVenta(Model model) {
         model.addAttribute("venta", new Venta());
         cargarCombos(model);
+        model.addAttribute("envases", envaseService.listarEnvasesParaVenta());
         return "ventas";
     }
 
     @PostMapping("/guardar")
-    public String guardarVenta(@ModelAttribute("venta") Venta venta, Principal principal, RedirectAttributes flash) {
+    public String guardarVenta(@ModelAttribute("venta") Venta venta, @RequestParam(required = false) String envasesJson, Principal principal, RedirectAttributes flash) {
         try {
             if (principal == null) throw new RuntimeException("Sesión no válida.");
 
-            // CORRECCIÓN: Usamos IgnoreCase para que no falle por mayúsculas/minúsculas
+            // --- 1. PROCESAR ENVASES CON SEGURIDAD ---
+            if (envasesJson != null && !envasesJson.isEmpty()) {
+                List<Map<String, Object>> listaRaw = objectMapper.readValue(envasesJson,
+                        new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>(){});
+
+                List<MovimientoEnvase> listaEnvases = listaRaw.stream().map(map -> {
+                    MovimientoEnvase mov = new MovimientoEnvase();
+
+                    // Mapeo de datos básicos
+                    mov.setCantidad(Integer.parseInt(map.get("cantidad").toString()));
+                    mov.setTipo((String) map.get("tipo"));
+
+                    // --- CORRECCIÓN: Captura del Monto de Garantía ---
+                    Object montoObj = map.get("montoGarantiaDejado");
+                    if (montoObj != null && !montoObj.toString().isEmpty()) {
+                        // Ahora puedes usar BigDecimal directamente gracias al import
+                        mov.setMontoGarantiaDejado(new BigDecimal(montoObj.toString()));
+                    } else {
+                        mov.setMontoGarantiaDejado(BigDecimal.ZERO);
+                    }
+                    // --------------------------------------------------
+
+                    Envase env = new Envase();
+                    env.setIdEnvase(Integer.parseInt(map.get("idEnvase").toString()));
+                    mov.setEnvase(env);
+
+                    // Vinculación con la venta padre
+                    mov.setVenta(venta);
+
+                    return mov;
+                }).collect(Collectors.toList());
+
+                venta.setMovimientosEnvase(listaEnvases);
+            }
+
+            // --- 2. PREPARACIÓN DE LA VENTA ---
             Usuario usuarioLogueado = usuarioRepository.findByUsernameIgnoreCase(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -86,18 +123,20 @@ public class VentaController {
                 venta.setTipoVenta(venta.getTipoVenta().toUpperCase());
             }
 
-            // Registramos la venta y capturamos el objeto guardado
+            // --- 3. REGISTRO Y PERSISTENCIA ---
+            // Al tener CascadeType.ALL en la entidad Venta, al guardar la venta
+            // se guardarán automáticamente los MovimientosEnvase creados arriba.
             Venta ventaGuardada = ventaService.registrarVenta(venta);
 
             flash.addFlashAttribute("success", "¡Venta realizada con éxito!");
-
-            // Enviamos el ID para el PDF en el frontend
             flash.addFlashAttribute("idVentaGenerada", ventaGuardada.getIdVenta());
 
             return "redirect:/ventas";
 
         } catch (Exception e) {
-            flash.addFlashAttribute("error", "Error: " + e.getMessage());
+            // Log del error para depuración
+            e.printStackTrace();
+            flash.addFlashAttribute("error", "Error al procesar la venta: " + e.getMessage());
             return "redirect:/ventas/nueva";
         }
     }
@@ -120,6 +159,7 @@ public class VentaController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
     // 4. API PARA EL MODAL (IGUAL QUE EN COMPRAS)
     @GetMapping("/api/{id}")
     @ResponseBody
@@ -168,12 +208,90 @@ public class VentaController {
         }).collect(Collectors.toList());
 
         json.put("detalles", detallesJson);
+
+        // ENVASES
+        List<MovimientoEnvase> listaEnvases = v.getMovimientosEnvase();
+
+        List<Map<String, Object>> envasesJson = (listaEnvases != null ? listaEnvases : new java.util.ArrayList<MovimientoEnvase>())
+                .stream().map(m -> {
+                    Map<String, Object> env = new HashMap<>();
+                    // Como usas Lombok, m.getEnvase() ya existe
+                    env.put("nombre", (m.getEnvase() != null) ? m.getEnvase().getNombre() : "Sin nombre");
+                    env.put("cantidad", m.getCantidad());
+                    env.put("tipo", m.getTipo());
+                    env.put("montoGarantiaDejado", m.getMontoGarantiaDejado() != null ? m.getMontoGarantiaDejado() : 0);
+                    env.put("fecha", (m.getFecha() != null) ? m.getFecha().toLocalDate().toString() : "N/A");
+                    return env;
+                }).collect(Collectors.toList());
+
+        json.put("envases", envasesJson);
+        // --- FIN DE LA INSERCIÓN ---
+
         return ResponseEntity.ok(json);
     }
 
     private void cargarCombos(Model model) {
         model.addAttribute("productos", productoService.listarParaCombos());
         model.addAttribute("clientes", clienteService.listarParaCombos());
+    }
+
+
+
+    @PostMapping("/api/envases/registrar")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> registrarEnvase(@RequestParam Integer idVenta,
+                                             @RequestParam Integer idEnvase,
+                                             @RequestParam Integer cantidad,
+                                             @RequestParam String tipo,
+                                             @RequestParam(required = false) java.math.BigDecimal montoDejado) {
+        try {
+            // 0. BUSCAR VENTA Y VALIDAR ESTADO (Seguridad Backend)
+            Venta v = ventaService.buscarPorId(idVenta);
+            if (v == null) return ResponseEntity.badRequest().body("Venta no encontrada.");
+
+            // Obtenemos el saldo actual para verificar si la cuenta está saldada
+            Envase env = envaseRepository.findById(idEnvase).orElseThrow();
+            Integer saldoActual = movimientoEnvaseRepository.obtenerSaldoEnvase(v.getCliente().getIdCliente(), env.getIdEnvase());
+
+            // Si no debe nada y el usuario intenta registrar un "PRESTAMO", bloqueamos
+            // (Si el saldo es 0 o null, asumimos que no hay deuda pendiente para este envase)
+            if ("PRESTAMO".equalsIgnoreCase(tipo) && (saldoActual == null || saldoActual <= 0)) {
+                // Si quieres bloquear, añade aquí el return:
+                return ResponseEntity.badRequest().body("Error: No se pueden realizar nuevos préstamos en esta cuenta.");
+            }
+
+            // 1. OBTENER SALDO PENDIENTE ACTUAL
+            // (Ya lo obtuvimos arriba)
+
+            // 2. VALIDACIÓN DE DEVOLUCIÓN
+            if ("DEVOLUCION".equalsIgnoreCase(tipo)) {
+                if (saldoActual == null || cantidad > saldoActual) {
+                    return ResponseEntity.badRequest().body("Error: No puedes devolver " + cantidad + " unidades. El cliente solo debe " + (saldoActual != null ? saldoActual : 0) + ".");
+                }
+            }
+
+            // LÓGICA DE LIQUIDACIÓN
+            int cantidadMovimiento = "DEVOLUCION".equalsIgnoreCase(tipo) ? -Math.abs(cantidad) : Math.abs(cantidad);
+
+            // 3. AJUSTE DE STOCK DE TIENDA
+            env.setStock(env.getStock() - cantidadMovimiento);
+            envaseRepository.save(env);
+
+            // 4. REGISTRAR MOVIMIENTO
+            envaseService.registrarMovimiento(v.getCliente(), env, cantidadMovimiento, tipo, v, montoDejado);
+
+            return ResponseEntity.ok("Movimiento registrado correctamente.");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/envases/lista")
+    @ResponseBody
+    public List<Envase> listarEnvasesApi() {
+        // Ya no usamos findAll(), usamos nuestro método filtrado
+        return envaseRepository.listarEnvasesParaVenta();
     }
 
 }

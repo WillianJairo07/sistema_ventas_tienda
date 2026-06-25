@@ -45,4 +45,12 @@ public class Venta {
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<DetalleVenta> detalles;
+
+    // Agrega esto:
+    // Usa fetch = FetchType.LAZY para que los pagos solo se carguen cuando los pidas
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Pago> pagos;
+
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
+    private List<MovimientoEnvase> movimientosEnvase;
 }

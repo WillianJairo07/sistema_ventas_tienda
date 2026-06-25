@@ -1,12 +1,13 @@
 package com.sistemaventas.sistema_ventas.service;
 
+import com.sistemaventas.sistema_ventas.model.DetalleCompra;
 import com.sistemaventas.sistema_ventas.model.Producto;
 import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page; // IMPORTANTE
-import org.springframework.data.domain.PageRequest; // IMPORTANTE
-import org.springframework.data.domain.Pageable; // IMPORTANTE
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,7 +19,6 @@ public class ProductoService {
     @Autowired
     private ProductoRepository productoRepository;
 
-    // --- NUEVO: Este método faltaba para tus combos ---
     public List<Producto> listarParaCombos() {
         return productoRepository.findByEstadoTrueOrderByIdProductoDesc();
     }
@@ -40,41 +40,45 @@ public class ProductoService {
 
     @Transactional
     public void guardar(Producto producto) {
+        // 1. Limpieza de espacios redundantes
         String nombreLimpio = producto.getNombreProducto().trim().replaceAll("\\s+", " ");
 
-        // Lógica de Lotes (Se mantiene igual)
+        // 2. Lógica de Lotes (Se mantiene intacta)
         if (producto.getIdProducto() != null) {
             Producto productoExistente = productoRepository.findById(producto.getIdProducto()).orElse(null);
             if (productoExistente != null && productoExistente.getDetallesCompra() != null) {
                 BigDecimal sumaStockLotes = productoExistente.getDetallesCompra().stream()
                         .filter(lote -> lote != null && lote.getStockActual() != null)
-                        .map(lote -> lote.getStockActual())
+                        .map(DetalleCompra::getStockActual)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 if (sumaStockLotes.compareTo(BigDecimal.ZERO) > 0 &&
                         producto.getStock().compareTo(sumaStockLotes) != 0) {
-                    throw new IllegalArgumentException("No puedes modificar el stock manualmente. " +
-                            "Stock actual en lotes: " + sumaStockLotes);
+                    throw new IllegalArgumentException("No puedes modificar el stock manualmente. Stock actual en lotes: " + sumaStockLotes);
                 }
             }
         }
 
-        // Auto-revivir
-        Producto inactivo = productoRepository.findByNombreProductoIgnoreCaseAndEstadoFalse(nombreLimpio);
-        if (inactivo != null && producto.getIdProducto() == null) {
-            inactivo.setEstado(true);
-            inactivo.setPrecio(producto.getPrecio());
-            inactivo.setStock(producto.getStock());
-            inactivo.setUnidadMedida(producto.getUnidadMedida());
-            inactivo.setCodigoBarras(producto.getCodigoBarras());
-            inactivo.setCategoria(producto.getCategoria());
-            productoRepository.save(inactivo);
-            return;
+        // 3. Auto-revivir (Solo si es nuevo registro)
+        if (producto.getIdProducto() == null) {
+            Producto inactivo = productoRepository.findInactivoByNombreSinTildesNiEspacios(nombreLimpio);
+            if (inactivo != null) {
+                inactivo.setEstado(true);
+                inactivo.setPrecio(producto.getPrecio());
+                inactivo.setStock(producto.getStock());
+                inactivo.setUnidadMedida(producto.getUnidadMedida());
+                inactivo.setCodigoBarras(producto.getCodigoBarras());
+                inactivo.setCategoria(producto.getCategoria());
+                productoRepository.save(inactivo);
+                return;
+            }
         }
 
+        // 4. Validaciones unificadas
         validarDuplicados(producto, nombreLimpio);
         validarDatosProducto(producto);
 
+        // 5. Persistencia
         producto.setNombreProducto(nombreLimpio);
         producto.setEstado(true);
         if (producto.getUnidadMedida() == null) producto.setUnidadMedida("UNIDAD");
@@ -83,16 +87,20 @@ public class ProductoService {
     }
 
     private void validarDuplicados(Producto p, String nombre) {
-        if (p.getIdProducto() == null) {
-            if (productoRepository.existsByNombreProductoIgnoreCase(nombre))
-                throw new IllegalArgumentException("Ya existe ese nombre.");
-            if (p.getCodigoBarras() != null && !p.getCodigoBarras().isEmpty() &&
-                    productoRepository.existsByCodigoBarras(p.getCodigoBarras()))
-                throw new IllegalArgumentException("Código de barras ya registrado.");
-        } else {
-            if (p.getCodigoBarras() != null && !p.getCodigoBarras().isEmpty() &&
-                    productoRepository.existsByCodigoBarrasAndIdProductoNot(p.getCodigoBarras(), p.getIdProducto()))
-                throw new IllegalArgumentException("El código ya pertenece a otro producto.");
+        // Validar Nombre: Busca duplicados ignorando tildes/espacios, excluyendo el ID actual si existe
+        if (productoRepository.existsByNombreSinTildesNiEspacios(nombre, p.getIdProducto())) {
+            throw new IllegalArgumentException("Ya existe un producto con ese nombre.");
+        }
+
+        // Validar Código de Barras: Se mantiene tu lógica original
+        if (p.getCodigoBarras() != null && !p.getCodigoBarras().isEmpty()) {
+            boolean existeCodigo = (p.getIdProducto() == null)
+                    ? productoRepository.existsByCodigoBarras(p.getCodigoBarras())
+                    : productoRepository.existsByCodigoBarrasAndIdProductoNot(p.getCodigoBarras(), p.getIdProducto());
+
+            if (existeCodigo) {
+                throw new IllegalArgumentException("El código de barras ya pertenece a otro producto.");
+            }
         }
     }
 

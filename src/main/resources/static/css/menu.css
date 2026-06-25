@@ -18,7 +18,7 @@ body {
     overflow-x: hidden; /* Evita scroll horizontal durante animaciones */
 }
 
-/* --- ESTRUCTURA DEL SIDEBAR --- */
+/* 1. Modificación de #sidebar */
 #sidebar {
     width: var(--sidebar-width);
     height: 100vh;
@@ -29,11 +29,15 @@ body {
     transition: var(--transition);
     display: flex;
     flex-direction: column;
+    overflow: visible; /* <--- PON ESTO */
 }
 
 /* Oculta el sidebar desplazándolo a la izquierda */
 body.sidebar-closed #sidebar {
     transform: translateX(-100%);
+}
+body.sidebar-open #sidebar {
+    transform: translateX(0);
 }
 
 /* --- BOTÓN FLOTANTE (INDICADOR DE ESTADO) --- */
@@ -73,12 +77,28 @@ body.sidebar-closed .toggle-icon {
 }
 
 /* --- CABECERA Y LOGO --- */
+/* Vertical (portrait) - tablet parada */
 .sidebar-header {
-    height: var(--navbar-height);
+    height: 65px;
     background: var(--navy-dark);
     display: flex;
     align-items: center;
     padding: 0 20px;
+}
+
+/* Horizontal (landscape) - tablet acostada */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+    .sidebar-header {
+        height: 75px;
+    }
+}
+
+@media (max-width: 900px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    .sidebar-header {
+        height: auto;
+        min-height: 65px;
+        padding: 10px 20px;
+    }
 }
 .brand-sidebar { display: flex; align-items: center; gap: 12px; }
 /* Controlamos el tamaño del logo para que no se desborde */
@@ -91,15 +111,12 @@ body.sidebar-closed .toggle-icon {
     background: white;
     position: fixed;
     top: 0;
-    right: 0; /* Fijado a la derecha siempre */
-    left: var(--sidebar-width); /* Empieza donde termina el sidebar */
+    right: 0;
+    left: 0;
     z-index: 1100;
     border-bottom: 1px solid #e2e8f0;
     transition: var(--transition);
 }
-
-/* Cuando el sidebar cierra, la navbar se estira hasta la izquierda (0) */
-body.sidebar-closed .top-navbar { left: 0; }
 
 /* Posicionamiento absoluto para que los iconos no se empujen entre sí */
 .topbar-left { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); }
@@ -114,23 +131,47 @@ body.sidebar-closed .top-navbar { left: 0; }
 body.sidebar-closed .hamburger-btn { display: flex; }
 
 /* --- MENÚ DE NAVEGACIÓN LATERAL --- */
-.sidebar-menu { flex-grow: 1; padding: 15px 0; overflow-y: auto; }
+.sidebar-menu {
+    flex-grow: 1;
+    padding: 15px 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Enlaces y Logout */
 .sidebar-menu a, .btn-logout {
     color: var(--text-muted);
     text-decoration: none;
     padding: 12px 25px;
-    display: flex; align-items: center; gap: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
     font-size: 0.95rem;
     border-left: 3px solid transparent;
-    transition: all 0.3s ease; /* Suavizado de hover */
-    background: none; border: none; width: 100%; cursor: pointer; font-family: inherit;
+    transition: all 0.3s ease;
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .sidebar-menu a:hover, .btn-logout:hover {
     background: rgba(255, 255, 255, 0.08);
     color: white;
     border-left: 3px solid var(--accent-blue);
-    padding-left: 32px; /* Efecto de desplazamiento suave */
+    padding-left: 32px;
+}
+
+/* Configuración especial del formulario y logout al final */
+.sidebar-menu form {
+    margin-top: auto;
+    flex-shrink: 0;
+    display: block;
+}
+
+.btn-logout {
+    padding-bottom: 20px; /* Espacio extra al final */
 }
 
 .sidebar-menu a.active {
@@ -206,118 +247,121 @@ body.sidebar-closed .hamburger-btn { display: flex; }
 }
 
 /*ESTILO PARA DASHBOARD*/
-/* --- LAYOUT DEL CONTENIDO --- */
+/* --- 1. LAYOUT DEL CONTENIDO --- */
+
 .content {
-    margin-left: var(--sidebar-width);
+    margin-left: 0;
     padding: calc(var(--navbar-height) + 25px) 1.5rem 1.5rem 1.5rem;
     transition: var(--transition);
     min-height: 100vh;
     background-color: var(--bg-body);
 }
-
-body.sidebar-closed .content { margin-left: 0; }
-
-/* --- BARRA DE REPORTES & FILTROS --- */
-.report-filter-bar {
-    background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #eef2f6;
-    padding: 15px 20px;
-}
-
-.select-clean {
-    cursor: pointer;
-    border: 1px solid #eef2f6 !important;
-    font-weight: 600;
-    color: var(--navy-dark);
-    padding: 0.4rem 2rem 0.4rem 1rem;
-    transition: var(--transition);
-}
-
-.select-clean:focus, .btn:focus, .form-select:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: var(--accent-blue) !important;
-}
-
-/* Quitar el borde azul de los botones de SweetAlert2 al hacer click o tener foco */
-.swal2-styled:focus {
-    box-shadow: none !important;
-    outline: none !important;
-}
-
-/* --- TARJETAS DASHBOARD --- */
-.bg-dashboard-card {
-    background: #ffffff !important;
-    border-radius: 12px !important;
-    border: 1px solid #eef2f6;
-    transition: var(--transition);
-    transform: none; /* Por defecto no se mueven */
-}
-
-/* Solo sombra para Gráfico y Listas (Sin levantarse) */
-.bg-dashboard-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    transform: none;
-}
-
-/* EFECTO ESPECIAL: Solo para las 5 tarjetas KPI superiores */
-.kpi-card:hover {
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
-    transform: translateY(-4px) !important;
-}
-
-/* --- ICONOS Y TEXTOS --- */
-.icon-box-dash {
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 8px; font-size: 1rem;
-}
-
-.text-xs-bold { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+/* --- 2. TARJETAS Y COMPONENTES DASHBOARD --- */
+.bg-dashboard-card { background: #ffffff !important; border-radius: 12px !important; border: 1px solid #eef2f6; transition: var(--transition); transform: none; }
+.bg-dashboard-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.kpi-card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; transform: translateY(-4px) !important; }
+.icon-box-dash { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1rem; }
+.text-xs-bold{ font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.text-navy{ font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #505050 }
+.text-navi{ font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
+.card-link-dash span,.fw-bold{ font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; color: #505050 }
 .dynamic-value { color: var(--navy-dark); font-size: 1.4rem; font-weight: 700; }
-
-/* --- BOTONES DASHBOARD (Sin efecto de levantarse) --- */
-.btn-dash {
-    border-radius: 5px !important;
-    padding: 10px 20px !important;
-    transition: background-color 0.3s ease, filter 0.3s ease;
-    background-color: var(--accent-blue);
-    border: none;
-    color: white;
-}
-.btn-dash:hover {
-    filter: brightness(110%);
-    transform: none !important; /* No se levanta */
-}
-
-/* --- TABLAS COMPACTAS --- */
 .table-dash { font-size: 0.85rem; }
 .table-dash tbody tr td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 992px) {
-    .content { margin-left: 0; }
-    .report-filter-bar .justify-content-lg-end {
-        justify-content: flex-start !important;
-        margin-top: 15px;
-    }
+.card-link-dash { display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; padding: 20px; border-radius: 12px; text-decoration: none; color: var(--navy-dark); box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); height: 100%; border: 1px solid rgba(0,0,0,0.05); }
+.card-link-dash:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); color: var(--accent-blue); }
+.icon-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 12px; transition: transform 0.3s ease; }
+.card-link-dash:hover .icon-circle { transform: scale(1.1); }
+.card-link-dash:hover span { color: var(--accent-blue); }
+
+/* --- 3. BARRA DE FILTROS (Nueva estructura) --- */
+.custom-filter-container {
+    display: grid;
+    align-items: center;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+    gap: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.filter-title { display: flex; flex-direction: column; }
+.filter-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-report { color: white !important; padding: 8px 16px; font-size: 14px; font-weight: 600; transition: filter 0.3s ease; white-space: nowrap; border-radius: 6px; }
+.btn-report:hover { filter: brightness(90%); }
+.date-field-hidden { display: none !important; }
+.date-fields-wrapper { display: flex; gap: 10px; }
+
+/* --- 4. RESPONSIVE --- */
+/* Tablet y Móvil (<= 1270px) */
+@media (max-width: 1270px) {
+    .custom-filter-container { grid-template-columns: 1fr; text-align: center; }
+    .filter-title { align-items: center; }
+    .filter-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+    .date-fields-wrapper { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .btn-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
 }
 
-@media (max-width: 768px) {
-    .btn-dash {
-        padding: 12px 10px !important; /* Más altura para facilitar el toque */
-        font-size: 0.85rem !important; /* Texto ligeramente más grande para legibilidad */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap; /* Evita que el texto salte de línea */
+/* Móvil estricto (<= 576px) */
+@media (max-width: 576px) {
+    .date-fields-wrapper { grid-template-columns: 1fr; }
+    .btn-container { grid-template-columns: 1fr; }
+}
+
+/* --- SOLO PANTALLA GRANDE (Desktop > 1270px) --- */
+@media (min-width: 1271px) {
+    .custom-filter-container {
+        grid-template-columns: auto 1fr auto;
+        text-align: left;
+        gap: 25px; /* Aumentamos el espacio entre bloques principales */
     }
 
-    /* Espaciado extra entre el select y los botones en móvil */
-    .select-clean {
-        margin-bottom: 8px;
+    .filter-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        width: 100%;
+        gap: 15px; /* <--- ESTO SEPARA EL SELECT, FECHAS Y BOTONES */
     }
+
+    /* Espaciado entre los inputs de fecha */
+    .date-fields-wrapper {
+        display: flex;
+        flex-direction: row;
+        width: auto;
+        gap: 10px; /* <--- ESTO SEPARA LOS DOS INPUTS DE FECHA */
+    }
+
+    /* Espaciado entre los dos botones */
+    .btn-container {
+        display: flex;
+        flex-direction: row;
+        width: auto;
+        gap: 10px; /* <--- ESTO SEPARA EL BOTÓN VENTAS DEL DE COMPRAS */
+    }
+
+    #periodoSelect { width: 220px !important; flex-shrink: 0; }
+    .filter-title { align-items: flex-start; }
+}
+
+/* --- 5. SWAL2 --- */
+.swal2-styled:focus { box-shadow: none !important; outline: none !important; }
+/* El SweetAlert debe estar MUCHO más arriba (3000+) */
+.swal2-container {
+    z-index: 3000 !important;
+}
+
+/* --- Mejora del Título Panel de Control --- */
+.filter-title h4 {
+    font-size: 1.5rem !important; /* Aumenta el tamaño significativamente */
+    letter-spacing: -0.5px;      /* Le da un toque más moderno y profesional */
+    margin-bottom: 2px !important;
+}
+
+.filter-title p {
+    font-size: 0.9rem !important; /* Un poco más grande también el "Bienvenido" */
+    color: #6c757d !important;    /* Un gris ligeramente más visible */
 }
 
 /* ==========================================================================
@@ -528,7 +572,19 @@ body.sidebar-closed .content { margin-left: 0; }
 /* ==========================================================================
    ESTILOS: MODAL DASHBOARD (SISTEMA DE VENTAS)
    ========================================================================== */
+.modal-header h5 i {
+    color: #ffffff !important;      /* Asegura que sea blanco */
+    font-size: 0.95rem !important;  /* Tamaño ajustado */
+    margin-right: 10px !important;  /* Espacio con el texto */
+    display: inline-block;
+}
 
+/* Opcional: si quieres que el título también sea pequeño y compacto */
+.modal-header h5 {
+    font-size: 1.1rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
 /* --- 1. CONTROL DE SCROLL Y JERARQUÍA (FIX) --- */
 
 /* Bloquea el scroll del body pero permite el del modal si es necesario */
@@ -701,6 +757,14 @@ body.modal-open {
     -webkit-box-orient: vertical;
     overflow: hidden;
     word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .custom-table td:nth-child(5),
+    .custom-table th:nth-child(5) {
+        min-width: 100px;
+        white-space: nowrap;
+    }
 }
 
 /* 4. OPTIMIZACIÓN DE ESPACIOS EN MÓVIL */
@@ -1186,4 +1250,194 @@ textarea:focus{
 }
 
 
+/*ESTILO PARA ENVASES*/
+/* Layout de la sección envases */
+#selectEnvase {
+    width: 100%;
+}
 
+/* Convertimos la fila en grid */
+.row.g-2:has(#selectEnvase) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .5rem;
+}
+
+/* Select ocupa toda la primera fila */
+.row.g-2:has(#selectEnvase) > .col-8 {
+    grid-column: 1 / 3;
+    width: 100%;
+}
+
+/* Cantidad y garantía mitad y mitad */
+.row.g-2:has(#selectEnvase) > .col-4,
+.row.g-2:has(#selectEnvase) > .col-12:nth-of-type(3) {
+    width: 100%;
+}
+
+/* Contenedor de botones ocupa toda la fila */
+.row.g-2:has(#selectEnvase) > .col-12.d-flex {
+    grid-column: 1 / 3;
+}
+
+/* Botones más altos */
+.row.g-2:has(#selectEnvase) .btn {
+    min-height: 48px;
+    font-weight: 700;
+    border-radius: 12px;
+}
+
+/* Inputs y select más uniformes */
+#selectEnvase,
+#cantEnvase,
+#montoGarantiaInput {
+    height: 42px;
+    border-radius: 10px;
+}
+
+
+/* LLEVA - estado normal */
+.btn-outline-success {
+
+    border-color: #10b981 !important;
+    color: #151515 !important;
+}
+
+/* LLEVA - hover (igual que normal) */
+.btn-outline-success:hover {
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #fff !important;
+}
+
+/* DEVUELVE - estado normal */
+.btn-outline-primary {
+    border-color: #3b82f6 !important;
+    color: #151515 !important;
+}
+
+/* DEVUELVE - hover (igual que normal) */
+.btn-outline-primary:hover {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #fff !important;
+}
+
+
+
+/* =========================
+   MODAL GENERAL
+========================= */
+#modalEnvasesVenta .modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* =========================
+   TABLA RESPONSIVE PRO
+========================= */
+#modalEnvasesVenta table {
+    font-size: 0.85rem;
+    min-width: 600px; /* evita que colapse */
+}
+
+#modalEnvasesVenta .table-responsive {
+    border-radius: 12px;
+    background: #fff;
+}
+
+/* Encabezado fijo visual */
+#modalEnvasesVenta thead th {
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #374151;
+    background: #f3f4f6;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Filas más limpias */
+#modalEnvasesVenta tbody tr {
+    transition: background 0.2s ease;
+}
+
+#modalEnvasesVenta tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* =========================
+   FORMULARIO RESPONSIVE
+========================= */
+#modalEnvasesVenta label {
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+}
+
+#modalEnvasesVenta .form-control,
+#modalEnvasesVenta .form-select {
+    height: 40px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+}
+
+/* =========================
+   BOTÓN AGREGAR
+========================= */
+#modalEnvasesVenta .btn-circle {
+    height: 40px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+/* =========================
+   MOBILE OPTIMIZADO
+========================= */
+@media (max-width: 768px) {
+
+    #modalEnvasesVenta .row.g-2 {
+        gap: 10px;
+    }
+
+    #modalEnvasesVenta table {
+        min-width: 700px; /* scroll horizontal controlado */
+    }
+
+    #modalEnvasesVenta .modal-body {
+        padding: 16px !important;
+    }
+
+    #modalEnvasesVenta h6 {
+        font-size: 0.75rem;
+    }
+}
+
+
+/* Estilo para el botón circular */
+.btn-add-circle {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important; /* Esto lo hace circular */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #3b82f6; /* Color azul corporativo */
+    color: white;
+    border: none;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-add-circle:hover {
+    background-color: #2563eb;
+    transform: scale(1.05);
+}
+
+/* Ajuste para que los select/inputs no se sientan apretados en tablet */
+@media (min-width: 768px) {
+    #seccionNuevoMovimiento .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+    #seccionNuevoMovimiento .col-md-4 { flex: 0 0 33.33%; max-width: 33.33%; }
+    #seccionNuevoMovimiento .col-md-5 { flex: 0 0 41.66%; max-width: 41.66%; }
+    #seccionNuevoMovimiento .col-md-3 { flex: 0 0 25%; max-width: 25%; }
+}

@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.data.domain.Page;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 @RequestMapping("/usuarios")
@@ -17,33 +18,30 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    // ====================================================================
+    // PERMITIDO PARA CUALQUIERA: ADMIN y VENDEDOR pueden gestionar su perfil
+    // ====================================================================
     @GetMapping("/perfil")
     public String verPerfil(Model model, Authentication auth) {
         if (auth == null || !auth.isAuthenticated()) return "redirect:/login";
 
-        // Obtenemos el usuario completo usando el username de la sesión
         Usuario usuario = usuarioService.buscarPorUsername(auth.getName());
         model.addAttribute("usuario", usuario);
         return "perfil";
     }
 
-    // ====================================================================
-    // NUEVO: Procesa el cambio de contraseña desde el perfil personal
-    // ====================================================================
     @PostMapping("/perfil/cambiar-password")
     public String cambiarPasswordMiPerfil(@RequestParam("passwordActual") String passwordActual,
                                           @RequestParam("nuevaPassword") String nuevaPassword,
-                                          org.springframework.security.core.Authentication auth,
+                                          Authentication auth,
                                           RedirectAttributes flash) {
         if (auth == null || !auth.isAuthenticated()) return "redirect:/login";
 
         try {
             String usernameLogueado = auth.getName();
-            // Llama a la nueva validación del servicio
             usuarioService.cambiarPasswordPersonal(usernameLogueado, passwordActual, nuevaPassword);
             flash.addFlashAttribute("success", "Contraseña cambiada con éxito.");
         } catch (IllegalArgumentException e) {
-            // Captura si la contraseña actual no coincide o es inválida
             flash.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
             flash.addFlashAttribute("error", "Error interno al cambiar la contraseña.");
@@ -52,7 +50,11 @@ public class UsuarioController {
         return "redirect:/usuarios/perfil";
     }
 
+    // ====================================================================
+    // EXCLUSIVOS PARA ADMIN: El Vendedor será rechazado inmediatamente
+    // ====================================================================
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String listar(Model model,
                          @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
                          @RequestParam(name = "page", defaultValue = "0") int page,
@@ -73,6 +75,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/guardar")
+    @PreAuthorize("hasRole('ADMIN')")
     public String guardar(@ModelAttribute Usuario usuario,
                           @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
                           RedirectAttributes flash) {
@@ -88,6 +91,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/eliminar/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String eliminar(@PathVariable Integer id,
                            @RequestParam(name = "verInactivos", defaultValue = "false") boolean verInactivos,
                            RedirectAttributes flash) {
@@ -105,6 +109,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/restaurar/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String restaurar(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             usuarioService.restaurar(id);
@@ -117,11 +122,13 @@ public class UsuarioController {
 
     @GetMapping("/editar/{id}")
     @ResponseBody
+    @PreAuthorize("hasRole('ADMIN')")
     public Usuario editar(@PathVariable Integer id) {
         return usuarioService.buscarPorId(id);
     }
 
     @GetMapping("/reset-password/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String resetPassword(@PathVariable Integer id,
                                 @RequestParam String password,
                                 @RequestParam(defaultValue = "false") boolean verInactivos,

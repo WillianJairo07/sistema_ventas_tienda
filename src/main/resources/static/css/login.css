@@ -2,33 +2,25 @@
     --primary-gradient: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
 }
 
-html {
-    height: 100%;
-    background: var(--primary-gradient);
-    background-attachment: fixed;
-    background-size: cover;
-    overflow-x: hidden;
+html, body {
+    height: 100%; /* Asegura que ambos ocupen toda la altura */
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Evita scroll horizontal */
 }
 
 body {
     margin: 0;
-    padding: 20px;
-    padding-left: max(20px, env(safe-area-inset-left));
-    padding-right: max(20px, env(safe-area-inset-right));
-    box-sizing: border-box;
-    min-height: 100%;
+    min-height: 100dvh; /* Altura dinámica para móviles */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    background-attachment: fixed; /* El fondo se queda quieto */
+    padding: 20px;
+    box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: transparent;
-}
-
-.logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 15px;
 }
 
 .main-title {
@@ -84,17 +76,28 @@ body {
     border: 2px solid #3b5998;
 }
 
-.forgot-password {
-    display: block;
-    font-size: 14px;
-    color: #4b6cb7;
-    text-decoration: none;
-    transition: color 0.3s ease;
+.password-wrapper {
+    position: relative;
+    width: 100%;
 }
 
-.forgot-password:hover {
-    color: #182848;
-    text-decoration: underline;
+.password-wrapper .form-control {
+    padding-right: 40px; /* Espacio para que el texto no tape al ojo */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    font-size: 18px;
+    opacity: 0.6;
+}
+
+.toggle-password:hover {
+    opacity: 1;
 }
 
 /* Estilo para los mensajes de alerta */

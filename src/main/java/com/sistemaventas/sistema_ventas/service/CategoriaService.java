@@ -2,7 +2,6 @@ package com.sistemaventas.sistema_ventas.service;
 
 import com.sistemaventas.sistema_ventas.model.Categoria;
 import com.sistemaventas.sistema_ventas.repository.CategoriaRepository;
-import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,14 +18,11 @@ public class CategoriaService {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
-
     private String normalizarTexto(String texto) {
         if (texto == null) return "";
-        // 1. Quitar tildes (NFD separa la letra del acento, luego el regex borra el acento)
         String normalizado = java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD);
         normalizado = normalizado.replaceAll("\\p{M}", "");
-        // 2. Quitar espacios y pasar a minúsculas
-        return normalizado.replace(" ", "").toLowerCase();
+        return normalizado.toLowerCase().trim().replaceAll("\\s+", " ");
     }
 
     public Page<Categoria> listarPaginado(boolean activos, int page, int size, String buscar) {
@@ -43,7 +39,6 @@ public class CategoriaService {
 
     @Transactional
     public void restaurar(Integer id) {
-        // .findById ya encuentra categorías inactivas por defecto
         Categoria cat = categoriaRepository.findById(id).orElse(null);
         if (cat != null) {
             cat.setEstado(true);
@@ -55,44 +50,29 @@ public class CategoriaService {
 
     @Transactional
     public void guardar(Categoria categoria) {
-        // 1. Limpieza de espacios
-        String nombreNuevo = categoria.getNombreCategoria().trim().replaceAll("\\s+", " ");
+        String nombreNuevo = categoria.getNombreCategoria().trim(); // Mantenemos el formato original para guardarlo bonito
 
-        // 2. VALIDACIÓN OPTIMIZADA (Sin usar findAll)
-
-        // Escenario A: NUEVA CATEGORÍA (ID es null)
         if (categoria.getIdCategoria() == null) {
-            // Buscamos si existe por nombre (ignora mayúsculas/minúsculas)
-            Categoria existente = categoriaRepository.findByNombreCategoriaIgnoreCase(nombreNuevo);
+            // Buscamos ignorando espacios y tildes
+            Categoria existente = categoriaRepository.findByNombreSinTildesNiEspacios(nombreNuevo);
 
             if (existente != null) {
-                // Lógica de Auto-revivir: si existe pero está inactiva, la activamos
                 if (!existente.isEstado()) {
                     existente.setEstado(true);
-                    existente.setNombreCategoria(nombreNuevo);
                     categoriaRepository.save(existente);
                     return;
                 }
-                // Si está activa, es un duplicado
                 throw new IllegalArgumentException("Ya existe una categoría similar");
             }
-        }
-        // Escenario B: EDITANDO CATEGORÍA (ID ya existe)
-        else {
-            // Validamos que el nuevo nombre no lo tenga OTRA categoría distinta a la actual
-            if (categoriaRepository.existsByNombreCategoriaIgnoreCaseAndIdCategoriaNot(nombreNuevo, categoria.getIdCategoria())) {
-                throw new IllegalArgumentException("Ya existe una categoría similar");
+        } else {
+            // Validación para edición
+            if (categoriaRepository.existsByNombreSinTildesNiEspaciosYIdNot(nombreNuevo, categoria.getIdCategoria())) {
+                throw new IllegalArgumentException("Ya existe otra categoría similar");
             }
         }
 
-        // 3. GUARDADO O ACTUALIZACIÓN FINAL
         categoria.setNombreCategoria(nombreNuevo);
-
-        // Solo forzamos estado true si es un registro totalmente nuevo
-        if (categoria.getIdCategoria() == null) {
-            categoria.setEstado(true);
-        }
-
+        if (categoria.getIdCategoria() == null) categoria.setEstado(true);
         categoriaRepository.save(categoria);
     }
 
@@ -100,7 +80,6 @@ public class CategoriaService {
         return categoriaRepository.findById(id).orElse(null);
     }
 
-    // ELIMINACIÓN LÓGICA: Para que se vaya a "Inactivos"
     public void eliminar(Integer id) {
         Categoria cat = buscarPorId(id);
         if (cat != null) {
@@ -109,9 +88,7 @@ public class CategoriaService {
         }
     }
 
-
     public List<Categoria> listarParaCombos() {
-        // Usamos el repositorio para traer solo las activas, ordenadas por nombre, en una LISTA
         return categoriaRepository.findByEstadoTrueOrderByNombreCategoriaAsc();
     }
 }

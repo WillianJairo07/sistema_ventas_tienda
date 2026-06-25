@@ -5,15 +5,13 @@
     <title>Historial de Compras - Sistema de Ventas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <script th:src="@{/js/tema.js}"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
     <link th:href="@{/css/menu.css}" rel="stylesheet">
-    <link th:href="@{/css/menu1.css}" rel="stylesheet">
-    <link th:href="@{/css/modal.css}" rel="stylesheet">
+
 
 </head>
 <body>
@@ -320,7 +318,7 @@
                 showConfirmButton: false,
                 background: '#ffffff',
                 color: '#1b254b',
-                iconColor: '#3b82f6', // Azul del sistema
+                iconColor: '#3b82f6',
                 customClass: { popup: 'border-radius-15' }
             });
         }
@@ -333,13 +331,15 @@
                 background: '#ffffff',
                 color: '#1b254b',
                 confirmButtonColor: '#3b82f6',
-                iconColor: '#ee5d5d', // Rojo para errores
+                iconColor: '#ee5d5d',
                 customClass: { popup: 'border-radius-15' }
             });
         }
     });
 
-
+    // =========================================================================
+    // 1. FILTRADO DINÁMICO (AJAX REAL ENLAZADO CON EL CONTROLLER)
+    // =========================================================================
     let timeoutBusqueda = null;
 
     function filtrarPagos() {
@@ -349,25 +349,28 @@
         clearTimeout(timeoutBusqueda);
 
         timeoutBusqueda = setTimeout(() => {
-
-            fetch(`/pagos?buscar=${encodeURIComponent(texto)}`)
-                .then(response => response.text())
+            // CORRECCIÓN CLAVE: Agregamos la cabecera X-Requested-With para que el Controller detecte el AJAX
+            fetch(`/pagos?buscar=${encodeURIComponent(texto)}`, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error("Error en la respuesta del servidor");
+                    return response.text();
+                })
                 .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    const nuevoContenido = doc.getElementById('contenedorTabla').innerHTML;
-
-                    document.getElementById('contenedorTabla').innerHTML = nuevoContenido;
+                    // Como el controlador ahora sí devuelve solo el fragmento, lo inyectamos de manera directa y limpia
+                    document.getElementById('contenedorTabla').innerHTML = html;
                 })
                 .catch(err => console.warn("Error en búsqueda:", err));
 
         }, 400);
     }
 
-
-
-
+    // =========================================================================
+    // 2. CONTROL COMPATIBLE DE MODALES (EVITA PANTALLAS CONGELADAS)
+    // =========================================================================
     function abrirModalAbono(id, saldo) {
         document.getElementById('modalIdVenta').value = id;
         document.getElementById('labelSaldo').innerText = saldo.toFixed(2);
@@ -377,26 +380,42 @@
         inputMonto.value = saldo.toFixed(2);
 
         const modalElement = document.getElementById('modalAbono');
-        const modal = new bootstrap.Modal(modalElement);
+
+        // CORRECCIÓN CLAVE: Reutiliza la instancia si ya existe, en lugar de instanciar modales infinitos
+        let modal = bootstrap.Modal.getInstance(modalElement);
+        if (!modal) {
+            modal = new bootstrap.Modal(modalElement);
+        }
 
         modal.show();
     }
 
-
+    // =========================================================================
+    // 3. VALIDACIÓN PRE-ENVÍO
+    // =========================================================================
     document.getElementById('formAbono').addEventListener('submit', function(e) {
         const monto = parseFloat(document.getElementById('inputMonto').value);
         const saldo = parseFloat(document.getElementById('labelSaldo').innerText);
 
         if (isNaN(monto) || monto <= 0) {
             e.preventDefault();
-            Swal.fire('Atención', 'Ingrese un monto válido mayor a cero.', 'warning');
+            Swal.fire({
+                title: 'Atención',
+                text: 'Ingrese un monto válido mayor a cero.',
+                icon: 'warning',
+                customClass: { popup: 'border-radius-15' }
+            });
             return;
         }
 
-
         if (monto > (saldo + 0.01)) {
             e.preventDefault();
-            Swal.fire('Monto excedido', 'El abono no puede superar el saldo pendiente.', 'error');
+            Swal.fire({
+                title: 'Monto excedido',
+                text: 'El abono no puede superar el saldo pendiente.',
+                icon: 'error',
+                customClass: { popup: 'border-radius-15' }
+            });
         }
     });
 </script>

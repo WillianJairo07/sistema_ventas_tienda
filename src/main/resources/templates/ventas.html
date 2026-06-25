@@ -2,9 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Categorias - Sistema de Ventas</title>
+  <title>Ventas - Sistema de Ventas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+  <meta th:name="_csrf" th:content="${_csrf.token}"/>
+  <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -121,7 +122,7 @@
                         <i class="fas fa-search text-muted"></i>
                     </span>
                     <input type="text" id="inputCliente" class="form-control border-start-0"
-                           placeholder="Escanear o buscar cliente..."
+                           placeholder="Buscar cliente..."
                            autocomplete="off" required
                            style="height: 46px; border-radius: 0 12px 12px 0; border: 1px solid #e2e8f0; border-left: none;">
 
@@ -214,6 +215,48 @@
                   </span>
                 </div>
               </div>
+              <!-- SECCIÓN DE ENVASES -->
+              <div class="crud-card p-3 shadow-sm border-0 mb-3 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold small text-muted mb-0">
+                    <i class="fas fa-wine-bottle me-1"></i> Gestión de Envases
+                  </h6>
+                  <span id="badgeEnvases" class="badge bg-primary rounded-pill small">0</span>
+                </div>
+
+                <div class="row g-2">
+                  <div class="col-8">
+                    <select id="selectEnvase" class="form-select form-select-sm shadow-none">
+                      <option value="">-- Seleccione --</option>
+                      <option th:each="e : ${envases}"
+                              th:value="${e.idEnvase}"
+                              th:data-nombre="${e.nombre}"
+                              th:data-stock="${e.stock}"
+                              th:data-precio-garantia="${e.precioGarantiaBase}"
+                              th:text="${e.nombre + ' (S/ ' + e.precioGarantiaBase + ')'}">
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-4">
+                    <input type="number" id="cantEnvase" class="form-control form-control-sm text-center" placeholder="Cantidad">
+                  </div>
+                  <div class="col-12">
+                    <input type="number" step="0.01" id="montoGarantiaInput"
+                           class="form-control form-control-sm text-center"
+                           placeholder="Garantía">
+                  </div>
+                  <div class="col-12 d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-success flex-fill fw-bold" onclick="registrarEnvase('PRESTAMO')">
+                      <i class="fas fa-arrow-up me-1"></i>Lleva
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill fw-bold" onclick="registrarEnvase('DEVOLUCION')">
+                      <i class="fas fa-arrow-down me-1"></i>Devuelve
+                    </button>
+                  </div>
+                </div>
+                <ul id="listaEnvasesVenta" class="list-unstyled mt-3 small mb-0"></ul>
+                <input type="hidden" name="envasesJson" id="envasesJson">
+              </div>
 
               <button type="submit" id="btnGuardar" class="btn btn-new-cat w-100 py-3 rounded-pill fw-bold shadow-sm" disabled>
                 <i class="fas fa-check-circle me-2"></i> Finalizar Venta
@@ -237,8 +280,8 @@
       <!-- HEADER -->
       <div class="modal-header border-0">
         <h5 class="modal-title fw-bold text-white">
-          <i class="fas fa-user-plus me-2"></i>
-          Nuevo Cliente Rápido
+          <i class="fas fa-plus-circle me-2"></i>
+          Nuevo Cliente
         </h5>
         <button type="button"
                 class="btn-close btn-close-white"
@@ -312,6 +355,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
+</body>
 <script th:inline="javascript">
   // ==========================================
   // 1. ELEMENTOS DEL DOM E INICIALIZACIÓN
@@ -362,7 +406,8 @@
         if (form) form.reset();
       });
     }
-
+    // Limpia el input de envases al cargar para evitar datos basura
+    document.getElementById('envasesJson').value = "";
     cargarCarritoTemporal();
   });
 
@@ -527,18 +572,19 @@
           <input type="hidden" class="input-precio" value="${precio}">
       </td>
 
-      <td class="text-center px-1">
-          <input type="number" step="${step}"
-                 class="form-control form-control-sm input-cantidad text-center fw-bold shadow-none mx-auto"
+      <td class="text-center px-1" style="min-width: 110px;">
+          <input type="number"
+                 step="${step}"
+                 class="form-control form-control-sm input-cantidad text-center fw-bold shadow-none"
                  value="1"
                  oninput="validarStockManual(this, ${stockMax}, '${unidad}')"
                  onclick="this.select()"
-                 style="width: 65px; height: 35px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                 style="width: 80px !important; height: 38px !important; margin: auto; font-size: 0.85rem; border-radius: 8px; border: 1px solid #e2e8f0;">
       </td>
 
       <td class="text-center px-1">
           <span class="badge bg-light text-muted border fw-bold"
-                style="font-size: 0.65rem; padding: 6px 10px; border-radius: 8px;">
+                style="font-size: 0.80rem; padding: 6px 10px; border-radius: 8px;">
               ${unidad.toLowerCase()}
           </span>
       </td>
@@ -614,7 +660,7 @@
   function actualizarTotales() {
     let acumulado = 0;
     const filas = document.querySelectorAll('#tbodyDetalles tr[data-id]');
-
+    document.getElementById("btnGuardar").disabled = (filas.length === 0 && listaEnvasesTemp.length === 0);
     filas.forEach((tr, i) => {
       const inputCant = tr.querySelector('.input-cantidad');
       const cant = parseFloat(inputCant.value) || 0;
@@ -658,17 +704,8 @@
     }
   }
 
-  // ==========================================
-  // 6. CLIENTE Y VALIDACIÓN FINAL
-  // ==========================================
-  inputCliente.addEventListener('input', function() {
-    const opcion = Array.from(datalistCli.options).find(opt => opt.value === this.value);
-    if (opcion) {
-      clienteIdHidden.value = opcion.getAttribute('data-id');
-    } else {
-      clienteIdHidden.value = "";
-    }
-  });
+
+
 
   window.guardarClienteRapido = function() {
     const nombre = document.getElementById('reg_nombre').value.trim();
@@ -677,8 +714,11 @@
 
     if (!nombre || !apePat) return;
 
-    const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
-    const csrfHeader = "X-CSRF-TOKEN";
+    // ====================================================================
+    // EXTRACCIÓN DEL ESCUDO CSRF DESDE EL LAYOUT GLOBAL
+    // ====================================================================
+    const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+    const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
 
     const clienteData = {
       nombre: nombre,
@@ -687,28 +727,42 @@
       estado: true
     };
 
+    // Obtenemos la instancia del modal antes de la petición para poder manipularlo en cualquier escenario
+    const modalElement = document.getElementById('modalNuevoCliente');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+
     fetch('/clientes/guardar-rapido', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        [csrfHeader]: csrfToken
+        [csrfHeader]: csrfToken // <--- Inyección dinámica y segura del Header CSRF
       },
       body: JSON.stringify(clienteData)
     })
             .then(response => {
-              if (!response.ok) throw new Error('Error al registrar cliente');
+              // Si el servidor responde con un error (ej: 400 por duplicado barriendo tildes)
+              if (!response.ok) {
+                return response.text().then(text => {
+                  throw new Error(text || 'Ya existe un cliente similar o hubo un error.');
+                });
+              }
               return response.json();
             })
             .then(clienteGuardado => {
-              const nombreCompleto = `${clienteGuardado.nombre} ${clienteGuardado.apellidoPat} ${clienteGuardado.apellidoMat || ''}`.trim();
+              const nombreCompleto = `${clienteGuardado.nombre} ${clienteGuardado.apellidoPat} ${clienteGuardado.apellidoMat || ''}`.trim().replace(/\s+/g, ' ');
 
+              listaClientesMemoria.push({
+                id: clienteGuardado.idCliente,
+                completo: nombreCompleto
+              });
+              //  Asignar los valores al buscador visual e input oculto de la venta actual
               inputCliente.value = nombreCompleto;
               clienteIdHidden.value = clienteGuardado.idCliente;
 
-              const modalElement = document.getElementById('modalNuevoCliente');
-              const modal = bootstrap.Modal.getInstance(modalElement);
+              // 2. Cierre del modal en caso de éxito
               if (modal) modal.hide();
 
+              // 3. Alerta de confirmación corporativa
               Swal.fire({
                 title: '¡Cliente Registrado!',
                 text: `${nombreCompleto}`,
@@ -720,13 +774,20 @@
                 iconColor: '#3b82f6',
                 customClass: { popup: 'border-radius-15' }
               });
+
+              // 4. Devolver de inmediato el foco al buscador de productos para no romper el flujo de la venta
+              if (buscador) buscador.focus();
             })
             .catch(error => {
               console.error('Error:', error);
+
+              // Cerramos el modal también aquí para que no tape la alerta de error del SweetAlert
+              if (modal) modal.hide();
+
               Swal.fire({
-                title: 'Error de Registro',
-                text: 'No se pudo guardar el cliente en el servidor.',
-                icon: 'error',
+                title: 'No se pudo registrar',
+                text: error.message || 'Ya existe un cliente similar en el sistema.',
+                icon: 'warning',
                 background: '#ffffff',
                 color: '#1b254b',
                 confirmButtonColor: '#3b82f6',
@@ -786,6 +847,7 @@
       customClass: { popup: 'border-radius-15' }
     }).then((result) => {
       if (result.isConfirmed) {
+        document.getElementById('envasesJson').value = JSON.stringify(listaEnvasesTemp);
         localStorage.removeItem('carritoVenta');
         this.submit();
       }
@@ -846,8 +908,14 @@
   };
 
   document.addEventListener('click', (e) => {
-    if (!inputCli.contains(e.target) && !resCli.contains(e.target)) {
-      resCli.classList.add('d-none');
+    // Verificamos si los elementos existen antes de usar .contains
+    const inputCli = document.getElementById('inputCliente');
+    const resCli = document.getElementById('res-busqueda-cliente');
+
+    if (inputCli && resCli) {
+      if (!inputCli.contains(e.target) && !resCli.contains(e.target)) {
+        resCli.classList.add('d-none');
+      }
     }
   });
 
@@ -879,6 +947,103 @@
       actualizarTotales();
     }
   }
+
+
+
+  // ENVASES
+  let listaEnvasesTemp = [];
+
+  function registrarEnvase(tipo) {
+    const sel = document.getElementById('selectEnvase');
+    const inputCant = document.getElementById('cantEnvase');
+    const inputGarantia = document.getElementById('montoGarantiaInput');
+
+    const cant = parseInt(inputCant.value);
+    // Si el campo está vacío o no es un número, lo tratamos como 0.00
+    const montoGarantia = parseFloat(inputGarantia.value) || 0;
+
+    // 1. Validación inicial (Envase y Cantidad)
+    if (!sel.value || isNaN(cant) || cant <= 0) {
+      Swal.fire('Atención', 'Seleccione un envase y cantidad válida', 'warning');
+      return;
+    }
+
+    // Obtener datos del envase seleccionado
+    const selectedOption = sel.options[sel.selectedIndex];
+    const stockDisponible = parseInt(selectedOption.getAttribute('data-stock'));
+
+    // 2. Validación de Stock (Solo para préstamos)
+    if (tipo === 'PRESTAMO' && cant > stockDisponible) {
+      Swal.fire({
+        title: 'Stock insuficiente',
+        text: `Solo quedan ${stockDisponible} unidades disponibles.`,
+        icon: 'error',
+        confirmButtonColor: '#ee5d5d'
+      });
+      return;
+    }
+
+    // 3. Creación del objeto movimiento
+    // Ya no obligamos a que montoGarantia > 0, si es 0, simplemente se guarda como 0
+    const movimiento = {
+      idEnvase: sel.value,
+      nombre: selectedOption.getAttribute('data-nombre'),
+      cantidad: tipo === 'PRESTAMO' ? cant : -cant,
+      tipo: tipo,
+      // Si es devolución siempre es 0, si es préstamo toma el valor del input o 0 si está vacío
+      montoGarantiaDejado: montoGarantia
+    };
+
+    listaEnvasesTemp.push(movimiento);
+
+    // Limpieza de campos
+    inputCant.value = '';
+    inputGarantia.value = '';
+
+    renderizarEnvases();
+    actualizarTotales();
+  }
+
+  // ENVASES - Función visual profesional
+  function renderizarEnvases() {
+    const listaUI = document.getElementById('listaEnvasesVenta');
+    const badge = document.getElementById('badgeEnvases');
+    listaUI.innerHTML = '';
+
+    listaEnvasesTemp.forEach((mov, index) => {
+      const color = mov.cantidad > 0 ? 'text-success' : 'text-primary';
+      const icono = mov.cantidad > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+
+      // Mostramos la garantía solo si es un préstamo
+      const infoGarantia = mov.montoGarantiaDejado > 0
+              ? `<small class="d-block text-muted" style="font-size: 0.75rem;">Garantía: S/ ${mov.montoGarantiaDejado.toFixed(2)}</small>`
+              : '';
+
+      listaUI.innerHTML += `
+          <li class="d-flex justify-content-between align-items-center border-bottom py-2 ${color}">
+              <div class="d-flex flex-column">
+                  <span><i class="fas ${icono} me-1"></i> <strong>${mov.nombre}</strong> (x${Math.abs(mov.cantidad)})</span>
+                  ${infoGarantia}
+              </div>
+              <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="quitarEnvase(${index})">
+                  <i class="fas fa-trash"></i>
+              </button>
+          </li>`;
+    });
+
+    if (badge) badge.innerText = listaEnvasesTemp.length;
+
+    // Actualizar input oculto para el controlador (Spring Boot recibirá esto como lista de movimientos)
+    document.getElementById('envasesJson').value = JSON.stringify(listaEnvasesTemp);
+
+    actualizarTotales();
+  }
+
+  function quitarEnvase(index) {
+    listaEnvasesTemp.splice(index, 1);
+    renderizarEnvases();
+    actualizarTotales();
+  }
+
 </script>
-</body>
 </html>

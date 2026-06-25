@@ -1,7 +1,7 @@
 package com.sistemaventas.sistema_ventas.repository;
 
 import com.sistemaventas.sistema_ventas.model.Cliente;
-import org.springframework.data.domain.Page;     // <--- IMPORTANTE
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,14 +11,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
 
-    // Único método necesario para combos (Activos y por ID)
+    // Único método necesario para combos
     List<Cliente> findByEstadoTrueOrderByIdClienteDesc();
 
-    // Añadimos ORDER BY c.idCliente DESC para que los nuevos salgan primero
+    // Tu paginación se queda intacta y perfecta
     @Query("SELECT c FROM Cliente c WHERE c.estado = :estado AND " +
             "(LOWER(c.nombre) LIKE LOWER(CONCAT('%', :b, '%')) OR " +
             "LOWER(c.apellidoPat) LIKE LOWER(CONCAT('%', :b, '%')) OR " +
@@ -28,7 +27,14 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
                                  @Param("b") String buscar,
                                  Pageable pageable);
 
-    // Búsqueda para evitar duplicados exactos
-    Optional<Cliente> findByNombreIgnoreCaseAndApellidoPatIgnoreCaseAndApellidoMatIgnoreCase(
-            String nombre, String apePat, String apeMat);
+    // =========================================================================
+    // OPTIMIZACIÓN DE DUPLICADOS: Blindado contra tildes y mayúsculas en la BD
+    // =========================================================================
+    @Query("SELECT c FROM Cliente c WHERE " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(c.nombre, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) = LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(:nom, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) AND " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(c.apellidoPat, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) = LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(:pat, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) AND " +
+            "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(c.apellidoMat, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) = LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(:mat, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u'))")
+    Optional<Cliente> findClienteDuplicadoSinTildesNiEspacios(@Param("nom") String nombre,
+                                                              @Param("pat") String apePat,
+                                                              @Param("mat") String apeMat);
 }

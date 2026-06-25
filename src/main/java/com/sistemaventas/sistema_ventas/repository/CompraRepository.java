@@ -1,5 +1,6 @@
 package com.sistemaventas.sistema_ventas.repository;
 
+import com.sistemaventas.sistema_ventas.dto.ReporteCompraDTO;
 import com.sistemaventas.sistema_ventas.model.Compra;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface CompraRepository extends JpaRepository<Compra, Integer> {
@@ -27,4 +29,8 @@ public interface CompraRepository extends JpaRepository<Compra, Integer> {
                          @Param("fechaDesde") LocalDate fechaDesde,
                          @Param("fechaHasta") LocalDate fechaHasta,
                          Pageable pageable);
+
+    @Query("SELECT new com.sistemaventas.sistema_ventas.dto.ReporteCompraDTO(c.idCompra, c.fechaContabilizacion, c.total, p.nombre) " +
+            "FROM Compra c JOIN c.proveedor p WHERE c.fechaContabilizacion BETWEEN :inicio AND :fin")
+    List<ReporteCompraDTO> findReporteCompras(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 }

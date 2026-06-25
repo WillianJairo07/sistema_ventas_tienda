@@ -2,11 +2,16 @@ package com.sistemaventas.sistema_ventas.service;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.sistemaventas.sistema_ventas.dto.DeudorDTO;
+import com.sistemaventas.sistema_ventas.dto.ProductoDTO;
+import com.sistemaventas.sistema_ventas.model.Producto;
 import com.sistemaventas.sistema_ventas.repository.CompraRepository;
 import com.sistemaventas.sistema_ventas.repository.PagoRepository;
 import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import com.sistemaventas.sistema_ventas.repository.VentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -107,6 +112,26 @@ public class DashboardService {
         }
 
         return count;
+    }
+
+    // En tu DashboardService
+    public List<ProductoDTO> obtenerTopProductosCriticos() {
+        return productoRepository.findByEstadoTrueOrderByIdProductoDesc()
+                .stream()
+                .filter(p -> p.getStock().compareTo(new BigDecimal("5.0")) <= 0)
+                .limit(5)
+                // Aquí haces la magia: conviertes la entidad al DTO
+                .map(p -> new ProductoDTO(
+                        p.getNombreProducto(),
+                        p.getStock(),
+                        p.getUnidadMedida()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public List<DeudorDTO> obtenerDeudoresAntiguos() {
+        // Pedimos solo los 5 más antiguos usando Pageable
+        return ventaRepository.findDeudoresPendientes(PageRequest.of(0, 5));
     }
 
 
