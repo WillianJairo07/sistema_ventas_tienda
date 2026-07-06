@@ -37,8 +37,8 @@ public class TicketService {
         Paragraph header = new Paragraph();
         header.setAlignment(Element.ALIGN_CENTER);
         header.add(new Chunk("TICKET DE VENTA\n", fontBold));
-        header.add(new Chunk("BODEGA SAN MARTÍN\n", fontBold));
-        header.add(new Chunk("RUC: 12345678901\n", fontNormal));
+        header.add(new Chunk("TIENDA DE ABARROTES\n", fontBold));
+        header.add(new Chunk("RUC: 10295807593\n", fontNormal));
         header.add(new Chunk("Calle Zarumilla P-30 San Juan de Dios\n", fontNormal));
         header.add(new Chunk("Jacobo Hunter, Arequipa\n", fontNormal));
         header.add(new Chunk(String.format("Ticket Nº: %03d\n", venta.getIdVenta()), fontNormal));
