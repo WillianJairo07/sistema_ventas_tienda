@@ -95,7 +95,7 @@
             </div>
         </div>
 
-        <!-- PAGINACIÓN IGUAL A CATEGORÍAS -->
+
         <div th:if="${totalPages > 1}" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
             <div class="text-dark small fw-medium">
                 Página <span class="fw-bold text-primary" th:text="${currentPage + 1}"></span> de <span class="fw-bold" th:text="${totalPages}"></span>
@@ -107,10 +107,13 @@
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
+
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:if="${(currentPage == 0 and i < 3) or (currentPage == totalPages - 1 and i > totalPages - 4) or (i >= currentPage - 1 and i <= currentPage + 1)}"
                         th:classappend="${i == currentPage} ? 'active'">
                         <a class="page-link shadow-sm" th:href="@{/clientes(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
                     </li>
+
                     <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
                         <a class="page-link shadow-sm" th:href="@{/clientes(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
                             <i class="fas fa-chevron-right"></i>

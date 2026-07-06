@@ -138,21 +138,19 @@
             </div>
             <nav>
                 <ul class="pagination pagination-sm mb-0">
-                    <!-- Botón Anterior -->
                     <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage - 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
 
-                    <!-- Números de Página -->
                     <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:if="${(currentPage == 0 and i < 3) or (currentPage == totalPages - 1 and i > totalPages - 4) or (i >= currentPage - 1 and i <= currentPage + 1)}"
                         th:classappend="${i == currentPage} ? 'active'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${i}, verInactivos=${verInactivos}, buscar=${buscar})}" th:text="${i + 1}"></a>
                     </li>
 
-                    <!-- Botón Siguiente -->
-                    <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                    <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
                         <a class="page-link shadow-sm" th:href="@{/productos(page=${currentPage + 1}, verInactivos=${verInactivos}, buscar=${buscar})}">
                             <i class="fas fa-chevron-right"></i>
                         </a>

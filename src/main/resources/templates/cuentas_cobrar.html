@@ -130,13 +130,16 @@
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
+
                         <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:if="${(currentPage == 0 and i < 3) or (currentPage == totalPages - 1 and i > totalPages - 4) or (i >= currentPage - 1 and i <= currentPage + 1)}"
                             th:classappend="${i == currentPage} ? 'active'">
                             <a class="page-link shadow-sm"
                                th:href="@{/pagos(page=${i}, buscar=${buscar}, verCompletadas=${verCompletadas})}"
                                th:text="${i + 1}">
                             </a>
                         </li>
+
                         <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
                             <a class="page-link shadow-sm" th:href="@{/pagos(page=${currentPage + 1}, buscar=${buscar}, verCompletadas=${verCompletadas})}">
                                 <i class="fas fa-chevron-right"></i>
