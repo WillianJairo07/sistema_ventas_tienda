@@ -1,11 +1,11 @@
 package com.sistemaventas.sistema_ventas.service;
 
-import com.sistemaventas.sistema_ventas.model.Compra;
-import com.sistemaventas.sistema_ventas.model.DetalleCompra;
-import com.sistemaventas.sistema_ventas.model.Producto;
+import com.sistemaventas.sistema_ventas.model.*;
 import com.sistemaventas.sistema_ventas.repository.CompraRepository;
+import com.sistemaventas.sistema_ventas.repository.EnvaseRepository;
+import com.sistemaventas.sistema_ventas.repository.MovimientoEnvaseRepository;
 import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,13 +24,11 @@ public class CompraService {
 
     @Autowired private CompraRepository compraRepository;
     @Autowired private ProductoRepository productoRepository;
+    @Autowired private EnvaseRepository envaseRepository;
+    @Autowired private MovimientoEnvaseRepository movimientoEnvaseRepository;
 
     public Page<Compra> filtrarCompras(String proveedor, String fechaDesde, String fechaHasta,
                                        int page, int size) {
-        Pageable pageable = PageRequest.of(page, size,
-                Sort.by("estado").descending()
-                        .and(Sort.by("fechaInicio").descending())
-                        .and(Sort.by("idCompra").descending()));
 
         LocalDate desde = null;
         LocalDate hasta = null;
@@ -42,6 +40,17 @@ public class CompraService {
             throw new RuntimeException("Error: El formato de fecha debe ser YYYY-MM-DD");
         }
 
+        // --- NUEVA VALIDACIÓN DE SEGURIDAD EN BACKEND ---
+        if (desde != null && hasta != null && hasta.isBefore(desde)) {
+            throw new RuntimeException("La fecha hasta no puede ser anterior a la fecha desde.");
+        }
+        // -------------------------------------------------
+
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by("estado").descending()
+                        .and(Sort.by("fechaInicio").descending())
+                        .and(Sort.by("idCompra").descending()));
+
         String proveedorLimpio = (proveedor != null && !proveedor.trim().isEmpty()) ? proveedor.trim() : null;
         return compraRepository.filtrar(proveedorLimpio, desde, hasta, pageable);
     }
@@ -50,6 +59,8 @@ public class CompraService {
     public void registrarCompra(Compra compra) {
         // 1. Validaciones de negocio originales
         validarDatosBasicos(compra);
+        // DEBUG: ¿Cuántos costos llegan aquí?
+        System.out.println("CANTIDAD DE COSTOS RECIBIDOS: " + (compra.getCostosAdicionales() != null ? compra.getCostosAdicionales().size() : "NULO"));
 
         // 2. Asegurar fecha de contabilización para evitar restricciones Nullable en BD
         if (compra.getFechaContabilizacion() == null) {
@@ -82,24 +93,36 @@ public class CompraService {
 
         compraActualizada.setFechaInicio(existente.getFechaInicio());
 
+        // 1. Sincronizar DETALLES (Ya lo tenías)
         for (DetalleCompra detalle : compraActualizada.getDetalles()) {
             validarDetalle(detalle);
-
-            // OPTIMIZADO: Verificación unitaria directo en los índices del motor de BD
             procesarProducto(detalle);
-
-            if (detalle.getStockActual() == null) {
-                detalle.setStockActual(detalle.getCantidad());
-            }
-
+            if (detalle.getStockActual() == null) detalle.setStockActual(detalle.getCantidad());
             detalle.setCompra(compraActualizada);
+        }
+        existente.getDetalles().clear();
+        existente.getDetalles().addAll(compraActualizada.getDetalles());
+
+        // 2. --- AQUÍ ESTÁ LA SOLUCIÓN: Sincronizar ENVASES ---
+        existente.getMovimientosEnvase().clear();
+        if (compraActualizada.getMovimientosEnvase() != null) {
+            for (MovimientoEnvase mov : compraActualizada.getMovimientosEnvase()) {
+                mov.setCompra(existente); // Vincular cada movimiento a la compra persistente
+                existente.getMovimientosEnvase().add(mov);
+            }
+        }
+        // ----------------------------------------------------
+
+        // 3. --- NUEVO: Sincronizar FALTANTES (Costos Adicionales) ---
+        existente.getCostosAdicionales().clear();
+        if (compraActualizada.getCostosAdicionales() != null) {
+            for (CostoAdicionalEnvase faltante : compraActualizada.getCostosAdicionales()) {
+                faltante.setCompra(existente); // Vinculamos a la compra persistente
+                existente.getCostosAdicionales().add(faltante);
+            }
         }
 
         calcularYAsignarTotal(compraActualizada);
-
-        // Limpieza de sub-colecciones huérfanas gestionada mediante Hibernate Orphan Removal
-        existente.getDetalles().clear();
-        existente.getDetalles().addAll(compraActualizada.getDetalles());
 
         existente.setFecha(compraActualizada.getFecha());
         existente.setProveedor(compraActualizada.getProveedor());
@@ -131,6 +154,31 @@ public class CompraService {
             detalle.setStockActual(detalle.getCantidad());
 
             productoRepository.save(prod);
+        }
+
+        // --- LÓGICA DE ENVASES CON VALIDACIÓN DE SEGURIDAD ---
+        if (compra.getMovimientosEnvase() != null) {
+            for (MovimientoEnvase mov : compra.getMovimientosEnvase()) {
+                Envase env = envaseRepository.findById(mov.getEnvase().getIdEnvase())
+                        .orElseThrow(() -> new RuntimeException("Envase no existe"));
+
+                // Si el movimiento es negativo (SALIDA), validamos el stock
+                if (mov.getCantidad() < 0) {
+                    int cantidadSalida = Math.abs(mov.getCantidad());
+                    if (env.getStock() < cantidadSalida) {
+                        throw new RuntimeException("Stock insuficiente para el envase: " + env.getNombre()
+                                + ". Disponible: " + env.getStock());
+                    }
+                }
+
+                // Actualizamos stock (esto funciona tanto para entrada como para salida)
+                env.setStock(env.getStock() + mov.getCantidad());
+                envaseRepository.save(env);
+
+                mov.setCompra(compra);
+                mov.setFecha(LocalDateTime.now());
+                movimientoEnvaseRepository.save(mov);
+            }
         }
 
         compra.setEstado("COMPLETADA");
@@ -210,5 +258,21 @@ public class CompraService {
         }
     }
 
-    public Compra buscarPorId(Integer id) { return compraRepository.findById(id).orElse(null); }
+    @Transactional(readOnly = true)
+    public Compra buscarPorId(Integer id) {
+        Compra compra = compraRepository.findById(id).orElse(null);
+
+        if (compra != null) {
+            // Esto es CRÍTICO para que los DTOs funcionen sin errores de "LazyInitialization"
+            // Al llamar a .size(), obligas a Hibernate a traer los datos de la BD
+            // mientras la transacción aún está abierta.
+            if (compra.getMovimientosEnvase() != null) {
+                compra.getMovimientosEnvase().size();
+            }
+            if (compra.getDetalles() != null) {
+                compra.getDetalles().size();
+            }
+        }
+        return compra;
+    }
 }

@@ -62,5 +62,11 @@ public class Compra {
     @Column(name = "es_comprobante_propio", nullable = false)
     private boolean esComprobantePropio = true;
 
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MovimientoEnvase> movimientosEnvase;
+
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CostoAdicionalEnvase> costosAdicionales = new ArrayList<>();
+
 
 }

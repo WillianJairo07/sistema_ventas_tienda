@@ -35,4 +35,7 @@ public interface EnvaseRepository extends JpaRepository<Envase, Integer> {
     boolean existsByNombreSinTildesNiEspaciosYIdNot(@Param("nombre") String nombre, @Param("id") Integer id);
 
 
+    long countByStockLessThan(Integer stock);
+
+
 }

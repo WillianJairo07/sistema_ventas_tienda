@@ -28,34 +28,25 @@
                 <p class="text-muted small mb-0">Bienvenido, <span th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}"></span></p>
             </div>
 
-            <form th:action="@{/reportes/exportar}" method="GET" class="filter-actions" id="reportForm">
+            <div class="btn-container row g-2 ms-lg-auto col-12 col-md-auto p-0 m-0">
 
-                <select name="periodo" id="periodoSelect" class="form-select" onchange="toggleDateFields()">
-                    <option value="diario">Hoy</option>
-                    <option value="semanal">Esta Semana</option>
-                    <option value="mensual">Este Mes</option>
-                    <option value="personalizado">Rango Personalizado</option>
-                </select>
-
-                <div id="dateFieldsContainer" class="date-fields-wrapper date-field-hidden">
-                    <input type="date" name="fechaInicio" class="form-control">
-                    <input type="date" name="fechaFin" class="form-control">
-                </div>
-
-                <div class="btn-container">
-                    <button type="submit" name="tipo" value="ventas"
-                            class="btn btn-primary btn-report"
+                <div class="col-12 col-md-6 col-lg-auto p-0">
+                    <button type="button" class="btn btn-primary btn-report w-100"
+                            onclick="abrirModalReporte('ventas')"
                             style="background-color: #3b82f6 !important; border-color: #3b82f6 !important;">
-                        Reporte Ventas
-                    </button>
-
-                    <button type="submit" name="tipo" value="compras"
-                            class="btn btn-dark btn-report"
-                            style="background-color: #0f172a !important; border-color: #0f172a !important;">
-                        Reporte Compras
+                        <i class="fas fa-file-invoice-dollar me-1"></i> Reporte Ventas
                     </button>
                 </div>
-            </form>
+
+                <div class="col-12 col-md-6 col-lg-auto p-0">
+                    <button type="button" class="btn btn-dark btn-report w-100"
+                            onclick="abrirModalReporte('compras')"
+                            style="background-color: #0f172a !important; border-color: #0f172a !important;">
+                        <i class="fas fa-file-import me-1"></i> Reporte Compras
+                    </button>
+                </div>
+
+            </div>
         </div>
 
         <div class="row g-3 mb-4">
@@ -79,7 +70,7 @@
             </div>
             <div class="col-12 col-md-6 col-xl">
                 <div class="card bg-dashboard-card p-3 h-100">
-                    <p class="text-xs-bold text-muted mb-2">N° Deudores</p>
+                    <p class="text-xs-bold text-muted mb-2">N° Personas Deben</p>
                     <div class="d-flex align-items-center justify-content-between">
                         <h4 class="dynamic-value mb-0" th:text="${cantidadDeudores}">0</h4>
                         <div class="icon-box-dash bg-danger-subtle text-danger"><i class="fas fa-users"></i></div>
@@ -88,7 +79,7 @@
             </div>
             <div class="col-12 col-md-6 col-xl">
                 <div class="card bg-dashboard-card p-3 h-100">
-                    <p class="text-xs-bold text-muted mb-2">Total Deuda</p>
+                    <p class="text-xs-bold text-muted mb-2">Total Deudas</p>
                     <div class="d-flex align-items-center justify-content-between">
                         <h4 class="dynamic-value mb-0" th:text="'S/ ' + ${totalDeudas}">S/ 0.00</h4>
                         <div class="icon-box-dash bg-warning-subtle text-warning"><i class="fas fa-money-bill-wave"></i></div>
@@ -97,10 +88,32 @@
             </div>
             <div class="col-12 col-md-6 col-xl">
                 <div class="card bg-dashboard-card p-3 h-100">
-                    <p class="text-xs-bold text-muted mb-2">Stock Bajo</p>
+                    <p class="text-xs-bold text-muted mb-2">Productos Stock Bajo</p>
                     <div class="d-flex align-items-center justify-content-between">
                         <h4 class="dynamic-value mb-0" th:text="${productosCriticos}">0</h4>
                         <div class="icon-box-dash bg-secondary-subtle text-secondary"><i class="fas fa-box"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta Stock Envases -->
+            <div class="col-12 col-md-6 col-xl">
+                <div class="card bg-dashboard-card p-3 h-100">
+                    <p class="text-xs-bold text-muted mb-2">Envases Stock Bajo</p>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h4 class="dynamic-value mb-0" th:text="${totalEnvasesCriticos}">0</h4>
+                        <div class="icon-box-dash bg-primary-subtle text-primary"><i class="fas fa-bottle-water"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta Costo Adicional -->
+            <div class="col-12 col-md-6 col-xl">
+                <div class="card bg-dashboard-card p-3 h-100">
+                    <p class="text-xs-bold text-muted mb-2">Gasto Adicional Envases (Mes)</p>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h4 class="dynamic-value mb-0" th:text="'S/ ' + ${costosEnvaseMes != null ? #numbers.formatDecimal(costosEnvaseMes, 1, 2) : '0.00'}">S/ 0.00</h4>
+                        <div class="icon-box-dash bg-danger-subtle text-danger"><i class="fas fa-hand-holding-dollar"></i></div>
                     </div>
                 </div>
             </div>
@@ -138,7 +151,9 @@
         <div class="row g-4">
             <div class="col-lg-6">
                 <div class="card bg-dashboard-card p-3 border-top border-warning border-4 shadow-sm">
-                    <h6 class="fw-bold mb-3 text-navi">📦 Productos con bajo stock</h6>
+                    <h6 class="fw-bold mb-3 text-navi">
+                        <i class="fas fa-exclamation-triangle me-2 text-warning"></i> Productos con bajo stock
+                    </h6>
                     <div class="table-responsive">
                         <table class="table table-dash mb-0">
                             <thead><tr class="text-muted text-xs-bold"><th>Producto</th><th>Stock</th><th class="text-end">Acción</th></tr></thead>
@@ -159,7 +174,9 @@
             </div>
             <div class="col-lg-6">
                 <div class="card bg-dashboard-card p-3 border-top border-danger border-4 shadow-sm">
-                    <h6 class="fw-bold mb-3 text-navi">📅 Deudores más antiguos </h6>
+                    <h6 class="fw-bold mb-3 text-navi">
+                        <i class="fas fa-clock me-2 text-danger"></i> Deudores más antiguos
+                    </h6>
                     <div class="table-responsive">
                         <table class="table table-dash mb-0">
                             <thead><tr class="text-muted text-xs-bold"><th>Cliente</th><th>Monto</th><th class="text-end">Fecha</th></tr></thead>
@@ -178,38 +195,235 @@
     </div>
 </main>
 
+
+
+<div class="modal fade" id="modalReportesHome" tabindex="-1" aria-labelledby="modalReporteTitulo" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+
+            <div class="modal-header border-0 bg-dark text-white" id="cabeceraModalReporte" style="transition: background-color 0.3s ease;">
+                <h5 class="modal-title fw-bold text-white" id="modalReporteTitulo">
+                    <i class="fas fa-chart-bar me-2"></i> <span id="txtTituloModal">Configurar Reporte</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form th:action="@{/reportes/exportar}" method="GET" id="formGenerarReporte" >
+                <input type="hidden" name="tipo" id="inputTipoReporte">
+
+                <div class="modal-body p-4">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Periodo de tiempo</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border: 1px solid #dee2e6;">
+                                <i class="fas fa-calendar-alt text-muted"></i>
+                            </span>
+                            <select name="periodo" id="periodoSelectModal" class="form-select shadow-none border-start-0"
+                                    onchange="toggleDateFieldsModal()" required style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6;">
+                                <option value="diario">Hoy</option>
+                                <option value="semanal">Esta Semana</option>
+                                <option value="mensual">Este Mes</option>
+                                <option value="personalizado">Rango Personalizado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="dateFieldsContainerModal" class="mb-3 d-none">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.85rem; color: #64748b;">Rango de Fechas</label>
+                        <div class="d-flex gap-2">
+                            <input type="date" name="fechaInicio" id="fechaInicioModal" class="form-control custom-form-input shadow-sm" style="height: 42px;">
+                            <input type="date" name="fechaFin" id="fechaFinModal" class="form-control custom-form-input shadow-sm" style="height: 42px;">
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-none transition-item" id="wrapperTipoComprobante">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Tipo de comprobante</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border: 1px solid #dee2e6;">
+                                <i class="fas fa-file-invoice text-muted"></i>
+                            </span>
+                            <select name="tipoComprobante" id="selectComprobanteModal" class="form-select shadow-none border-start-0"
+                                    style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6;">
+                                <option value="">Todos los comprobantes</option>
+                                <option value="FACTURA">Factura</option>
+                                <option value="BOLETA">Boleta de Venta</option>
+                                <option value="NOTA_VENTA">Nota de Venta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-2 transition-item" id="wrapperTipoRegistro">
+                        <label class="form-label fw-bold text-dynamic mb-1" style="font-size: 0.9rem;">Tipo de registro</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border: 1px solid #dee2e6;">
+                                <i class="fas fa-clipboard-check text-muted"></i>
+                            </span>
+                            <select name="esComprobantePropio" id="selectRegistroModal" class="form-select shadow-none border-start-0"
+                                    style="height: 42px; font-size: 0.9rem; border: 1px solid #dee2e6;">
+                                <option value="" disabled selected>Seleccione una opción...</option>
+                                <option value="true">A Nombre Propio</option>
+                                <option value="false">Terceros / Otros</option>
+                            </select>
+                        </div>
+                        <small class="text-muted mt-2 d-flex align-items-center" style="font-size: 0.72rem; opacity: 0.8;">
+                            <i class="fas fa-info-circle me-1"></i> Clasifique las compras según el tipo de titularidad.
+                        </small>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-secondary-custom px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnSubmitModal" class="btn btn-new-cat px-4">
+                        <i class="fas fa-file-download me-2"></i>Generar Reporte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/menu.js}"></script>
 <script th:inline="javascript">
-    // 1. Detectar el parámetro de error en la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorMsg = urlParams.get('error');
+    let modalReporteBS = null;
 
-    // 2. Si existe un error, mostrar la alerta
-    if (errorMsg) {
-        Swal.fire({
-            icon: 'warning',
-            title: '¡Atención!',
-            text: errorMsg.replace(/\+/g, ' '), // Decodifica los espacios
-            confirmButtonColor: '#3b82f6',
-            confirmButtonText: 'Entendido',
-            allowOutsideClick: false
-        }).then(() => {
-            // 3. Limpiar la URL para que no vuelva a aparecer al refrescar
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMsg = urlParams.get('error');
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: errorMsg.replace(/\+/g, ' '),
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'Entendido',
+                allowOutsideClick: false
+            }).then(() => {
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            });
+        }
+    });
+
+    function abrirModalReporte(tipo) {
+        const modalElement = document.getElementById('modalReportesHome');
+        if (!modalReporteBS) {
+            modalReporteBS = new bootstrap.Modal(modalElement);
+        }
+
+        document.getElementById('formGenerarReporte').reset();
+        document.getElementById('periodoSelectModal').value = 'diario';
+        toggleDateFieldsModal();
+
+        const inputTipo = document.getElementById('inputTipoReporte');
+        const txtTitulo = document.getElementById('txtTituloModal');
+        const cabecera = document.getElementById('cabeceraModalReporte');
+        const btnSubmit = document.getElementById('btnSubmitModal');
+        const wrapperRegistro = document.getElementById('wrapperTipoRegistro');
+        const selectRegistro = document.getElementById('selectRegistroModal');
+
+        // Elementos del nuevo selector integrado
+        const wrapperComprobante = document.getElementById('wrapperTipoComprobante');
+        const selectComprobante = document.getElementById('selectComprobanteModal');
+
+        inputTipo.value = tipo;
+
+        // Aseguramos que el botón SIEMPRE mantenga el azul claro corporativo al abrirse
+        btnSubmit.style.setProperty('background-color', '#3b82f6', 'important');
+        btnSubmit.style.setProperty('border-color', '#3b82f6', 'important');
+
+        if (tipo === 'ventas') {
+            txtTitulo.innerText = "Reporte de Ventas";
+            cabecera.style.backgroundColor = "#3b82f6"; // Cabecera Azul
+
+            // Ocultar y deshabilitar lógica de Compras
+            wrapperRegistro.classList.add('d-none');
+            selectRegistro.disabled = true;
+            selectRegistro.required = false;
+
+            wrapperComprobante.classList.add('d-none');
+            selectComprobante.disabled = true;
+        } else {
+            txtTitulo.innerText = "Reporte de Compras";
+            cabecera.style.backgroundColor = "#0f172a"; // Cabecera Slate Dark
+
+            // Mostrar y habilitar lógica de Compras
+            wrapperRegistro.classList.remove('d-none');
+            selectRegistro.disabled = false;
+            selectRegistro.required = true;
+
+            wrapperComprobante.classList.remove('d-none');
+            selectComprobante.disabled = false;
+        }
+
+        modalReporteBS.show();
     }
 
-    function toggleDateFields() {
-        const select = document.getElementById('periodoSelect');
-        const container = document.getElementById('dateFieldsContainer');
+    function toggleDateFieldsModal() {
+        const select = document.getElementById('periodoSelectModal');
+        const container = document.getElementById('dateFieldsContainerModal');
+        const inputInicio = document.getElementById('fechaInicioModal');
+        const inputFin = document.getElementById('fechaFinModal');
+
         if (select.value === 'personalizado') {
-            container.classList.remove('date-field-hidden');
+            container.classList.remove('d-none');
+            inputInicio.required = true;
+            inputFin.required = true;
+
+            // --- AQUÍ LA VALIDACIÓN ÓPTIMA ---
+            // Aseguramos que la fecha fin no pueda ser menor a la de inicio
+            inputInicio.onchange = () => {
+                inputFin.min = inputInicio.value;
+                // Si ya hay una fecha fin y es menor a la nueva inicio, la limpiamos
+                if(inputFin.value && inputFin.value < inputInicio.value) {
+                    inputFin.value = '';
+                }
+            };
         } else {
-            container.classList.add('date-field-hidden');
+            container.classList.add('d-none');
+            inputInicio.required = false;
+            inputFin.required = false;
+            inputInicio.value = '';
+            inputFin.value = '';
+            inputFin.removeAttribute('min'); // Limpiamos el límite al cerrar
         }
     }
+
+    document.getElementById('formGenerarReporte')?.addEventListener('submit', function(e) {
+        const selectRegistro = document.getElementById('selectRegistroModal');
+
+        if (!selectRegistro.disabled && selectRegistro.value === "") {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Atención',
+                text: 'Por favor, seleccione el tipo de registro para el reporte de compras.',
+                icon: 'warning',
+                confirmButtonColor: '#3b82f6',
+                customClass: { popup: 'border-radius-15' }
+            });
+        } else {
+            setTimeout(() => { if(modalReporteBS) modalReporteBS.hide(); }, 600);
+        }
+    });
+
+    // Validar que el usuario no elija una fecha fin inválida manualmente
+    document.getElementById('fechaFinModal').addEventListener('change', function() {
+        const inicio = document.getElementById('fechaInicioModal').value;
+        if (inicio && this.value < inicio) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Fecha inválida',
+                text: 'La fecha final debe ser mayor o igual a la fecha inicial.',
+                confirmButtonColor: '#3b82f6'
+            });
+            this.value = inicio; // Reseteamos a la fecha de inicio
+        }
+    });
 </script>
 </body>
 </html>

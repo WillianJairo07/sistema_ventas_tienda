@@ -57,15 +57,32 @@ public class EnvaseService {
     @Transactional
     public void guardar(Envase envase) {
         String nombreNuevo = envase.getNombre().trim();
+
         if (envase.getIdEnvase() == null) {
+            // Lógica para NUEVO envase
             Envase existente = envaseRepository.findByNombreSinTildesNiEspacios(nombreNuevo);
             if (existente != null) {
-                if (!existente.isEstado()) { existente.setEstado(true); envaseRepository.save(existente); return; }
+                if (!existente.isEstado()) {
+                    existente.setEstado(true);
+                    envaseRepository.save(existente);
+                    return;
+                }
                 throw new IllegalArgumentException("Ya existe un envase similar");
             }
-        } else if (envaseRepository.existsByNombreSinTildesNiEspaciosYIdNot(nombreNuevo, envase.getIdEnvase())) {
-            throw new IllegalArgumentException("Ya existe otro envase similar");
+        } else {
+            // Lógica para EDITAR envase (AQUÍ ESTÁ EL SEGURO)
+            if (envaseRepository.existsByNombreSinTildesNiEspaciosYIdNot(nombreNuevo, envase.getIdEnvase())) {
+                throw new IllegalArgumentException("Ya existe otro envase similar");
+            }
+
+            // BUSCAMOS el original en BD para mantener el stock que ya tenía
+            Envase envaseOriginal = envaseRepository.findById(envase.getIdEnvase())
+                    .orElseThrow(() -> new IllegalArgumentException("Envase no encontrado"));
+
+            // SOBRESCRIBIMOS el valor que viene del formulario con el real de la BD
+            envase.setStock(envaseOriginal.getStock());
         }
+
         envase.setNombre(nombreNuevo);
         envaseRepository.save(envase);
     }

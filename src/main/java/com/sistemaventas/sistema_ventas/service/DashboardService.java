@@ -6,10 +6,7 @@ import java.util.stream.Collectors;
 import com.sistemaventas.sistema_ventas.dto.DeudorDTO;
 import com.sistemaventas.sistema_ventas.dto.ProductoDTO;
 import com.sistemaventas.sistema_ventas.model.Producto;
-import com.sistemaventas.sistema_ventas.repository.CompraRepository;
-import com.sistemaventas.sistema_ventas.repository.PagoRepository;
-import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
-import com.sistemaventas.sistema_ventas.repository.VentaRepository;
+import com.sistemaventas.sistema_ventas.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -33,6 +30,12 @@ public class DashboardService {
 
     @Autowired
     private PagoRepository pagoRepository;
+
+    @Autowired
+    private EnvaseRepository envaseRepository;
+
+    @Autowired
+    private CostoAdicionalEnvaseRepository costoAdicionalEnvaseRepository;
 
     // STOCK CRÍTICO
     public long obtenerProductosCriticos() {
@@ -132,6 +135,21 @@ public class DashboardService {
     public List<DeudorDTO> obtenerDeudoresAntiguos() {
         // Pedimos solo los 5 más antiguos usando Pageable
         return ventaRepository.findDeudoresPendientes(PageRequest.of(0, 5));
+    }
+
+
+    // 1. STOCK CRÍTICO DE ENVASES
+    public long obtenerEnvasesCriticos() {
+        // Asumimos un stock bajo si es menor a 5 unidades
+        return envaseRepository.countByStockLessThan(5);
+    }
+
+    // 2. COSTOS ADICIONALES POR MES
+    public BigDecimal obtenerCostosEnvaseMes() {
+        LocalDateTime inicioMes = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime finMes = LocalDateTime.now();
+        // Este método debe estar en tu CostoAdicionalEnvaseRepository
+        return costoAdicionalEnvaseRepository.sumMontoByFechaRegistroBetween(inicioMes, finMes);
     }
 
 

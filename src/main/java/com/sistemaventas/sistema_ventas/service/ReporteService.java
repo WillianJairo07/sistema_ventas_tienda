@@ -16,11 +16,15 @@ public class ReporteService {
     @Autowired private CompraRepository compraRepo;
 
     @Transactional(readOnly = true)
-    public List<?> obtenerDatos(String tipo, LocalDateTime inicio, LocalDateTime fin) {
+    public List<?> obtenerDatos(String tipo, LocalDateTime inicio, LocalDateTime fin, boolean esPropio, String filtroExtra) {
         if ("ventas".equals(tipo)) {
-            return ventaRepo.findReporteVentas(inicio, fin);
+            // Para ventas, 'filtroExtra' representa el tipoVenta ("contado", "credito" o null)
+            String tipoVenta = (filtroExtra != null && !filtroExtra.isBlank()) ? filtroExtra : null;
+            return ventaRepo.findReporteVentas(inicio, fin, tipoVenta);
         } else {
-            return compraRepo.findReporteCompras(inicio.toLocalDate(), fin.toLocalDate());
+            // Para compras, 'filtroExtra' representa el tipoComprobante
+            String filtroComprobante = (filtroExtra != null && !filtroExtra.isBlank()) ? filtroExtra : null;
+            return compraRepo.findReporteCompras(inicio.toLocalDate(), fin.toLocalDate(), esPropio, filtroComprobante);
         }
     }
 }

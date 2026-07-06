@@ -203,7 +203,7 @@
                             </span>
                             <input type="password" th:field="*{password}" id="password" required
                                    class="form-control bg-transparent border-0 shadow-none position-relative z-1"
-                                   placeholder="Mínimo 4 caracteres"
+                                   placeholder="Ingresa la constraseña"
                                    style="height: 42px; font-size: 0.9rem; border-radius: 0 !important;">
                             <span class="input-group-text bg-transparent border-0 text-muted ps-3 pe-3" id="btnToggleVisibility" onclick="alternarVisibilidadPassword()"
                                                       style="cursor: pointer; height: 42px; border-radius: 0 !important;">
@@ -403,7 +403,7 @@
                         <i class="fas fa-lock text-muted"></i>
                     </span>
                     <input type="password" id="swal-input-pass" class="form-control shadow-none border-start-0 border-end-0 rounded-0"
-                           placeholder="Mínimo 4 caracteres" style="height: 42px; font-size: 0.9rem; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+                           placeholder="Ingresa la constraseña" style="height: 42px; font-size: 0.9rem; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
                     <span class="input-group-text bg-white border-start-0 text-muted" onclick="alternarOjoSweetAlert()" style="cursor: pointer; height: 42px; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">
                         <i class="fas fa-eye" id="swal-eye-icon"></i>
                     </span>
@@ -424,7 +424,7 @@
                 }
                 const swalPassInput = document.getElementById('swal-input-pass');
                 if(swalPassInput) {
-                    swalPassInput.focus(); // El teclado se despliega directo en la alerta de clave
+
                     swalPassInput.style.outline = 'none';
                     swalPassInput.style.boxShadow = 'none';
                     swalPassInput.onfocus = () => swalPassInput.style.borderColor = '#3b82f6';

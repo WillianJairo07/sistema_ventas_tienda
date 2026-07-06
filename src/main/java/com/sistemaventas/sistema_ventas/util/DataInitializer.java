@@ -55,11 +55,11 @@ public class DataInitializer implements CommandLineRunner {
         // 2. CREAR USUARIO ADMINISTRADOR INICIAL (Solo si la tabla de usuarios está vacía)
         if (usuarioRepository.count() == 0) {
             Usuario admin = new Usuario();
-            admin.setNombre("Jairo");
-            admin.setApellidoPaterno("Quispe");
-            admin.setApellidoMaterno("Canazas");
-            admin.setUsername("willianjairo07");
-            admin.setPassword(passwordEncoder.encode("jairo1elproxd"));
+            admin.setNombre("Usuario");
+            admin.setApellidoPaterno("Primero");
+            admin.setApellidoMaterno("Prueba");
+            admin.setUsername("usuarioprueba01");
+            admin.setPassword(passwordEncoder.encode("usuarioprueba01"));
             admin.setEstado(true);
 
             // Le asignamos el objeto de Rol que acabamos de asegurar arriba

@@ -122,26 +122,7 @@
                         <!-- FILA DE LOTES -->
                         <tr th:id="'lotes-' + ${p.idProducto}" style="display:none; background-color: #f8fafc;">
                             <td colspan="8" class="p-3">
-                                <div class="card card-body border-0 shadow-sm p-0 overflow-hidden" style="border-radius: 10px;">
-                                    <table class="table table-sm mb-0">
-                                        <thead class="text-white" style="background: var(--slate-sidebar);">
-                                        <tr style="font-size: 0.75rem;">
-                                            <th class="text-center ps-3 py-2">ID Lote</th>
-                                            <th class="text-center py-2">Cant. Inicial</th>
-                                            <th class="text-center py-2">P. Compra</th>
-                                            <th class="text-center py-2">Stock Actual</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody style="font-size: 0.8rem;">
-                                        <tr th:each="lote : ${p.detallesCompra}" th:if="${lote != null and lote.stockActual > 0}">
-                                            <td class="text-center ps-3" th:text="${lote.idDetalleCompra}"></td>
-                                            <td class= text-center th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.cantidad, 1, 3) : #numbers.formatInteger(lote.cantidad, 1)}"></td>
-                                            <td class= text-center th:text="'S/ ' + ${#numbers.formatDecimal(lote.precioCompra, 1, 2)}"></td>
-                                            <td class="text-center fw-bold text-success" th:text="${p.unidadMedida == 'KG' ? #numbers.formatDecimal(lote.stockActual, 1, 3) : #numbers.formatInteger(lote.stockActual, 1)}"></td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <div class="historial-container"></div>
                             </td>
                         </tr>
                     </th:block>
@@ -444,21 +425,99 @@
     }
 
     // --- MANEJO DE LOTES ---
+    // --- MANEJO DE LOTES OPTIMIZADO CON FORMATO INTELIGENTE (5 COLUMNAS) ---
     function toggleLotes(idFila, btn) {
-        const fila = document.getElementById(idFila);
-        if (!fila) return; // Si no existe la fila, no hace nada
+        const filaDetalle = document.getElementById(idFila);
+        if (!filaDetalle) return;
 
-        // Obtenemos el icono de forma segura
+        const container = filaDetalle.querySelector('.historial-container');
+        const idProducto = idFila.replace('lotes-', '');
         const icono = btn ? btn.querySelector('i') : null;
-
-        // Comprobamos el estado actual
-        const estaVisible = fila.style.display === 'table-row';
+        const estaVisible = filaDetalle.style.display === 'table-row';
 
         if (!estaVisible) {
-            fila.style.display = 'table-row';
+            filaDetalle.style.display = 'table-row';
             if (icono) icono.style.transform = 'rotate(90deg)';
+
+            fetch(`/productos/lotes/${idProducto}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Error al obtener lotes");
+                    return res.json();
+                })
+                .then(data => {
+                    const lotesActivos = Array.isArray(data) ? data.filter(l => l.stockActual > 0) : [];
+
+                    if (lotesActivos.length > 0) {
+                        // Estructura adaptada para 5 columnas (20% de ancho cada una para simetría perfecta)
+                        let html = `<div class="w-100 d-flex justify-content-center py-2">
+                        <div class="bg-white rounded-3 shadow-sm border overflow-hidden" style="max-width: 750px; width: 100%;">
+                            <table class="table table-sm table-hover small text-center mb-0" style="color: #6c757d; table-layout: fixed;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 20%; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding: 8px 0;">ID Lote</th>
+                                        <th style="width: 20%; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding: 8px 0;">F. Ingreso</th>
+                                        <th style="width: 20%; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding: 8px 0;">P. Compra</th>
+                                        <th style="width: 20%; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding: 8px 0;">Cant. Inicial</th>
+                                        <th style="width: 20%; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding: 8px 0;">Stock Disponible</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                        lotesActivos.forEach(lote => {
+                            // 1. Formateo de Fecha Seguro (De AAAA-MM-DD a DD/MM/AAAA)
+                            let fechaFormateada = 'N/A';
+                            if (lote.fecha) {
+                                // Si contiene hora por algún motivo string se limpia, sino se corta directo
+                                const fechaSucia = lote.fecha.includes('T') ? lote.fecha.split('T')[0] : lote.fecha;
+                                const partes = fechaSucia.split('-');
+                                if (partes.length === 3) {
+                                    fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                                }
+                            }
+
+                            // 2. Formateo de Costo (Precio de Compra)
+                            const pCompra = typeof lote.precioCompra === 'number' ? lote.precioCompra.toFixed(2) : '0.00';
+
+                            // 3. Formateo Dinámico de Cantidades (Inicial y Actual) según la unidad de medida
+                            let cantInicialFormateada = '0';
+                            let stockActualFormateado = '0';
+
+                            if (lote.unidadMedida === 'KG') {
+                                // Si es Kilos, forzar 3 decimales
+                                cantInicialFormateada = typeof lote.cantidad === 'number' ? lote.cantidad.toFixed(3) : lote.cantidad;
+                                stockActualFormateado = typeof lote.stockActual === 'number' ? lote.stockActual.toFixed(3) : lote.stockActual;
+                            } else {
+                                // Si es Unidad (o cualquier otra), remover decimales usando enteros limpitos
+                                cantInicialFormateada = typeof lote.cantidad === 'number' ? Math.floor(lote.cantidad).toString() : lote.cantidad;
+                                stockActualFormateado = typeof lote.stockActual === 'number' ? Math.floor(lote.stockActual).toString() : lote.stockActual;
+                            }
+
+                            // Etiqueta pequeña decorativa para la unidad de medida
+                            const sufijo = lote.unidadMedida ? ` <small class="text-muted" style="font-size: 0.7rem;">${lote.unidadMedida}</small>` : '';
+
+                            html += `<tr>
+                                <td style="vertical-align: middle; padding: 8px 0;"># ${lote.idDetalleCompra}</td>
+                                <td style="vertical-align: middle; padding: 8px 0;">${fechaFormateada}</td>
+                                <td style="vertical-align: middle; padding: 8px 0;">S/ ${pCompra}</td>
+                                <td style="vertical-align: middle; padding: 8px 0;">${cantInicialFormateada}${sufijo}</td>
+                                <td style="vertical-align: middle; padding: 8px 0; font-weight: 700; color: #10b981;">
+                                    ${stockActualFormateado}${sufijo}
+                                </td>
+                             </tr>`;
+                        });
+
+                        html += '</tbody></table></div></div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p class="text-muted small text-center" style="margin: 15px;">No hay lotes con stock disponible para este producto.</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error("Error al cargar lotes:", err);
+                    container.innerHTML = '<p class="text-danger small text-center" style="margin: 15px;">Error al cargar los lotes del inventario.</p>';
+                });
         } else {
-            fila.style.display = 'none';
+            filaDetalle.style.display = 'none';
             if (icono) icono.style.transform = 'rotate(0deg)';
         }
     }

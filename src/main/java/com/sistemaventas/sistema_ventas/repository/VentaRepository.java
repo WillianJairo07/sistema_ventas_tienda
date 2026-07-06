@@ -52,7 +52,8 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
             "c.nombre || ' ' || COALESCE(c.apellido_pat, ''), " +
             "v.total_venta, " +
             "COALESCE(SUM(p.monto), 0) as pagado, " +
-            "(v.total_venta - COALESCE(SUM(p.monto), 0)) as saldo " +
+            "(v.total_venta - COALESCE(SUM(p.monto), 0)) as saldo, " +
+            "v.fecha " + // <--- CORREGIDO: Usamos v.fecha tal cual está en tu modelo
             "FROM venta v " +
             "JOIN cliente c ON c.id_cliente = v.id_cliente " +
             "LEFT JOIN pago p ON p.id_venta = v.id_venta " +
@@ -61,20 +62,21 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
             "     CAST(v.id_venta AS TEXT) LIKE CONCAT('%', :buscar, '%') OR " +
             "     LOWER(c.nombre) LIKE LOWER(CONCAT('%', :buscar, '%')) OR " +
             "     LOWER(c.apellido_pat) LIKE LOWER(CONCAT('%', :buscar, '%'))) " +
-            "GROUP BY v.id_venta, c.nombre, c.apellido_pat, v.total_venta " +
-            "HAVING (v.total_venta - COALESCE(SUM(p.monto), 0)) > 0 " +
+            "GROUP BY v.id_venta, c.nombre, c.apellido_pat, v.total_venta, v.fecha " + // <--- CORREGIDO aquí también
+            "HAVING (:verCompletadas = false AND (v.total_venta - COALESCE(SUM(p.monto), 0)) > 0) " +
+            "    OR (:verCompletadas = true AND (v.total_venta - COALESCE(SUM(p.monto), 0)) <= 0) " +
             "ORDER BY v.id_venta DESC",
-            countQuery = "SELECT count(DISTINCT v.id_venta) FROM venta v " +
-                    "JOIN cliente c ON c.id_cliente = v.id_cliente " +
+            countQuery = "SELECT COUNT(*) FROM (" +
+                    "SELECT v.id_venta FROM venta v " +
                     "LEFT JOIN pago p ON p.id_venta = v.id_venta " +
-                    "WHERE UPPER(v.tipo_venta) = 'CREDITO' " +
-                    "AND (:buscar IS NULL OR :buscar = '' OR " +
-                    "     CAST(v.id_venta AS TEXT) LIKE CONCAT('%', :buscar, '%') OR " +
-                    "     LOWER(c.nombre) LIKE LOWER(CONCAT('%', :buscar, '%'))) " +
                     "GROUP BY v.id_venta, v.total_venta " +
-                    "HAVING (v.total_venta - COALESCE(SUM(p.monto), 0)) > 0",
+                    "HAVING (:verCompletadas = false AND (v.total_venta - COALESCE(SUM(p.monto), 0)) > 0) " +
+                    "    OR (:verCompletadas = true AND (v.total_venta - COALESCE(SUM(p.monto), 0)) <= 0)" +
+                    ") as subquery",
             nativeQuery = true)
-    Page<Object[]> findVentasPendientesRaw(@Param("buscar") String buscar, Pageable pageable);
+    Page<Object[]> findVentasPendientesRaw(@Param("buscar") String buscar,
+                                           @Param("verCompletadas") boolean verCompletadas,
+                                           Pageable pageable);
 
     List<Venta> findByFechaBetweenOrderByFechaDesc(LocalDateTime inicio, LocalDateTime fin);
 
@@ -104,8 +106,27 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
             "ORDER BY v.fecha ASC")
     List<DeudorDTO> findDeudoresPendientes(Pageable pageable);
 
-    @Query("SELECT new com.sistemaventas.sistema_ventas.dto.ReporteVentaDTO(v.idVenta, v.fecha, v.totalVenta, c.nombre) " +
-            "FROM Venta v JOIN v.cliente c WHERE v.fecha BETWEEN :inicio AND :fin")
-    List<ReporteVentaDTO> findReporteVentas(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+    // MODIFICADO: Adaptado al nuevo constructor de ReporteVentaDTO y con filtro dinámico por tipoVenta
+    @Query("SELECT new com.sistemaventas.sistema_ventas.dto.ReporteVentaDTO(" +
+            "  v.idVenta, " +
+            "  v.fecha, " +
+            "  v.tipoVenta, " +
+            "  v.metodoPago, " +
+            "  v.totalVenta, " +
+            "  CAST(CASE WHEN v.tipoVenta = 'contado' THEN v.totalVenta ELSE COALESCE(SUM(p.monto), 0) END AS big_decimal), " +
+            "  CAST(CASE WHEN v.tipoVenta = 'contado' THEN 0.00 ELSE (v.totalVenta - COALESCE(SUM(p.monto), 0)) END AS big_decimal), " +
+            "  CONCAT(c.nombre, ' ', COALESCE(c.apellidoPat, ''))" +
+            ") " +
+            "FROM Venta v " +
+            "JOIN v.cliente c " +
+            "LEFT JOIN v.pagos p " +
+            "WHERE v.fecha BETWEEN :inicio AND :fin " +
+            "AND (:tipoVenta IS NULL OR v.tipoVenta = :tipoVenta) " +
+            "GROUP BY v.idVenta, v.fecha, v.tipoVenta, v.metodoPago, v.totalVenta, c.nombre, c.apellidoPat")
+    List<ReporteVentaDTO> findReporteVentas(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin,
+            @Param("tipoVenta") String tipoVenta
+    );
 
 }

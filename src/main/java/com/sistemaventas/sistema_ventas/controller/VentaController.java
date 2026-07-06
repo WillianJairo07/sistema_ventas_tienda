@@ -1,10 +1,8 @@
 package com.sistemaventas.sistema_ventas.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sistemaventas.sistema_ventas.model.Envase;
-import com.sistemaventas.sistema_ventas.model.MovimientoEnvase;
-import com.sistemaventas.sistema_ventas.model.Usuario;
-import com.sistemaventas.sistema_ventas.model.Venta;
+import com.sistemaventas.sistema_ventas.dto.PagoHistorialDTO;
+import com.sistemaventas.sistema_ventas.model.*;
 import com.sistemaventas.sistema_ventas.repository.*;
 import com.sistemaventas.sistema_ventas.service.*;
 import jakarta.transaction.Transactional;
@@ -38,6 +36,7 @@ public class VentaController {
     @Autowired private EnvaseService envaseService;
     @Autowired private EnvaseRepository envaseRepository;
     @Autowired private MovimientoEnvaseRepository movimientoEnvaseRepository;
+    @Autowired private PagoService pagoService;
 
     // 1. VER HISTORIAL DE VENTAS
 
@@ -292,6 +291,13 @@ public class VentaController {
     public List<Envase> listarEnvasesApi() {
         // Ya no usamos findAll(), usamos nuestro método filtrado
         return envaseRepository.listarEnvasesParaVenta();
+    }
+
+
+    @GetMapping("/historial/{idVenta}")
+    @ResponseBody
+    public List<PagoHistorialDTO> obtenerHistorialPagos(@PathVariable Integer idVenta) {
+        return pagoService.obtenerPorVenta(idVenta);
     }
 
 }

@@ -325,6 +325,12 @@ body.sidebar-closed .hamburger-btn { display: flex; }
         gap: 15px; /* <--- ESTO SEPARA EL SELECT, FECHAS Y BOTONES */
     }
 
+    .filter-actions select {
+        width: 220px !important; /* Mismo ancho que tu periodoSelect para equilibrio */
+        flex-shrink: 0;          /* Evita que se encoja */
+        flex-grow: 0;            /* Evita que se estire */
+    }
+
     /* Espaciado entre los inputs de fecha */
     .date-fields-wrapper {
         display: flex;
@@ -431,7 +437,19 @@ body.sidebar-closed .hamburger-btn { display: flex; }
     font-size: 14px;
 }
 
-.btn-new-cat { background-color: var(--accent-blue) !important; }
+.btn-new-cat, .btn-envases { background-color: var(--accent-blue) !important; }
+.btn-envases {
+    /* Tus estilos actuales */
+    border: none !important;
+}
+
+.btn-envases:focus,
+.btn-envases:active {
+    /* Esto elimina el contorno y el brillo azul/negro al presionar */
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
 .btn-ver-inactivos,.badge-agotado { background-color: var(--slate-sidebar) !important; }
 .btn-ver-activos,.badge-disponible { background-color: #10b981 !important; }
 
@@ -1086,6 +1104,10 @@ input::-webkit-inner-spin-button {
     background-color: var(--slate-sidebar) !important;
 }
 
+.badge-nota {
+    background-color: #6b21a8 !important; /* Color morado/púrpura corporativo */
+}
+
 
 
 /* --- COLORS PERSONALIZADOS PARA BADGES (Yape y Plin) --- */
@@ -1324,6 +1346,19 @@ textarea:focus{
 }
 
 
+/* AGREGAR FALTANTE - estado normal (rojo borde fino) */
+.btn-outline-danger {
+    border-color: #dc3545 !important;
+    color: #151515 !important;
+}
+
+/* AGREGAR FALTANTE - hover (rojo sólido al pasar el mouse) */
+.btn-outline-danger:hover {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+}
+
 
 /* =========================
    MODAL GENERAL
@@ -1440,4 +1475,33 @@ textarea:focus{
     #seccionNuevoMovimiento .col-md-4 { flex: 0 0 33.33%; max-width: 33.33%; }
     #seccionNuevoMovimiento .col-md-5 { flex: 0 0 41.66%; max-width: 41.66%; }
     #seccionNuevoMovimiento .col-md-3 { flex: 0 0 25%; max-width: 25%; }
+}
+
+
+
+/* Ajustes para el contenedor del desplegable */
+.historial-container {
+    padding: 10px 20px;
+    background-color: #f9f9f9; /* Un gris muy suave para diferenciarlo */
+    border-bottom: 1px solid #ddd;
+}
+
+/* Alineación y estilo de la tabla interna */
+.historial-container table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+/* Asegurar que las celdas de datos tengan el color gris y alineación */
+.historial-container table tbody td {
+    color: #6c757d; /* Color gris profesional (text-muted de Bootstrap) */
+    padding: 8px;
+    vertical-align: middle;
+}
+
+/* Alineación de cabeceras para que coincidan con la tabla padre */
+.historial-container table thead th {
+    color: #333;
+    font-weight: 600;
+    padding: 8px;
 }

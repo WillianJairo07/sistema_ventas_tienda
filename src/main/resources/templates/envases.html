@@ -220,6 +220,8 @@
         nombreInput.value = '';
         precioInput.value = '';
         stockInput.value = '0'; // <--- Lo ponemos en 0 por defecto para un envase nuevo
+        stockInput.readOnly = false;
+        stockInput.style.backgroundColor = "#ffffff";
     }
 
     function editarEnvase(id) {
@@ -233,7 +235,11 @@
                 document.getElementById('precioGarantia').value = data.precioGarantiaBase;
 
                 // Ahora este campo sí recibirá el valor y será editable
-                document.getElementById('stockEnvase').value = data.stock;
+                const stockInput = document.getElementById('stockEnvase');
+                stockInput.value = data.stock;
+
+                stockInput.readOnly = true; // Bloquea el campo para que NO se pueda editar
+                stockInput.style.backgroundColor = "#e9ecef";
             })
             .catch(err => {
                 console.error("Error:", err);

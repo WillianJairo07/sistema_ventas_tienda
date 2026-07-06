@@ -1,5 +1,6 @@
 package com.sistemaventas.sistema_ventas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -17,6 +18,7 @@ public class Pago {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_venta", nullable = false)
+    @JsonIgnore
     private Venta venta;
 
     @Column(name = "monto", precision = 38, scale = 2, nullable = false)

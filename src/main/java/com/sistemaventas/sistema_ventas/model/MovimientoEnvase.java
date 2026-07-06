@@ -31,7 +31,11 @@ public class MovimientoEnvase {
 
     private LocalDateTime fecha;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Es mejor para el rendimiento
-    @JoinColumn(name = "id_venta", nullable = false) // 'nullable = false' asegura integridad
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_venta", nullable = true) // Cambiado a true
     private Venta venta;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_compra", nullable = true) // Asegurado nullable = true
+    private Compra compra;
 }

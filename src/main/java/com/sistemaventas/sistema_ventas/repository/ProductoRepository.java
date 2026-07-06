@@ -56,4 +56,10 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
             "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.nombreProducto, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u')) = " +
             "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(:nombre, ' ', ''), 'á','a'), 'é','e'), 'í','i'), 'ó','o'), 'ú','u'))")
     Optional<Producto> findByNombreSinTildesNiEspacios(@Param("nombre") String nombre);
+
+    @Query("SELECT new com.sistemaventas.sistema_ventas.dto.LoteHistorialDTO(" +
+            "d.idDetalleCompra, d.compra.fecha, d.precioCompra, d.cantidad, d.stockActual, d.producto.unidadMedida) " +
+            "FROM DetalleCompra d WHERE d.producto.idProducto = :idProducto AND d.stockActual > 0 " +
+            "ORDER BY d.idDetalleCompra DESC")
+    List<com.sistemaventas.sistema_ventas.dto.LoteHistorialDTO> findLotesActivosPorProducto(@Param("idProducto") Integer idProducto);
 }

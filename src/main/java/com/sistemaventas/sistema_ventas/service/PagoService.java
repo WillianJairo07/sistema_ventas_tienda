@@ -1,5 +1,6 @@
 package com.sistemaventas.sistema_ventas.service;
 
+import com.sistemaventas.sistema_ventas.dto.PagoHistorialDTO;
 import com.sistemaventas.sistema_ventas.model.Pago;
 import com.sistemaventas.sistema_ventas.model.Venta;
 import com.sistemaventas.sistema_ventas.repository.PagoRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class PagoService {
@@ -65,5 +67,10 @@ public class PagoService {
         // ====================================================================
 
         return pagoGuardado;
+    }
+
+
+    public List<PagoHistorialDTO> obtenerPorVenta(Integer idVenta) {
+        return pagoRepo.findHistorialSimplificado(idVenta);
     }
 }

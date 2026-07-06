@@ -1,6 +1,8 @@
 package com.sistemaventas.sistema_ventas.controller;
 
+import com.sistemaventas.sistema_ventas.dto.LoteHistorialDTO;
 import com.sistemaventas.sistema_ventas.model.Producto;
+import com.sistemaventas.sistema_ventas.repository.ProductoRepository;
 import com.sistemaventas.sistema_ventas.service.CategoriaService;
 import com.sistemaventas.sistema_ventas.service.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/productos")
 public class ProductoController {
@@ -20,6 +24,8 @@ public class ProductoController {
 
     @Autowired
     private CategoriaService categoriaService;
+    @Autowired
+    private ProductoRepository productoRepository;
 
     @GetMapping
     public String listar(
@@ -102,5 +108,12 @@ public class ProductoController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/lotes/{idProducto}")
+    @ResponseBody
+    public List<LoteHistorialDTO> obtenerLotesProducto(@PathVariable Integer idProducto) {
+        // Llama directamente al repositorio optimizado que acabamos de modificar
+        return productoRepository.findLotesActivosPorProducto(idProducto);
     }
 }

@@ -223,6 +223,84 @@
                                     S/ <span id="labelTotal" th:text="${compra.total != null ? #numbers.formatDecimal(compra.total, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</span>
                                 </div>
                             </div>
+                            <div class="crud-card p-3 shadow-sm border-0 mb-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold small text-muted mb-0">
+                                        <i class="fas fa-wine-bottle me-1"></i> Gestión de Envases
+                                    </h6>
+                                    <span id="badgeEnvases" class="badge bg-primary rounded-pill small">0</span>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-8">
+                                        <select id="selectEnvase" class="form-select shadow-none"
+                                                style="height: 46px; font-size: 0.9rem;"
+                                                onchange="autoCompletarGarantia()">
+                                            <option value="">-- Seleccione --</option>
+                                            <option th:each="e : ${envases}"
+                                                    th:value="${e.idEnvase}"
+                                                    th:data-nombre="${e.nombre}"
+                                                    th:data-stock="${e.stock}"
+                                                    th:data-precio="${e.precioGarantiaBase}"
+                                                    th:text="${e.nombre}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="number" id="envaseCantidad" class="form-control text-center"
+                                               placeholder="Cant." style="height: 46px; font-size: 0.9rem;">
+                                    </div>
+                                    <div class="col-12">
+                                        <input type="number" step="0.01" id="envaseGarantia" class="form-control text-center"
+                                               placeholder="Precio" style="height: 46px; font-size: 0.9rem;">
+                                    </div>
+                                    <div class="col-12 d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-success flex-fill fw-bold"
+                                                onclick="registrarEnvase('ENTRADA')" style="height: 52px; font-size: 0.7rem; border-radius: 10px;">
+                                            <i class="fas fa-arrow-up me-1"></i>Entrada
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary flex-fill fw-bold"
+                                                onclick="registrarEnvase('SALIDA')" style="height: 52px; font-size: 0.7rem; border-radius: 10px;">
+                                            <i class="fas fa-arrow-down me-1"></i>Salida
+                                        </button>
+                                    </div>
+                                </div>
+                                <ul id="listaEnvasesVenta" class="list-unstyled mt-3 small mb-0"></ul>
+                                <input type="hidden" name="envasesJson" id="envasesJson">
+                            </div>
+
+                            <div class="crud-card p-3 shadow-sm border-0 mb-3 bg-light mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold small text-muted mb-0">
+                                        <i class="fas fa-exclamation-circle text-danger me-1"></i> Faltantes (Costo Extra)
+                                    </h6>
+                                    <span id="badgeFaltantes" class="badge bg-danger rounded-pill small">0</span>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <select id="selectFaltante" class="form-select shadow-none" style="height: 46px; font-size: 0.9rem;">
+                                            <option value="">-- Seleccione --</option>
+                                            <option th:each="e : ${envases}" th:value="${e.idEnvase}" th:text="${e.nombre}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" id="cantFaltante" class="form-control text-center" placeholder="Cant." style="height: 46px; font-size: 0.9rem;">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" step="0.01" id="precioFaltante" class="form-control text-center" placeholder="Precio" style="height: 46px; font-size: 0.9rem;">
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button"
+                                                class="btn btn-outline-danger w-100 fw-bold d-flex align-items-center justify-content-center"
+                                                onclick="agregarFaltante()"
+                                                style="height: 52px; font-size: 0.7rem; border-radius: 10px;">
+                                            <i class="fas fa-plus me-1"></i>Agregar Faltante
+                                        </button>
+                                    </div>
+                                </div>
+                                <ul id="listaFaltantesVenta" class="list-unstyled mt-3 small mb-0"></ul>
+                                <input type="hidden" name="faltantesJson" id="faltantesJson">
+                            </div>
 
                             <div class="mb-3 text-center" th:if="${modoEdicion != null}">
                                 <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
@@ -377,6 +455,8 @@
     const buscador = document.getElementById('buscadorCompra');
     const contenedorResultados = document.getElementById('contenedorResultados');
     const datalist = document.getElementById('listaProductos');
+    const envasesJsonGuardados = /*[[${envasesExistentes != null ? envasesExistentes : '[]'}]]*/ '[]';
+    const faltantesJsonGuardados = /*[[${faltantesExistentes}]]*/ '[]'
 
     // Mapeamos los productos una sola vez para búsquedas instantáneas
     const productosMap = Array.from(datalist.options).map(opt => ({
@@ -390,11 +470,77 @@
     document.addEventListener("DOMContentLoaded", () => {
         recuperarBackupTemporal();
 
-        // Configuración de fechas
+        // --- NUEVO: Cargar envases si estamos en modo edición ---
+        if (typeof envasesJsonGuardados !== 'undefined' && envasesJsonGuardados !== '[]') {
+            const lista = JSON.parse(envasesJsonGuardados);
+
+            listaEnvasesCompra = lista.map(mov => ({
+                // CAMBIA ESTO:
+                // Antes tenías: mov.envase.idEnvase
+                // Ahora pon solo: mov.idEnvase
+                idEnvase: mov.idEnvase,
+
+                // Antes tenías: mov.envase.nombre
+                // Ahora pon solo: mov.nombre
+                nombre: mov.nombre,
+
+                cantidad: mov.cantidad,
+                tipo: mov.cantidad > 0 ? 'ENTRADA' : 'SALIDA',
+                montoGarantiaDejado: mov.montoGarantiaDejado
+            }));
+
+            renderizarEnvases();
+        }
+
+        // --- CARGA OPTIMIZADA DE FALTANTES ---
+        if (typeof faltantesJsonGuardados !== 'undefined' && faltantesJsonGuardados !== '[]') {
+            const listaFaltantes = JSON.parse(faltantesJsonGuardados);
+
+            // Mapeamos los datos del backend a tu variable global listaFaltantesCompra
+            listaFaltantesCompra = listaFaltantes.map(item => ({
+                idEnvase: item.idEnvase,
+                nombre: item.nombreEnvase, // <--- Coincide con tu backend
+                cantidad: item.cantidad,
+                montoUnitario: item.total / item.cantidad, // Calculado para mantener la coherencia
+                total: item.total
+            }));
+
+            // Renderizamos una sola vez para máxima performance
+            renderizarFaltantes();
+        }
+
+        // 1. OBTENEMOS LOS INPUTS
         const inputFechaLlegada = document.querySelector('.fecha-llegada');
         const inputFechaInicio = document.querySelector('.fecha-inicio');
+        const hoy = new Date().toISOString().split('T')[0]; // Fecha de hoy (2026-06-26)
+
+        // 2. BLOQUEAR PASADO: Ningún input de fecha puede ser menor a hoy
+        //document.querySelectorAll('input[type="date"]').forEach(input => {
+        //    input.setAttribute('min', hoy);
+        //});
+
+        // 3. SINCRONIZAR FECHAS: La llegada debe ser mayor o igual a la emisión
         if (inputFechaLlegada && inputFechaInicio) {
-            inputFechaLlegada.setAttribute('min', inputFechaInicio.value);
+            const actualizarMinimo = () => {
+                const fechaEmision = inputFechaInicio.value;
+
+                // Si no hay fecha de emisión, no podemos establecer un mínimo, usamos 'hoy'
+                const fechaMinima = fechaEmision || hoy;
+
+                // Aplicamos el atributo min
+                inputFechaLlegada.setAttribute('min', fechaMinima);
+
+                // Ajuste de seguridad: Si la llegada seleccionada es menor a la emisión, la igualamos
+                if (inputFechaLlegada.value && inputFechaLlegada.value < fechaMinima) {
+                    inputFechaLlegada.value = fechaMinima;
+                }
+            };
+
+            // A. Ejecutar apenas cargue (para el caso de edición)
+            actualizarMinimo();
+
+            // B. Ejecutar siempre que el usuario cambie la emisión
+            inputFechaInicio.addEventListener('change', actualizarMinimo);
         }
 
         setTimeout(() => { actualizarTotales(); }, 100);
@@ -616,6 +762,8 @@
     // --- FORMULARIO Y CONFIRMACIÓN CON COLORES COHERENTES ---
     document.getElementById('formCompra').addEventListener('submit', function(e) {
         e.preventDefault();
+        document.getElementById('envasesJson').value = JSON.stringify(listaEnvasesCompra);
+        document.getElementById('faltantesJson').value = JSON.stringify(listaFaltantesCompra);
         Swal.fire({
             title: '¿Guardar Orden?',
             text: "Se registrará el pedido en el inventario.",
@@ -777,12 +925,178 @@
     });
 
     function validarCantidadMinima(input) {
+        // Si el campo está vacío, esperamos a que el usuario termine (blur) o deje de escribir
+        if (input.value === "") {
+            return;
+        }
+
         let valor = parseInt(input.value);
-        // Si el valor es menor a 1 o está vacío, lo reseteamos a 1
+
+        // Si el usuario escribió algo y es menor a 1, corregimos a 1
         if (isNaN(valor) || valor < 1) {
             input.value = 1;
         }
     }
+
+    let listaEnvasesCompra = [];
+    let listaFaltantesCompra = [];
+
+    function autoCompletarGarantia() {
+        const sel = document.getElementById('selectEnvase');
+        const inputGarantia = document.getElementById('envaseGarantia');
+        const precio = sel.options[sel.selectedIndex].getAttribute('data-precio');
+        inputGarantia.value = precio ? parseFloat(precio).toFixed(2) : '';
+    }
+
+    function registrarEnvase(tipo) {
+        const sel = document.getElementById('selectEnvase');
+        const inputCant = document.getElementById('envaseCantidad');
+        const inputGarantia = document.getElementById('envaseGarantia');
+
+        const cant = parseInt(inputCant.value);
+        const montoGarantia = parseFloat(inputGarantia.value) || 0;
+
+        // 1. Validaciones básicas
+        if (!sel.value || isNaN(cant) || cant <= 0) {
+            Swal.fire({
+                title: 'Atención',
+                text: 'Seleccione un envase y verifique cantidad',
+                icon: 'warning',
+                confirmButtonColor: '#3b82f6' // Azul
+            });
+            return;
+        }
+
+        // 2. Obtener datos del envase seleccionado desde el DOM (esto es clave)
+        const optionSeleccionada = sel.options[sel.selectedIndex];
+        const stockActual = parseInt(optionSeleccionada.getAttribute('data-stock') || 0);
+        const nombreEnvase = optionSeleccionada.getAttribute('data-nombre');
+
+        // 3. VALIDACIÓN: Impedir salida si no hay stock suficiente
+        if (tipo === 'SALIDA' && cant > stockActual) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Stock Insuficiente',
+                text: `Solo tienes ${stockActual} unidades de ${nombreEnvase}.`,
+                confirmButtonColor: '#3b82f6'
+            });
+            return; // No permitimos registrar el movimiento
+        }
+
+        // 4. Crear el objeto que coincide con tu Modelo Java (MovimientoEnvase)
+        const movimiento = {
+            idEnvase: sel.value,
+            nombre: nombreEnvase,
+            cantidad: tipo === 'ENTRADA' ? cant : -cant,
+            tipo: tipo,
+            montoGarantiaDejado: montoGarantia
+        };
+
+        // 5. Agregar y actualizar
+        listaEnvasesCompra.push(movimiento);
+
+        // Opcional: Actualizar el stock visualmente en el select para que el usuario vea el cambio
+        // esto evita que el usuario saque stock que acaba de comprometer en la misma compra
+        const nuevoStock = (tipo === 'ENTRADA') ? (stockActual + cant) : (stockActual - cant);
+        optionSeleccionada.setAttribute('data-stock', nuevoStock);
+
+        inputCant.value = '';
+        sel.value = '';
+
+        renderizarEnvases();
+    }
+
+    function renderizarEnvases() {
+        const listaUI = document.getElementById('listaEnvasesVenta');
+        listaUI.innerHTML = '';
+
+        listaEnvasesCompra.forEach((mov, index) => {
+            const color = mov.cantidad > 0 ? 'text-success' : 'text-primary';
+            listaUI.innerHTML += `
+          <li class="d-flex justify-content-between align-items-center border-bottom py-2 ${color}">
+              <div class="d-flex flex-column">
+                  <span><strong>${mov.nombre}</strong> (x${Math.abs(mov.cantidad)})</span>
+                  <small class="text-muted">Garantía: S/ ${mov.montoGarantiaDejado.toFixed(2)} c/u</small>
+              </div>
+              <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="quitarEnvase(${index})">
+                  <i class="fas fa-trash"></i>
+              </button>
+          </li>`;
+        });
+
+        document.getElementById('badgeEnvases').innerText = listaEnvasesCompra.length;
+        document.getElementById('envasesJson').value = JSON.stringify(listaEnvasesCompra);
+
+        // IMPORTANTE: Esto hará que el Total arriba se ajuste solo
+        if (typeof actualizarTotales === 'function') actualizarTotales();
+    }
+
+    function quitarEnvase(index) {
+        listaEnvasesCompra.splice(index, 1);
+        renderizarEnvases();
+    }
+    //FALTANTES
+    function agregarFaltante() {
+        const sel = document.getElementById('selectFaltante');
+        const cant = parseInt(document.getElementById('cantFaltante').value);
+        const precio = parseFloat(document.getElementById('precioFaltante').value);
+
+        // Validación
+        if (!sel.value || isNaN(cant) || cant <= 0 || isNaN(precio) || precio < 0) {
+            Swal.fire({
+                title: 'Atención',
+                text: 'Seleccione un envase y verifique cantidad y precio',
+                icon: 'warning',
+                confirmButtonColor: '#3b82f6'
+            });
+            return;
+        }
+
+        // Crear objeto
+        const faltante = {
+            idEnvase: sel.value,
+            nombre: sel.options[sel.selectedIndex].text,
+            cantidad: cant,
+            montoUnitario: precio,
+            total: cant * precio
+        };
+
+        listaFaltantesCompra.push(faltante);
+
+        // Limpiar inputs
+        sel.value = '';
+        document.getElementById('cantFaltante').value = '';
+        document.getElementById('precioFaltante').value = '';
+
+        renderizarFaltantes();
+    }
+
+    function renderizarFaltantes() {
+        const listaUI = document.getElementById('listaFaltantesVenta');
+        listaUI.innerHTML = '';
+
+        listaFaltantesCompra.forEach((f, index) => {
+            listaUI.innerHTML += `
+            <li class="d-flex justify-content-between align-items-center border-bottom py-2 text-danger">
+                <div class="d-flex flex-column">
+                    <span><strong>${f.nombre}</strong> (x${f.cantidad})</span>
+                    <small>Subtotal: S/ ${f.total.toFixed(2)}</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="quitarFaltante(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </li>`;
+        });
+
+        document.getElementById('badgeFaltantes').innerText = listaFaltantesCompra.length;
+        document.getElementById('faltantesJson').value = JSON.stringify(listaFaltantesCompra);
+    }
+
+    function quitarFaltante(index) {
+        listaFaltantesCompra.splice(index, 1);
+        renderizarFaltantes();
+    }
+
 </script>
 </body>
 </html>

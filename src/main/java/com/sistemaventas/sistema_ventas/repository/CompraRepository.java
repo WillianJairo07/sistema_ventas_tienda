@@ -30,7 +30,18 @@ public interface CompraRepository extends JpaRepository<Compra, Integer> {
                          @Param("fechaHasta") LocalDate fechaHasta,
                          Pageable pageable);
 
-    @Query("SELECT new com.sistemaventas.sistema_ventas.dto.ReporteCompraDTO(c.idCompra, c.fechaContabilizacion, c.total, p.nombre) " +
-            "FROM Compra c JOIN c.proveedor p WHERE c.fechaContabilizacion BETWEEN :inicio AND :fin")
-    List<ReporteCompraDTO> findReporteCompras(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+    @Query("SELECT new com.sistemaventas.sistema_ventas.dto.ReporteCompraDTO(" +
+            "  c.idCompra, c.fechaContabilizacion, c.tipoComprobante, c.total, p.nombre) " +
+            "FROM Compra c JOIN c.proveedor p " +
+            "WHERE c.fechaContabilizacion BETWEEN :inicio AND :fin " +
+            // Aquí ajustamos al valor exacto que me indicaste
+            "AND (c.estado = 'COMPLETADA' OR c.estado IS NULL) " +
+            "AND c.esComprobantePropio = :esPropio " +
+            "AND (:tipoComprobante IS NULL OR c.tipoComprobante = :tipoComprobante)")
+    List<ReporteCompraDTO> findReporteCompras(
+            @Param("inicio") LocalDate inicio,
+            @Param("fin") LocalDate fin,
+            @Param("esPropio") boolean esPropio,
+            @Param("tipoComprobante") String tipoComprobante
+    );
 }

@@ -24,179 +24,131 @@
 
 <main class="content" id="mainContent">
     <div class="container-fluid">
-
-        <!-- CABECERA -->
         <div class="row align-items-end mb-4 g-3">
             <div class="col-12 col-xl-4">
                 <h2 class="fw-bold text-dynamic mb-1">Gestión de Deudas</h2>
-                <p class="text-muted-dynamic mb-0 small">
-                    Administra aquí las deudas de tus clientes.
-                </p>
+                <p class="text-muted-dynamic mb-0 small">Administra aquí las deudas de tus clientes.</p>
             </div>
 
             <div class="col-12 col-xl-8">
                 <div class="d-flex flex-wrap flex-md-nowrap justify-content-xl-end align-items-center gap-2">
-
-                    <!-- BUSCADOR -->
                     <div class="search-container custom-search-adaptive">
                         <i class="fas fa-search"></i>
-                        <input type="text"
-                               id="inputBusqueda"
-                               class="form-control shadow-sm"
-                               th:value="${buscar}"
-                               placeholder="Buscar por cliente o N° de ticket..."
+                        <input type="text" id="inputBusqueda" class="form-control shadow-sm"
+                               th:value="${buscar}" placeholder="Buscar por cliente o ticket..."
                                onkeyup="filtrarPagos()">
                     </div>
 
+                    <div class="btn-group-adaptive d-flex gap-2">
+                        <a th:href="@{/pagos(verCompletadas=${!verCompletadas}, buscar=${buscar})}"
+                           class="btn shadow-sm"
+                           th:classappend="${verCompletadas} ? 'btn-ver-activos' : 'btn-ver-inactivos'">
+                            <i class="fas" th:classappend="${verCompletadas} ? 'fa-eye' : 'fa-eye-slash'"></i>
+                            <span th:text="${verCompletadas} ? ' Ver Pendientes' : ' Ver Completadas'"></span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA -->
         <div id="contenedorTabla">
             <div class="crud-card shadow-sm overflow-hidden border-0">
                 <div class="table-responsive">
                     <table class="table custom-table align-middle mb-0" id="tablaPagos">
-
                         <thead class="bg-light">
                         <tr class="text-dynamic">
-                            <th class="text-center ps-4 py-3"
-                                style="font-size: 0.8rem; font-weight: 700;">
-                                TICKET
-                            </th>
-
-                            <th class="text-center py-3"
-                                style="font-size: 0.8rem; font-weight: 700;">
-                                CLIENTE
-                            </th>
-
-                            <th class="text-center py-3"
-                                style="font-size: 0.8rem; font-weight: 700;">
-                                TOTAL
-                            </th>
-
-                            <th class="text-center py-3"
-                                style="font-size: 0.8rem; font-weight: 700;">
-                                ABONADO
-                            </th>
-
-                            <th class="text-center py-3"
-                                style="font-size: 0.8rem; font-weight: 700;">
-                                SALDO
-                            </th>
-
-                            <th class="text-center py-3"
-                                style="font-size: 0.8rem; font-weight: 700;">
-                                ACCIONES
-                            </th>
+                            <th style="width: 40px;"></th>
+                            <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">TICKET</th>
+                            <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">CLIENTE</th>
+                            <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">FECHA</th>
+                            <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">TOTAL</th>
+                            <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ABONADO</th>
+                            <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">SALDO</th>
+                            <th class="text-center py-3" style="font-size: 0.8rem; font-weight: 700;">ACCIONES</th>
                         </tr>
                         </thead>
-
                         <tbody>
-
                         <tr th:if="${#lists.isEmpty(ventasConDeuda)}">
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-50"></i>
-                                <p class="mb-0 fw-bold">
-                                    ¡Todo al día! No hay cuentas pendientes.
-                                </p>
-                            </td>
+                            <td colspan="8" class="text-center py-5 text-muted">No hay cuentas pendientes.</td>
                         </tr>
 
-                        <tr th:each="v : ${ventasConDeuda}" class="border-bottom">
-
-                            <td class="ps-4 fw-bold text-muted text-center"
-                                th:text="${v[0]}">
-                            </td>
-
-                            <td class="fw-medium text-muted text-center small nombre-cliente"
-                                th:text="${v[1]}">
-                            </td>
-
-                            <td class="text-center fw-bold text-muted small" style="white-space: nowrap;">
-                                S/ [[${#numbers.formatDecimal(v[2], 1, 2)}]]
-                            </td>
-
-                            <td class="text-center text-success fw-medium small" style="white-space: nowrap;">
-                                S/ [[${#numbers.formatDecimal(v[3], 1, 2)}]]
-                            </td>
-
-                            <td class="text-center">
-                                <span class="badge bg-light text-danger border border-danger px-3 rounded-pill" style="white-space: nowrap;">
-                                    S/ [[${#numbers.formatDecimal(v[4], 1, 2)}]]
-                                </span>
-                            </td>
-
-                            <td>
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn-circle btn-edit"
+                        <th:block th:each="v : ${ventasConDeuda}">
+                            <tr class="border-bottom">
+                                <td class="text-center">
+                                    <button class="btn btn-sm p-0 shadow-none border-0" type="button"
+                                            th:onclick="|toggleDetalle('detalle-${v != null ? v[0] : ''}', this)|"
+                                            style="background: transparent; outline: none;">
+                                        <i class="fas fa-chevron-right text-muted" style="transition: transform 0.3s;"></i>
+                                    </button>
+                                </td>
+                                <td class="ps-4 fw-bold text-muted text-center" th:text="${v != null ? v[0] : ''}"></td>
+                                <td class="fw-medium text-muted text-center small" th:text="${v != null ? v[1] : ''}"></td>
+                                <td class="text-center text-muted small" th:text="${v != null and v[5] != null ? #dates.format(v[5], 'dd/MM/yyyy') : ''}"></td>
+                                <td class="text-center fw-bold text-muted small">S/ [[${v != null ? #numbers.formatDecimal(v[2], 1, 2) : '0.00'}]]</td>
+                                <td class="text-center text-success fw-medium small">S/ [[${v != null ? #numbers.formatDecimal(v[3], 1, 2) : '0.00'}]]</td>
+                                <td class="text-center">
+                                    <span class="badge border px-3 rounded-pill" th:classappend="${v != null and v[4] <= 0} ? 'bg-light text-success border-success' : 'bg-light text-danger border-danger'">
+                                        S/ [[${v != null ? #numbers.formatDecimal(v[4], 1, 2) : '0.00'}]]
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button th:if="${v != null and v[4] > 0}"
+                                            class="btn-circle btn-edit"
                                             th:onclick="'abrirModalAbono(' + ${v[0]} + ', ' + ${v[4]} + ')'">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                </div>
-                            </td>
 
-                        </tr>
+                                    <span th:if="${v != null and v[4] <= 0}"
+                                          class="d-inline-flex align-items-center justify-content-center"
+                                          style="width: 32px; height: 32px; background-color: #d5e8d9; color: #10b981; border-radius: 50%; cursor: not-allowed;"
+                                          title="Pago Completado">
+                                        <i class="fas fa-check" style="font-size: 0.85rem;"></i>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:id="'detalle-' + ${v != null ? v[0] : ''}" style="display:none; background-color: #f8fafc;">
+                                <td colspan="8" class="p-3">
+                                    <div class="historial-container">
+                                        <p class="text-muted small text-center">Cargando...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </th:block>
                         </tbody>
-
                     </table>
                 </div>
             </div>
 
-            <!-- PAGINACIÓN -->
-            <div th:if="${totalPages > 1}"
-                 class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
-
+            <div th:if="${totalPages > 1}" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-2 gap-3">
                 <div class="text-dark small fw-medium">
-                    Página
-                    <span class="fw-bold text-primary"
-                          th:text="${currentPage + 1}"></span>
-                    de
-                    <span class="fw-bold"
-                          th:text="${totalPages}"></span>
+                    Página <span class="fw-bold text-primary" th:text="${currentPage + 1}"></span> de <span class="fw-bold" th:text="${totalPages}"></span>
                 </div>
-
                 <nav>
                     <ul class="pagination pagination-sm mb-0">
-
-                        <li class="page-item"
-                            th:classappend="${currentPage == 0} ? 'disabled'">
-
-                            <a class="page-link shadow-sm"
-                               th:href="@{/pagos(page=${currentPage - 1}, buscar=${buscar})}">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link shadow-sm" th:href="@{/pagos(page=${currentPage - 1}, buscar=${buscar}, verCompletadas=${verCompletadas})}">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
-
-                        <li class="page-item mx-1"
-                            th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                            th:if="${(currentPage == 0 and i < 3) or
-                            (currentPage == totalPages - 1 and i > totalPages - 4) or
-                            (i >= currentPage - 1 and i <= currentPage + 1)}"
-                                        th:classappend="${i == currentPage} ? 'active'">
-
+                        <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
                             <a class="page-link shadow-sm"
-                               th:href="@{/pagos(page=${i}, buscar=${buscar})}"
+                               th:href="@{/pagos(page=${i}, buscar=${buscar}, verCompletadas=${verCompletadas})}"
                                th:text="${i + 1}">
                             </a>
                         </li>
-
-                        <li class="page-item"
-                            th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-
-                            <a class="page-link shadow-sm"
-                               th:href="@{/pagos(page=${currentPage + 1}, buscar=${buscar})}">
+                        <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                            <a class="page-link shadow-sm" th:href="@{/pagos(page=${currentPage + 1}, buscar=${buscar}, verCompletadas=${verCompletadas})}">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
-
                     </ul>
                 </nav>
             </div>
-
         </div>
     </div>
 </main>
+
 <div class="modal fade" id="modalAbono" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -345,26 +297,20 @@
     function filtrarPagos() {
         const input = document.getElementById("inputBusqueda");
         const texto = input.value.trim();
+        const botonFiltro = document.querySelector('.btn-ver-activos, .btn-ver-inactivos');
+        const verCompletadas = botonFiltro.classList.contains('btn-ver-activos');
 
         clearTimeout(timeoutBusqueda);
 
         timeoutBusqueda = setTimeout(() => {
-            // CORRECCIÓN CLAVE: Agregamos la cabecera X-Requested-With para que el Controller detecte el AJAX
-            fetch(`/pagos?buscar=${encodeURIComponent(texto)}`, {
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                }
+            fetch(`/pagos?buscar=${encodeURIComponent(texto)}&verCompletadas=${verCompletadas}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
             })
-                .then(response => {
-                    if (!response.ok) throw new Error("Error en la respuesta del servidor");
-                    return response.text();
-                })
+                .then(response => response.text())
                 .then(html => {
-                    // Como el controlador ahora sí devuelve solo el fragmento, lo inyectamos de manera directa y limpia
                     document.getElementById('contenedorTabla').innerHTML = html;
                 })
                 .catch(err => console.warn("Error en búsqueda:", err));
-
         }, 400);
     }
 
@@ -381,7 +327,6 @@
 
         const modalElement = document.getElementById('modalAbono');
 
-        // CORRECCIÓN CLAVE: Reutiliza la instancia si ya existe, en lugar de instanciar modales infinitos
         let modal = bootstrap.Modal.getInstance(modalElement);
         if (!modal) {
             modal = new bootstrap.Modal(modalElement);
@@ -418,6 +363,92 @@
             });
         }
     });
+
+    // =========================================================================
+    // 4. DESPLEGABLE OPTIMIZADO (CORRECCIÓN DE RETRASO VISUAL)
+    // =========================================================================
+    function toggleDetalle(idFila, btn) {
+        const filaDetalle = document.getElementById(idFila);
+        if (!filaDetalle) return;
+
+        const container = filaDetalle.querySelector('.historial-container');
+        const idVenta = idFila.replace('detalle-', '');
+        const icono = btn.querySelector('i');
+        const estaVisible = filaDetalle.style.display === 'table-row';
+
+        if (!estaVisible) {
+            filaDetalle.style.display = 'table-row';
+            if (icono) icono.style.transform = 'rotate(90deg)';
+
+            fetch(`/ventas/historial/${idVenta}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Error en la respuesta");
+                    return res.json();
+                })
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        let html = `<div class="w-100 d-flex justify-content-center py-3">
+                        <div class="bg-white rounded-3 shadow-sm border overflow-hidden" style="max-width: 600px; width: 100%;">
+                            <table class="table table-sm table-hover small text-center mb-0" style="color: #6c757d; table-layout: fixed;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 33.33%; font-weight: 600; border-bottom: 1px solid #e2e8f0; py-2;">Fecha</th>
+                                        <th style="width: 33.33%; font-weight: 600; border-bottom: 1px solid #e2e8f0; py-2;">Método</th>
+                                        <th style="width: 33.33%; font-weight: 600; border-bottom: 1px solid #e2e8f0; py-2;">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                        data.forEach(pago => {
+                            let fechaFormateada = 'N/A';
+
+                            if (pago.fecha) {
+                                const fechaSucia = pago.fecha.split('T')[0];
+                                const partes = fechaSucia.split('-');
+                                if (partes.length === 3) {
+                                    fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                                }
+                            }
+
+                            // --- LÓGICA DE BADGES DINÁMICOS PARA MÉTODOS DE PAGO ---
+                            const metodoRaw = pago.metodoPago ? pago.metodoPago.toUpperCase().trim() : 'N/A';
+                            let badgeHtml = '';
+
+                            if (metodoRaw.includes('YAPE')) {
+                                badgeHtml = `<span class="badge-comprobante bg-yape">YAPE</span>`;
+                            } else if (metodoRaw.includes('PLIN')) {
+                                badgeHtml = `<span class="badge-comprobante bg-plin">PLIN</span>`;
+                            } else if (metodoRaw.includes('EFECTIVO')) {
+                                badgeHtml = `<span class="badge-comprobante" style="background-color: #10b981 !important;">EFECTIVO</span>`;
+                            } else {
+                                // Por si manejas depósitos u otros métodos en el futuro
+                                badgeHtml = `<span class="badge-comprobante" style="background-color: #64748b !important;">${metodoRaw}</span>`;
+                            }
+
+                            const monto = pago.monto ? pago.monto.toFixed(2) : '0.00';
+
+                            html += `<tr>
+                                    <td style="vertical-align: middle; padding: 8px 0;">${fechaFormateada}</td>
+                                    <td style="vertical-align: middle; padding: 8px 0;">${badgeHtml}</td>
+                                    <td style="vertical-align: middle; padding: 8px 0; font-weight: 600;">S/ ${monto}</td>
+                                 </tr>`;
+                        });
+
+                        html += '</tbody></table></div></div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p class="text-muted small text-center" style="margin: 10px;">No hay abonos registrados.</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error("Error al cargar historial:", err);
+                    container.innerHTML = '<p class="text-danger small text-center" style="margin: 10px;">Error al cargar datos.</p>';
+                });
+        } else {
+            filaDetalle.style.display = 'none';
+            if (icono) icono.style.transform = 'rotate(0deg)';
+        }
+    }
 </script>
 </body>
 </html>

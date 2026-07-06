@@ -78,10 +78,25 @@
                         <td class="text-center fw-medium text-muted small" th:text="${v.cliente.nombre + ' ' + v.cliente.apellidoPat}"></td>
 
                         <td class="text-center small">
-                            <span th:classappend="${v.metodoPago == 'EFECTIVO' ? 'bg-success' :
-                                                 (v.metodoPago == 'Yape' ? 'bg-yape' :
-                                                 (v.metodoPago == 'Plin' ? 'bg-plin' : 'bg-secondary'))}"
-                                  class="badge px-3 rounded-pill text-uppercase" th:text="${v.metodoPago}">
+                            <span th:if="${v.metodoPago != null and #strings.toUpperCase(#strings.trim(v.metodoPago)) == 'EFECTIVO'}"
+                                  class="badge-comprobante text-uppercase"
+                                  style="background-color: #10b981 !important;">
+                                EFECTIVO
+                            </span>
+
+                            <span th:if="${v.metodoPago != null and #strings.toUpperCase(#strings.trim(v.metodoPago)) == 'YAPE'}"
+                                  class="badge-comprobante bg-yape text-uppercase">
+                                YAPE
+                            </span>
+
+                            <span th:if="${v.metodoPago != null and #strings.toUpperCase(#strings.trim(v.metodoPago)) == 'PLIN'}"
+                                  class="badge-comprobante bg-plin text-uppercase">
+                                PLIN
+                            </span>
+
+                            <span th:if="${v.metodoPago == null or (#strings.toUpperCase(#strings.trim(v.metodoPago)) != 'EFECTIVO' and #strings.toUpperCase(#strings.trim(v.metodoPago)) != 'YAPE' and #strings.toUpperCase(#strings.trim(v.metodoPago)) != 'PLIN')}"
+                                  class="badge-comprobante bg-secondary text-uppercase"
+                                  th:text="${v.metodoPago}">
                             </span>
                         </td>
 

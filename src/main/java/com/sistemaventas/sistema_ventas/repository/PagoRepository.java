@@ -1,5 +1,6 @@
 package com.sistemaventas.sistema_ventas.repository;
 
+import com.sistemaventas.sistema_ventas.dto.PagoHistorialDTO;
 import com.sistemaventas.sistema_ventas.model.Pago;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,8 +13,9 @@ import java.util.List;
 @Repository
 public interface PagoRepository extends JpaRepository<Pago, Integer> {
 
-    // Recuperar el historial de abonos de una venta específica
-    List<Pago> findByVentaIdVenta(Integer idVenta);
+    @Query("SELECT new com.sistemaventas.sistema_ventas.dto.PagoHistorialDTO(p.fecha, p.metodoPago, p.monto) " +
+            "FROM Pago p WHERE p.venta.idVenta = :idVenta ORDER BY p.fecha DESC")
+    List<PagoHistorialDTO> findHistorialSimplificado(@Param("idVenta") Integer idVenta);
 
     // Suma real y atómica de todos los pagos guardados para una venta
     @Query("SELECT COALESCE(SUM(p.monto), 0) FROM Pago p WHERE p.venta.idVenta = :idVenta")
@@ -23,4 +25,6 @@ public interface PagoRepository extends JpaRepository<Pago, Integer> {
     @Query("SELECT p.venta.idVenta, COALESCE(SUM(p.monto), 0) " +
             "FROM Pago p GROUP BY p.venta.idVenta")
     List<Object[]> sumarPagosAgrupados();
+
+    
 }

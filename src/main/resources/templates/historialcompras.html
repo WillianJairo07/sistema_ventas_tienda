@@ -96,9 +96,15 @@
                                   class="badge-comprobante badge-factura"
                                   th:text="${c.tipoComprobante}">
                             </span>
+
                             <span th:if="${c.tipoComprobante == 'BOLETA'}"
                                   class="badge-comprobante badge-boleta"
                                   th:text="${c.tipoComprobante}">
+                            </span>
+
+                            <span th:if="${c.tipoComprobante == 'NOTA_VENTA'}"
+                                  class="badge-comprobante badge-nota"
+                                  th:text="'NOTA DE VENTA'">
                             </span>
 
                             <span th:if="${c.tipoComprobante == null}"
@@ -119,6 +125,8 @@
                                 <button type="button" class="btn-circle btn-ver" th:onclick="|verDetalle(${c.idCompra})|" title="Ver Detalle">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <button type="button" class="btn-circle btn-envases" th:onclick="|cargarEnvases(${c.idCompra})|" title="Ver Envases">
+                                    <i class="fas fa-wine-bottle text-white"></i> </button>
                                 <th:block th:if="${c.estado == 'PENDIENTE'}">
                                     <a class="btn-circle btn-edit" th:href="@{/compras/editar/{id}(id=${c.idCompra})}" title="Editar">
                                         <i class="fas fa-edit"></i>
@@ -181,37 +189,29 @@
 
 
                 <div class="row mb-3 g-2">
-
-                    <!-- PROVEEDOR (ARRIBA IZQUIERDA) -->
                     <div class="col-12">
-                        <label class="text-muted small d-block">PROVEEDOR</label>
-                        <div class="fw-semibold text-dark small text-truncate">
-                            <span id="detProveedor"></span>
+                        <label class="text-muted small mb-0 d-block">PROVEEDOR</label>
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="fw-semibold text-dark small text-truncate flex-grow-1">
+                                <span id="detProveedor"></span>
+                            </div>
+                            <span id="detPropiedad" class="badge rounded-pill small flex-shrink-0" style="display:none;"></span>
                         </div>
                     </div>
 
-                    <!-- COMPROBANTE (ABAJO IZQUIERDA) -->
                     <div class="col-6">
                         <label class="text-muted small d-block">COMPROBANTE</label>
                         <div id="contenedorComprobante">
-                            <span id="detComprobante"
-                                  class="badge bg-dark-subtle text-dark small"
-                                  style="display:none;"></span>
-
-                            <span id="detSinComprobante"
-                                  class="badge bg-secondary-subtle text-secondary small"
-                                  style="display:none;">
-                                Pendiente
-                            </span>
+                            <span id="detComprobante" class="badge bg-dark-subtle text-dark small" style="display:none;"></span>
+                            <span id="detSinComprobante" class="badge bg-secondary-subtle text-secondary small" style="display:none;">Pendiente</span>
                         </div>
                     </div>
 
-                    <!-- FECHA (ABAJO DERECHA) -->
                     <div class="col-6 text-end">
                         <label class="text-muted small d-block">FECHA LLEGADA</label>
                         <span id="detFecha" class="fw-semibold small text-dark"></span>
                     </div>
-
                 </div>
 
                 <!-- TABLA -->
@@ -271,12 +271,18 @@
         const filterForm = document.querySelector('form[action*="/compras/historial"]');
 
         if (inputDesde && inputHasta) {
-            // Restringe el calendario de 'Hasta' basándose en 'Desde'
+
+            // 1. Al cambiar 'Desde', actualizamos el 'min' de 'Hasta'
             inputDesde.addEventListener("change", () => {
                 inputHasta.min = inputDesde.value;
+
+                // Si 'Hasta' ya tenía una fecha menor, la limpiamos o ajustamos
+                if (inputHasta.value && inputHasta.value < inputDesde.value) {
+                    inputHasta.value = inputDesde.value;
+                }
             });
 
-            // Validación al enviar el formulario
+            // 2. Validación extra al intentar enviar el formulario
             if (filterForm) {
                 filterForm.addEventListener("submit", (e) => {
                     if (inputDesde.value && inputHasta.value && inputDesde.value > inputHasta.value) {
@@ -350,6 +356,7 @@
                     <option value="">-- Seleccione --</option>
                     <option value="BOLETA">Boleta de Venta</option>
                     <option value="FACTURA">Factura</option>
+                    <option value="NOTA_VENTA">Nota de Venta</option> </select>
                 </select>
 
                 <label style="font-size: 0.85rem; color: #666; display: block; margin-bottom: 5px;">¿Es a nombre propio?</label>
@@ -382,10 +389,12 @@
         const tablaCuerpo = document.getElementById('detTablaCuerpo');
         const badgeComp = document.getElementById('detComprobante');
         const txtSinComp = document.getElementById('detSinComprobante');
+        const detPropiedad = document.getElementById('detPropiedad');
 
         tablaCuerpo.innerHTML = '<tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Cargando...</td></tr>';
         badgeComp.style.display = 'none';
         txtSinComp.style.display = 'none';
+        detPropiedad.style.display = 'none';
 
         try {
             const response = await fetch(`/compras/api/${id}`);
@@ -399,12 +408,39 @@
 
             // Comprobante
             if (compra.tipoComprobante) {
-                badgeComp.innerText = compra.tipoComprobante;
-                badgeComp.className = "badge bg-dark-subtle text-dark small";
+                badgeComp.innerText = compra.tipoComprobante === 'NOTA_VENTA' ? 'NOTA DE VENTA' : compra.tipoComprobante;
                 badgeComp.style.display = 'inline-block';
+
+                // Limpiamos cualquier estilo en línea previo que pusimos de Bootstrap
+                badgeComp.style.backgroundColor = "";
+                badgeComp.style.color = "";
+
+                // Asignamos tus clases CSS personalizadas
+                if (compra.tipoComprobante === 'NOTA_VENTA') {
+                    badgeComp.className = "badge-comprobante badge-nota";
+                } else if (compra.tipoComprobante === 'FACTURA') {
+                    badgeComp.className = "badge-comprobante badge-factura";
+                } else if (compra.tipoComprobante === 'BOLETA') {
+                    badgeComp.className = "badge-comprobante badge-boleta";
+                }
             } else {
+                txtSinComp.className = "badge-comprobante badge-pendiente";
                 txtSinComp.style.display = 'inline-block';
             }
+
+            // Lógica del Badge de Propiedad
+            if (compra.estado === 'COMPLETADA') {
+                detPropiedad.style.display = 'inline-block';
+                if (compra.esComprobantePropio) {
+                    detPropiedad.innerHTML = '<i class="fas fa-user-check me-1"></i> A Nombre Propio';
+                    detPropiedad.className = "badge rounded-pill bg-primary-subtle text-primary small";
+                } else {
+                    detPropiedad.innerHTML = '<i class="fas fa-building me-1"></i> A Nombre de Terceros';
+                    detPropiedad.className = "badge rounded-pill bg-warning-subtle text-warning small";
+                }
+            }
+
+
 
             // Fecha formateada
             const fechaISO = compra.fechaRecepcion || compra.fecha || compra.fechaInicio;
@@ -448,6 +484,101 @@
         }
         const [y, m, d] = isoStr.split('-');
         return `${d}/${m}/${y}`;
+    }
+
+
+
+    async function cargarEnvases(idCompra) {
+        try {
+            const response = await fetch(`/compras/api/envases/${idCompra}`);
+            if (!response.ok) throw new Error("Error de conexión");
+
+            const data = await response.json();
+
+            // Detectamos si recibimos una lista directa (envases antiguos) o un objeto unificado
+            const esUnificado = !Array.isArray(data);
+            const listaEnvases = esUnificado ? data.envases : data;
+            const listaFaltantes = esUnificado ? data.faltantes : [];
+            const totalAdicionales = esUnificado ? data.totalGeneralFaltantes : 0; // Capturamos el total
+
+            if (listaEnvases.length === 0 && listaFaltantes.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Vacío',
+                    text: 'Esta compra no tiene envases ni costos adicionales registrados.',
+                    confirmButtonColor: '#3b82f6',
+                    background: '#ffffff',
+                    color: '#1b254b'
+                });
+                return;
+            }
+
+            let html = '';
+
+            // Sección Envases
+            if (listaEnvases.length > 0) {
+                html += `
+        <h6 class="text-start mb-2 mt-2 text-primary small fw-bold">MOVIMIENTOS DE ENVASES</h6>
+        <div class="table-responsive mb-3">
+            <table class="table align-middle mb-0">
+                <thead class="text-uppercase" style="font-size: 0.7rem; color: #64748b;">
+                    <tr><th class="ps-3">Envase</th><th class="text-center">Cant.</th><th class="text-end pe-3">Tipo</th></tr>
+                </thead>
+                <tbody style="font-size: 0.85rem; color: #334155;">
+                    ${listaEnvases.map(e => `
+                        <tr>
+                            <td class="ps-3 text-muted">${e.nombre}</td>
+                            <td class="text-center"><span class="badge ${e.cantidad > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill px-2">${Math.abs(e.cantidad)}</span></td>
+                            <td class="text-end pe-3 small text-muted">${e.cantidad > 0 ? 'ENTREGA' : 'DEVOLUCIÓN'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>`;
+            }
+
+            // Sección Faltantes (Costos Adicionales)
+            if (listaFaltantes.length > 0) {
+                html += `
+        <h6 class="text-start mb-2 mt-3 text-danger small fw-bold">COSTOS ADICIONALES (FALTANTES)</h6>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <tbody style="font-size: 0.85rem; color: #334155;">
+                    ${listaFaltantes.map(f => `
+                        <tr>
+                            <td class="ps-3 text-muted">${f.nombre}</td>
+                            <td class="text-center fw-bold">x${f.cantidad}</td>
+                            <td class="text-end pe-3 fw-bold text-dark">S/ ${parseFloat(f.total).toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                    <tr class="border-top">
+                        <td colspan="2" class="text-end fw-bold text-dark pt-2">TOTAL:</td>
+                        <td class="text-end pe-3 fw-bold text-danger pt-2">S/ ${parseFloat(totalAdicionales).toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>`;
+            }
+
+            Swal.fire({
+                title: 'Detalle de la Compra',
+                html: html,
+                width: '450px',
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: '#64748b',
+                customClass: { popup: 'rounded-4 shadow-lg', title: 'fw-bold text-dark fs-2' },
+                background: '#ffffff',
+                color: '#1b254b'
+            });
+
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los datos.',
+                confirmButtonColor: '#3b82f6'
+            });
+        }
     }
 </script>
 </body>
